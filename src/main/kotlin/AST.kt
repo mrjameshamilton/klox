@@ -32,6 +32,25 @@ data class LiteralExpr(val value: Any?) : Expr {
         visitor.visitLiteralExpr(this)
 }
 
+interface Stmt {
+    fun <R> accept(visitor: Visitor<R>): R
+
+    interface Visitor<R> {
+        fun visitExprStmt(stmt: ExprStmt): R
+        fun visitPrintStmt(print: PrintStmt): R
+    }
+}
+
+data class ExprStmt(val expression: Expr) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitExprStmt(this)
+}
+
+data class PrintStmt(val expression: Expr) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitPrintStmt(this)
+}
+
 
 class AstPrinter : Expr.Visitor<String> {
     fun print(expr: Expr) = expr.accept(this)

@@ -1,16 +1,33 @@
 import TokenType.*
-import java.lang.RuntimeException
 import error as errorFun
 
 class Parser(private val tokens: List<Token>) {
     private var current = 0
 
-    fun parse(): Expr? {
-        return try {
-            expression()
-        } catch (error: ParseError) {
-            null
+    fun parse(): List<Stmt> {
+        val statements = mutableListOf<Stmt>()
+        while (!isAtEnd()) {
+            statements.add(statement())
         }
+        return statements
+    }
+
+    private fun statement(): Stmt {
+        if (match(PRINT)) return printStatement()
+
+        return expressionStmt()
+    }
+
+    private fun expressionStmt(): ExprStmt {
+        val expr = expression()
+        consume(SEMICOLON, "Expected ';' after expression")
+        return ExprStmt(expr)
+    }
+
+    private fun printStatement(): PrintStmt {
+        val expr = expression()
+        consume(SEMICOLON, "Expected ';' after value")
+        return PrintStmt(expr)
     }
 
     private fun expression(): Expr {

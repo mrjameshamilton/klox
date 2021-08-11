@@ -40,7 +40,7 @@ class Scanner(private val source: String) {
                     addToken(SLASH)
             }
             '"' -> string()
-            ' ', '\t', '\r' -> {}
+            ' ', '\t', '\r' -> { }
             '\n' -> line++
             else -> {
                 if (isDigit(c)) number()

@@ -1,16 +1,19 @@
 import TokenType.*
 import Expr.Visitor as ExprVisitor
+import Stmt.Visitor as StmtVisitor
 
-class Interpreter : ExprVisitor<Any?> {
+class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
-    fun interpret(expr: Expr): String? {
-        return try {
-            val value = evaluate(expr)
-            stringify(value)
+    fun interpret(stmts: List<Stmt>) {
+        try {
+            stmts.forEach { execute(it) }
         } catch (e: RuntimeError) {
             runtimeError(e)
-            return null
         }
+    }
+
+    private fun execute(stmt: Stmt) {
+        stmt.accept(this)
     }
 
     private fun evaluate(expr: Expr): Any? = expr.accept(this)
@@ -22,13 +25,17 @@ class Interpreter : ExprVisitor<Any?> {
         when (expr.operator.type) {
             MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, BANG_EQUAL, EQUAL_EQUAL ->
                 checkNumberOperands(expr.operator, left, right)
-            else -> { }
+            else -> {
+            }
         }
 
         return when (expr.operator.type) {
             MINUS -> (left as Double) - (right as Double)
             SLASH -> {
-                if (right as Double == 0.0) throw RuntimeError(expr.operator, "Cannot divide ${stringify(left)} by zero")
+                if (right as Double == 0.0) throw RuntimeError(
+                    expr.operator,
+                    "Cannot divide ${stringify(left)} by zero"
+                )
                 return left as Double / right
             }
             STAR -> (left as Double) * (right as Double)
@@ -95,6 +102,14 @@ class Interpreter : ExprVisitor<Any?> {
             if (text.endsWith(".0")) text.substring(0, text.length - 2) else text
         }
         else -> value.toString()
+    }
+
+    override fun visitExprStmt(stmt: ExprStmt) {
+        evaluate(stmt.expression)
+    }
+
+    override fun visitPrintStmt(print: PrintStmt) {
+        println(stringify(evaluate(print.expression)))
     }
 }
 

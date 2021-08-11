@@ -40,11 +40,11 @@ fun run(code: String) {
     val scanner = Scanner(code)
     val tokens = scanner.scanTokens()
     val parser = Parser(tokens)
-    val expr = parser.parse()
+    val stmts = parser.parse()
 
-    if (hadError || expr == null) return;
+    if (hadError) return
 
-    interpreter.interpret(expr)?.let { println(it) }
+    interpreter.interpret(stmts)
 }
 
 fun error(line: Int, message: String) {
