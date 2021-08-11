@@ -74,7 +74,7 @@ class Interpreter : Visitor<Any?> {
     }
 
     private fun checkNumberOperands(operator: Token, left: Any?, right: Any?) {
-        if (left !is Double && right !is Double)
+        if (!(left is Double && right is Double))
             throw RuntimeError(operator, "Operands must be numbers")
     }
 
