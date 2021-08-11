@@ -1,38 +1,39 @@
 import TokenType.MINUS
 import TokenType.STAR
 
-abstract class Expr {
-    abstract fun <R> accept(visitor: Visitor<R>): R
+interface Expr {
+    fun <R> accept(visitor: Visitor<R>): R
+
+    interface Visitor<R> {
+        fun visitBinaryExpr(expr: BinaryExpr): R
+        fun visitUnaryExpr(unaryExpr: UnaryExpr): R
+        fun visitGroupingExpr(groupingExpr: GroupingExpr): R
+        fun visitLiteralExpr(literalExpr: LiteralExpr): R
+    }
 }
 
-data class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr() {
-    override fun <R> accept(visitor: Visitor<R>): R =
+data class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitBinaryExpr(this)
 }
 
-data class UnaryExpr(val operator: Token, val right: Expr) : Expr() {
-    override fun <R> accept(visitor: Visitor<R>): R =
+data class UnaryExpr(val operator: Token, val right: Expr) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitUnaryExpr(this)
 }
 
-data class GroupingExpr(val expression: Expr) : Expr() {
-    override fun <R> accept(visitor: Visitor<R>) =
+data class GroupingExpr(val expression: Expr) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>) =
         visitor.visitGroupingExpr(this)
 }
 
-data class LiteralExpr(val value: Any?) : Expr() {
-    override fun <R> accept(visitor: Visitor<R>): R =
+data class LiteralExpr(val value: Any?) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitLiteralExpr(this)
 }
 
-interface Visitor<R> {
-    fun visitBinaryExpr(expr: BinaryExpr): R
-    fun visitUnaryExpr(unaryExpr: UnaryExpr): R
-    fun visitGroupingExpr(groupingExpr: GroupingExpr): R
-    fun visitLiteralExpr(literalExpr: LiteralExpr): R
-}
 
-class AstPrinter : Visitor<String> {
+class AstPrinter : Expr.Visitor<String> {
     fun print(expr: Expr) = expr.accept(this)
 
     override fun visitBinaryExpr(expr: BinaryExpr): String =

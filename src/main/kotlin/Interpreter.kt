@@ -1,6 +1,7 @@
 import TokenType.*
+import Expr.Visitor as ExprVisitor
 
-class Interpreter : Visitor<Any?> {
+class Interpreter : ExprVisitor<Any?> {
 
     fun interpret(expr: Expr): String? {
         return try {
