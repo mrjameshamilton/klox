@@ -4,6 +4,8 @@ import Stmt.Visitor as StmtVisitor
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
+    private var environment = Environment()
+
     fun interpret(stmts: List<Stmt>) {
         try {
             stmts.forEach { execute(it) }
@@ -16,6 +18,16 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         stmt.accept(this)
     }
 
+    private fun executeBlock(stmts: List<Stmt>, environment: Environment) {
+        val previous = this.environment
+        try {
+            this.environment = environment
+            stmts.forEach { execute(it) }
+        } finally {
+            this.environment = previous
+        }
+    }
+
     private fun evaluate(expr: Expr): Any? = expr.accept(this)
 
     override fun visitBinaryExpr(expr: BinaryExpr): Any {
@@ -25,8 +37,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         when (expr.operator.type) {
             MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, BANG_EQUAL, EQUAL_EQUAL ->
                 checkNumberOperands(expr.operator, left, right)
-            else -> {
-            }
+            else -> { }
         }
 
         return when (expr.operator.type) {
@@ -111,6 +122,43 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitPrintStmt(print: PrintStmt) {
         println(stringify(evaluate(print.expression)))
     }
+
+    override fun visitVarStmt(`var`: VarStmt) {
+        environment.define(
+            `var`.token.lexeme,
+            if (`var`.initializer != null) evaluate(`var`.initializer) else null
+        )
+    }
+
+    override fun visitVariableExpr(variableExpr: VariableExpr): Any? =
+        environment.get(variableExpr.name)
+
+    override fun visitAssignExpr(assignExpr: AssignExpr) {
+        environment.assign(assignExpr.name, evaluate(assignExpr.value))
+    }
+
+    override fun visitBlockStmt(block: BlockStmt) =
+        executeBlock(block.stmts, Environment(environment))
 }
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)
+
+class Environment(private val enclosing: Environment? = null) {
+    private val values: MutableMap<String, Any?> = mutableMapOf()
+
+    fun define(name: String, value: Any?) {
+        values[name] = value
+    }
+
+    fun get(name: Token): Any? {
+        return if (values.containsKey(name.lexeme)) values[name.lexeme]
+        else if (enclosing != null) enclosing.get(name)
+        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+    }
+
+    fun assign(name: Token, value: Any?) {
+        return if (values.containsKey(name.lexeme)) values[name.lexeme] = value
+        else if (enclosing != null) enclosing.assign(name, value)
+        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+    }
+}

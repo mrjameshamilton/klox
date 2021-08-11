@@ -7,15 +7,42 @@ class Parser(private val tokens: List<Token>) {
     fun parse(): List<Stmt> {
         val statements = mutableListOf<Stmt>()
         while (!isAtEnd()) {
-            statements.add(statement())
+            declaration()?.let { statements.add(it) }
         }
         return statements
     }
 
+    private fun declaration(): Stmt? {
+        try {
+            if (match(VAR)) return varDeclaration()
+            return statement()
+        } catch (error: ParseError) {
+            synchronize()
+            return null
+        }
+    }
+
+    private fun varDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expected variable name")
+        val initializer = if (match(EQUAL)) expression() else null
+        consume(SEMICOLON, "Expected ';' after variable declaration")
+        return VarStmt(name, initializer)
+    }
+
     private fun statement(): Stmt {
         if (match(PRINT)) return printStatement()
+        if (match(LEFT_BRACE)) return BlockStmt(block())
 
         return expressionStmt()
+    }
+
+    private fun block(): List<Stmt> {
+        val stmts = mutableListOf<Stmt>()
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            declaration()?.let { stmts.add(it) }
+        }
+        consume(RIGHT_BRACE, "Expected '}' after block")
+        return stmts
     }
 
     private fun expressionStmt(): ExprStmt {
@@ -31,13 +58,30 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun expression(): Expr {
-        var expr = equality()
+        val expr = assignment()
 
-        // TODO comma expressions
+/*        // TODO comma expressions
         while (match(COMMA)) {
             val op = previous()
             val right = expression()
             expr = BinaryExpr(expr, op, right)
+        }*/
+
+        return expr
+    }
+
+    private fun assignment(): Expr {
+        val expr = equality()
+
+        if (match(EQUAL)) {
+            val equals = previous()
+            val value = assignment()
+
+            if (expr is VariableExpr) {
+                return AssignExpr(expr.name, value)
+            }
+
+            error(equals, "Invalid assignment target")
         }
 
         return expr
@@ -100,6 +144,9 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(NUMBER, STRING))
             return LiteralExpr(previous().literal)
+
+        if (match(IDENTIFIER))
+            return VariableExpr(previous())
 
         if (match(LEFT_PAREN)) {
             val expr = expression()

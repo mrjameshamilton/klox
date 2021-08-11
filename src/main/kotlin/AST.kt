@@ -9,6 +9,8 @@ interface Expr {
         fun visitUnaryExpr(unaryExpr: UnaryExpr): R
         fun visitGroupingExpr(groupingExpr: GroupingExpr): R
         fun visitLiteralExpr(literalExpr: LiteralExpr): R
+        fun visitVariableExpr(variableExpr: VariableExpr): R
+        fun visitAssignExpr(assignExpr: AssignExpr): R
     }
 }
 
@@ -32,12 +34,24 @@ data class LiteralExpr(val value: Any?) : Expr {
         visitor.visitLiteralExpr(this)
 }
 
+data class VariableExpr(val name: Token): Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitVariableExpr(this)
+}
+
+data class AssignExpr(val name: Token, val value: Expr): Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitAssignExpr(this)
+}
+
 interface Stmt {
     fun <R> accept(visitor: Visitor<R>): R
 
     interface Visitor<R> {
         fun visitExprStmt(stmt: ExprStmt): R
         fun visitPrintStmt(print: PrintStmt): R
+        fun visitVarStmt(`var`: VarStmt): R
+        fun visitBlockStmt(block: BlockStmt): R
     }
 }
 
@@ -51,8 +65,17 @@ data class PrintStmt(val expression: Expr) : Stmt {
         visitor.visitPrintStmt(this)
 }
 
+data class VarStmt(val token: Token, val initializer: Expr? = null) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitVarStmt(this)
+}
 
-class AstPrinter : Expr.Visitor<String> {
+data class BlockStmt(val stmts: List<Stmt>): Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitBlockStmt(this)
+}
+
+class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     fun print(expr: Expr) = expr.accept(this)
 
     override fun visitBinaryExpr(expr: BinaryExpr): String =
@@ -75,6 +98,29 @@ class AstPrinter : Expr.Visitor<String> {
         }
         sb.append(")")
         return sb.toString()
+    }
+
+    override fun visitVariableExpr(variableExpr: VariableExpr): String =
+        "var ${variableExpr.name}"
+
+    override fun visitExprStmt(stmt: ExprStmt): String {
+        return parenthesize("exprStmt", stmt.expression)
+    }
+
+    override fun visitPrintStmt(print: PrintStmt): String {
+        return parenthesize("print", print.expression)
+    }
+
+    override fun visitVarStmt(`var`: VarStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitAssignExpr(assignExpr: AssignExpr): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitBlockStmt(block: BlockStmt): String {
+        TODO("Not yet implemented")
     }
 }
 
