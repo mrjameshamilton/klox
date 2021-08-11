@@ -78,12 +78,10 @@ class Interpreter : Visitor<Any?> {
             throw RuntimeError(operator, "Operands must be numbers")
     }
 
-    private fun isTruthy(value: Any?): Boolean {
-        return when (value) {
-            is Boolean -> value
-            null -> false
-            else -> true
-        }
+    private fun isTruthy(value: Any?): Boolean = when (value) {
+        is Boolean -> value
+        null -> false
+        else -> true
     }
 
     private fun isEqual(a: Any?, b: Any?): Boolean =
