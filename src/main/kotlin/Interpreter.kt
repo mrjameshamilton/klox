@@ -87,6 +87,18 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitLiteralExpr(literalExpr: LiteralExpr): Any? =
         literalExpr.value
 
+    override fun visitLogicalExpr(logicalExpr: LogicalExpr): Any? {
+        val left = evaluate(logicalExpr.left)
+
+        when (logicalExpr.operator.type) {
+            OR -> if (isTruthy(left)) return left
+            AND -> if (!isTruthy(left)) return left
+            else -> throw RuntimeError(logicalExpr.operator, "Invalid logical operator")
+        }
+
+        return evaluate(logicalExpr.right)
+    }
+
     private fun checkNumberOperand(operator: Token, operand: Any?) {
         if (operand !is Double)
             throw RuntimeError(operator, "Operand must be a number")

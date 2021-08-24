@@ -11,6 +11,7 @@ interface Expr {
         fun visitLiteralExpr(literalExpr: LiteralExpr): R
         fun visitVariableExpr(variableExpr: VariableExpr): R
         fun visitAssignExpr(assignExpr: AssignExpr): R
+        fun visitLogicalExpr(logicalExpr: LogicalExpr): R
     }
 }
 
@@ -42,6 +43,11 @@ data class VariableExpr(val name: Token): Expr {
 data class AssignExpr(val name: Token, val value: Expr): Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitAssignExpr(this)
+}
+
+data class LogicalExpr(val left: Expr, val operator: Token, val right: Expr): Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitLogicalExpr(this)
 }
 
 interface Stmt {
@@ -130,6 +136,10 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitIfStmt(ifStmt: IfStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitLogicalExpr(logicalExpr: LogicalExpr): String {
         TODO("Not yet implemented")
     }
 }
