@@ -30,6 +30,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun statement(): Stmt {
+        if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
         if (match(LEFT_BRACE)) return BlockStmt(block())
 
@@ -49,6 +50,14 @@ class Parser(private val tokens: List<Token>) {
         val expr = expression()
         consume(SEMICOLON, "Expected ';' after expression")
         return ExprStmt(expr)
+    }
+
+    private fun ifStatement(): IfStmt {
+        consume(LEFT_PAREN, "Expected '(' after 'if'")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expected ')' after 'if' condition")
+
+        return IfStmt(condition, statement(), if (match(ELSE)) statement() else null)
     }
 
     private fun printStatement(): PrintStmt {
