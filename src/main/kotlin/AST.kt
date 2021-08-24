@@ -59,6 +59,7 @@ interface Stmt {
         fun visitVarStmt(`var`: VarStmt): R
         fun visitBlockStmt(block: BlockStmt): R
         fun visitIfStmt(ifStmt: IfStmt): R
+        fun visitWhileStmt(whileStmt: WhileStmt): R
     }
 }
 
@@ -85,6 +86,11 @@ data class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stm
 data class BlockStmt(val stmts: List<Stmt>): Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitBlockStmt(this)
+}
+
+data class WhileStmt(val condition: Expr, val body: Stmt): Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitWhileStmt(this)
 }
 
 class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
@@ -140,6 +146,10 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitLogicalExpr(logicalExpr: LogicalExpr): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitWhileStmt(whileStmt: WhileStmt): String {
         TODO("Not yet implemented")
     }
 }

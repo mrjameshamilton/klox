@@ -142,6 +142,11 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         println(stringify(evaluate(print.expression)))
     }
 
+    override fun visitWhileStmt(whileStmt: WhileStmt) {
+        while (isTruthy(evaluate(whileStmt.condition)))
+            execute(whileStmt.body)
+    }
+
     override fun visitVarStmt(`var`: VarStmt) {
         environment.define(
             `var`.token.lexeme,
