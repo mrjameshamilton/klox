@@ -31,6 +31,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun statement(): Stmt {
+        if (match(FOR)) return forStatement()
         if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
         if (match(WHILE)) return whileStatement()
@@ -74,6 +75,39 @@ class Parser(private val tokens: List<Token>) {
         consume(RIGHT_PAREN, "Expected ')' after 'while' condition")
 
         return WhileStmt(condition, body = statement())
+    }
+
+    private fun forStatement(): Stmt {
+        // desugar for loops to while loops
+
+        consume(LEFT_PAREN, "Expected '(' after 'for'")
+
+        var initializer: Stmt? = null
+        initializer = if (match(SEMICOLON)) null
+        else if (match(VAR)) varDeclaration();
+        else expressionStmt()
+
+        val condition = if (!check(SEMICOLON)) expression(); else LiteralExpr(true)
+
+        consume(SEMICOLON, "Expected ';' after loop condition")
+
+        val increment = if (!check(RIGHT_PAREN)) expression(); else null
+
+        consume(RIGHT_PAREN, "Expected ')' after for clauses")
+
+        var body = statement()
+
+        if (increment != null) {
+            body = BlockStmt(listOf(body, ExprStmt(increment)))
+        }
+
+        body = WhileStmt(condition, body)
+
+        if (initializer != null) {
+            body = BlockStmt(listOf(initializer, body))
+        }
+
+        return body
     }
 
     private fun expression(): Expr {
