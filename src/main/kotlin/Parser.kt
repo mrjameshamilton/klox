@@ -35,6 +35,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(PRINT)) return printStatement()
         if (match(WHILE)) return whileStatement()
         if (match(BREAK)) return breakStatement()
+        if (match(CONTINUE)) return continueStatement()
         if (match(LEFT_BRACE)) return BlockStmt(block())
 
         return expressionStmt()
@@ -113,6 +114,12 @@ class Parser(private val tokens: List<Token>) {
         val breakStmt = BreakStmt()
         consume(SEMICOLON, "Expected ';' after 'break'")
         return breakStmt
+    }
+
+    private fun continueStatement(): Stmt {
+        val continueStmt = ContinueStmt()
+        consume(SEMICOLON, "Expected ';' after 'continue'")
+        return continueStmt
     }
 
     private fun expression(): Expr {

@@ -1,0 +1,1 @@
+continue; // expect error: continue statement is only allowed in loops

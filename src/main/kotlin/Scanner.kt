@@ -128,7 +128,8 @@ class Scanner(private val source: String) {
             "true" to TRUE,
             "var" to VAR,
             "while" to WHILE,
-            "break" to BREAK
+            "break" to BREAK,
+            "continue" to CONTINUE
         )
     }
 }

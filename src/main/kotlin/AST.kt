@@ -61,6 +61,7 @@ interface Stmt {
         fun visitIfStmt(ifStmt: IfStmt): R
         fun visitWhileStmt(whileStmt: WhileStmt): R
         fun visitBreakStmt(breakStmt: BreakStmt): R
+        fun visitContinueStmt(continueStmt: ContinueStmt): R
     }
 }
 
@@ -97,6 +98,11 @@ data class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
 class BreakStmt : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitBreakStmt(this)
+}
+
+class ContinueStmt : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitContinueStmt(this)
 }
 
 class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
@@ -160,6 +166,10 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitBreakStmt(breakStmt: BreakStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitContinueStmt(continueStmt: ContinueStmt): String {
         TODO("Not yet implemented")
     }
 }

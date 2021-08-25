@@ -147,12 +147,17 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 execute(whileStmt.body)
             } catch (ignored: Break) {
                 break
+            } catch (ignored: Continue) {
+                continue
             }
         }
     }
 
     override fun visitBreakStmt(breakStmt: BreakStmt) =
         throw Break()
+
+    override fun visitContinueStmt(continueStmt: ContinueStmt) =
+        throw Continue()
 
     override fun visitVarStmt(`var`: VarStmt) {
         environment.define(
@@ -172,6 +177,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         executeBlock(block.stmts, Environment(environment))
 
     private class Break : RuntimeException()
+    private class Continue : RuntimeException()
 }
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)

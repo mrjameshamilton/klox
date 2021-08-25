@@ -30,8 +30,8 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     }
 
     override fun visitWhileStmt(whileStmt: WhileStmt) {
-        inLoop = true
         whileStmt.condition.accept(this)
+        inLoop = true
         whileStmt.body.accept(this)
         inLoop = false
     }
@@ -41,6 +41,13 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
             error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops")
         }
     }
+
+    override fun visitContinueStmt(continueStmt: ContinueStmt) {
+        if (!inLoop) {
+            error(Token(CONTINUE, "continue", null, -1), "continue statement is only allowed in loops")
+        }
+    }
+
     override fun visitBinaryExpr(expr: BinaryExpr) {
         expr.left.accept(this)
         expr.right.accept(this)
