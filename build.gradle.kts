@@ -1,3 +1,4 @@
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -34,4 +35,9 @@ tasks.withType<KotlinCompile>() {
 
 application {
     mainClass.set("MainKt")
+}
+
+ktlint {
+    enableExperimentalRules.set(true)
+    disabledRules.set(setOf("no-wildcard-imports"))
 }

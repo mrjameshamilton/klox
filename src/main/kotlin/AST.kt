@@ -35,17 +35,17 @@ data class LiteralExpr(val value: Any?) : Expr {
         visitor.visitLiteralExpr(this)
 }
 
-data class VariableExpr(val name: Token): Expr {
+data class VariableExpr(val name: Token) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitVariableExpr(this)
 }
 
-data class AssignExpr(val name: Token, val value: Expr): Expr {
+data class AssignExpr(val name: Token, val value: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitAssignExpr(this)
 }
 
-data class LogicalExpr(val left: Expr, val operator: Token, val right: Expr): Expr {
+data class LogicalExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitLogicalExpr(this)
 }
@@ -84,12 +84,12 @@ data class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stm
         visitor.visitIfStmt(this)
 }
 
-data class BlockStmt(val stmts: List<Stmt>): Stmt {
+data class BlockStmt(val stmts: List<Stmt>) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitBlockStmt(this)
 }
 
-data class WhileStmt(val condition: Expr, val body: Stmt): Stmt {
+data class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitWhileStmt(this)
 }

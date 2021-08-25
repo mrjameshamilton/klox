@@ -38,7 +38,7 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
 
     override fun visitBreakStmt(breakStmt: BreakStmt) {
         if (!inLoop) {
-            error(Token(BREAK, "break", null, -1),"break statement is only allowed in loops")
+            error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops")
         }
     }
     override fun visitBinaryExpr(expr: BinaryExpr) {

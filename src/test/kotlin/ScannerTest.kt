@@ -1,10 +1,9 @@
 import TokenType.*
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.extensions.system.NoSystemErrListener
 import io.kotest.matchers.shouldBe
 
 class ScannerTest : FreeSpec({
-    //listeners(listOf(NoSystemErrListener))
+    // listeners(listOf(NoSystemErrListener))
 
     "(()){}" {
         val scanner = Scanner("(()){}")
@@ -29,11 +28,13 @@ class ScannerTest : FreeSpec({
     }
 
     "With comment" {
-        val scanner = Scanner("""
+        val scanner = Scanner(
+            """
             ()
             // comment ()
             ()
-        """.trimIndent())
+            """.trimIndent()
+        )
         scanner.scanTokens() shouldBe listOf(
             Token(LEFT_PAREN, "(", null, 1),
             Token(RIGHT_PAREN, ")", null, 1),
@@ -83,9 +84,11 @@ class ScannerTest : FreeSpec({
     }
 
     "A string" {
-        val scanner = Scanner("""
+        val scanner = Scanner(
+            """
             "string"
-        """.trimIndent())
+            """.trimIndent()
+        )
         scanner.scanTokens() shouldBe listOf(
             Token(STRING, """"string"""", "string", 1),
             Token(EOF, "", null, 1)

@@ -43,10 +43,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         return when (expr.operator.type) {
             MINUS -> (left as Double) - (right as Double)
             SLASH -> {
-                if (right as Double == 0.0) throw RuntimeError(
-                    expr.operator,
-                    "Cannot divide ${stringify(left)} by zero"
-                )
+                if (right as Double == 0.0) throw RuntimeError(expr.operator, "Cannot divide ${stringify(left)} by zero")
                 return left as Double / right
             }
             STAR -> (left as Double) * (right as Double)
@@ -66,7 +63,6 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             else -> throw RuntimeError(expr.operator, "Not implemented")
         }
     }
-
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr): Any? {
         val right = evaluate(unaryExpr.right)
@@ -100,13 +96,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {
-        if (operand !is Double)
+        if (operand !is Double) {
             throw RuntimeError(operator, "Operand must be a number")
+        }
     }
 
     private fun checkNumberOperands(operator: Token, left: Any?, right: Any?) {
-        if (!(left is Double && right is Double))
+        if (!(left is Double && right is Double)) {
             throw RuntimeError(operator, "Operands must be numbers")
+        }
     }
 
     private fun isTruthy(value: Any?): Boolean = when (value) {
@@ -132,10 +130,11 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitIfStmt(ifStmt: IfStmt) {
-        if (isTruthy(evaluate(ifStmt.condition)))
+        if (isTruthy(evaluate(ifStmt.condition))) {
             execute(ifStmt.thenBranch)
-        else if (ifStmt.elseBranch != null)
+        } else if (ifStmt.elseBranch != null) {
             execute(ifStmt.elseBranch)
+        }
     }
 
     override fun visitPrintStmt(print: PrintStmt) {
@@ -147,7 +146,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             try {
                 execute(whileStmt.body)
             } catch (ignored: Break) {
-                break;
+                break
             }
         }
     }

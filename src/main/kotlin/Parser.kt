@@ -83,8 +83,8 @@ class Parser(private val tokens: List<Token>) {
         consume(LEFT_PAREN, "Expected '(' after 'for'")
 
         val initializer: Stmt? = if (match(SEMICOLON)) null
-            else if (match(VAR)) varDeclaration();
-            else expressionStmt()
+        else if (match(VAR)) varDeclaration()
+        else expressionStmt()
 
         val condition = if (!check(SEMICOLON)) expression(); else LiteralExpr(true)
 
@@ -224,11 +224,13 @@ class Parser(private val tokens: List<Token>) {
         if (match(TRUE)) return LiteralExpr(true)
         if (match(NIL)) return LiteralExpr(null)
 
-        if (match(NUMBER, STRING))
+        if (match(NUMBER, STRING)) {
             return LiteralExpr(previous().literal)
+        }
 
-        if (match(IDENTIFIER))
+        if (match(IDENTIFIER)) {
             return VariableExpr(previous())
+        }
 
         if (match(LEFT_PAREN)) {
             val expr = expression()

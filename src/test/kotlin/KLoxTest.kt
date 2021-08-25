@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 
-class KLoxTest: FunSpec({
+class KLoxTest : FunSpec({
     val dir = File(object {}.javaClass.getResource("lox").file)
     val regex = Regex("// expect( (runtime )?error)?: (.*)")
     dir.walk().forEach { file ->
@@ -26,10 +26,11 @@ class KLoxTest: FunSpec({
                 run(text)
                 withClue("hadError") { hadError shouldBe expectError }
                 withClue("hadRuntimeError") { hadRuntimeError shouldBe expectRuntimeError }
-                if (expectError || expectRuntimeError)
+                if (expectError || expectRuntimeError) {
                     myErr.toByteArray().decodeToString() shouldContain expected
-                else
+                } else {
                     myOut.toByteArray().decodeToString() shouldBe expected
+                }
                 System.setOut(oldOut)
                 System.setErr(oldErr)
             }

@@ -34,10 +34,11 @@ class Scanner(private val source: String) {
             '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
             '>' -> addToken(if (match('=')) GREATER_EQUAL else GREATER)
             '/' -> {
-                if (match('/'))
+                if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) advance()
-                else
+                } else {
                     addToken(SLASH)
+                }
             }
             '"' -> string()
             ' ', '\t', '\r' -> { }
