@@ -1,0 +1,15 @@
+var i = 0;
+while (i < 10) {
+    print i;
+    i = i + 1;
+}
+// expect: 0
+// expect: 1
+// expect: 2
+// expect: 3
+// expect: 4
+// expect: 5
+// expect: 6
+// expect: 7
+// expect: 8
+// expect: 9
