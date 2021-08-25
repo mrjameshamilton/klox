@@ -1,0 +1,1 @@
+break; // expect error: break statement is only allowed in loops

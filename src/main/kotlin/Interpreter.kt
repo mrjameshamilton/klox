@@ -143,9 +143,17 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitWhileStmt(whileStmt: WhileStmt) {
-        while (isTruthy(evaluate(whileStmt.condition)))
-            execute(whileStmt.body)
+        while (isTruthy(evaluate(whileStmt.condition))) {
+            try {
+                execute(whileStmt.body)
+            } catch (ignored: Break) {
+                break;
+            }
+        }
     }
+
+    override fun visitBreakStmt(breakStmt: BreakStmt) =
+        throw Break()
 
     override fun visitVarStmt(`var`: VarStmt) {
         environment.define(
@@ -163,6 +171,8 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     override fun visitBlockStmt(block: BlockStmt) =
         executeBlock(block.stmts, Environment(environment))
+
+    private class Break : RuntimeException()
 }
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)

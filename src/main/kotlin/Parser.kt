@@ -1,5 +1,4 @@
 import TokenType.*
-import kotlin.math.exp
 import error as errorFun
 
 class Parser(private val tokens: List<Token>) {
@@ -35,6 +34,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
         if (match(WHILE)) return whileStatement()
+        if (match(BREAK)) return breakStatement()
         if (match(LEFT_BRACE)) return BlockStmt(block())
 
         return expressionStmt()
@@ -107,6 +107,12 @@ class Parser(private val tokens: List<Token>) {
         }
 
         return body
+    }
+
+    private fun breakStatement(): Stmt {
+        val breakStmt = BreakStmt()
+        consume(SEMICOLON, "Expected ';' after 'break'")
+        return breakStmt
     }
 
     private fun expression(): Expr {

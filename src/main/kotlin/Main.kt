@@ -47,6 +47,12 @@ fun run(code: String) {
 
     if (hadError) return
 
+    val checker = Checker()
+
+    checker.check(stmts)
+
+    if (hadError) return
+
     interpreter.interpret(stmts)
 }
 
