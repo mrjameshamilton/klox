@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 
-class JLoxTest: FunSpec({
+class KLoxTest: FunSpec({
     val dir = File(object {}.javaClass.getResource("lox").file)
     val regex = Regex("// expect( (runtime )?error)?: (.*)")
     dir.walk().forEach { file ->
