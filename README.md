@@ -4,4 +4,8 @@ A Kotlin implementation of lox, the language from [Crafting Interpreters](https:
 
 # Status
 
-Currently only the basic intepreter.
+Currently implements up to and includig chapter 10 (functions).
+
+# Extra features
+
+* `break` and `continue` statements
