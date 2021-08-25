@@ -37,6 +37,9 @@ fun runFile(path: String) {
 }
 
 fun run(code: String) {
+    hadError = false
+    hadRuntimeError = false
+
     val scanner = Scanner(code)
     val tokens = scanner.scanTokens()
     val parser = Parser(tokens)
