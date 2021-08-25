@@ -26,10 +26,12 @@ class KLoxTest : FunSpec({
                 run(text)
                 withClue("hadError") { hadError shouldBe expectError }
                 withClue("hadRuntimeError") { hadRuntimeError shouldBe expectRuntimeError }
-                if (expectError || expectRuntimeError) {
-                    myErr.toByteArray().decodeToString() shouldContain expected
-                } else {
-                    myOut.toByteArray().decodeToString() shouldBe expected
+                if (expected.isNotBlank()) {
+                    if (expectError || expectRuntimeError) {
+                        myErr.toByteArray().decodeToString() shouldContain expected
+                    } else {
+                        myOut.toByteArray().decodeToString() shouldBe expected
+                    }
                 }
                 System.setOut(oldOut)
                 System.setErr(oldErr)

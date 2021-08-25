@@ -1,0 +1,6 @@
+fun hello(name, surname) {
+    print name + " " + surname;
+}
+
+hello("foo", "bar");
+

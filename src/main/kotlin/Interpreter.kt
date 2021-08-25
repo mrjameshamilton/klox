@@ -4,7 +4,19 @@ import Stmt.Visitor as StmtVisitor
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
-    private var environment = Environment()
+    private val globals = Environment().apply {
+        define(
+            "clock",
+            object : LoxCallable {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any =
+                    System.currentTimeMillis() / 1000.0
+
+                override fun toString(): String = "<native fn clock>"
+            }
+        )
+    }
+
+    private var environment = globals
 
     fun interpret(stmts: List<Stmt>) {
         try {
@@ -18,7 +30,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         stmt.accept(this)
     }
 
-    private fun executeBlock(stmts: List<Stmt>, environment: Environment) {
+    fun executeBlock(stmts: List<Stmt>, environment: Environment) {
         val previous = this.environment
         try {
             this.environment = environment
@@ -75,6 +87,27 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             }
             else -> null
         }
+    }
+
+    override fun visitCallExpr(callExpr: CallExpr): Any? {
+        val callee = evaluate(callExpr.callee)
+
+        val arguments = callExpr.arguments.map { evaluate(it) }
+
+        if (callee !is LoxCallable) {
+            throw RuntimeError(callExpr.paren, "Can only call functions and classes")
+        }
+
+        if (callee.arity() != arguments.size) {
+            throw RuntimeError(callExpr.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}")
+        }
+
+        return callee.call(this, arguments)
+    }
+
+    override fun visitFunctionStmt(functionStmt: FunctionStmt) {
+        val function = LoxFunction(functionStmt, environment)
+        environment.define(functionStmt.name.lexeme, function)
     }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr): Any? =
@@ -141,6 +174,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         println(stringify(evaluate(print.expression)))
     }
 
+    override fun visitReturnStmt(returnStmt: ReturnStmt) {
+        throw Return(if (returnStmt.value != null) evaluate(returnStmt.value); else null)
+    }
+
     override fun visitWhileStmt(whileStmt: WhileStmt) {
         while (isTruthy(evaluate(whileStmt.condition))) {
             try {
@@ -178,6 +215,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     private class Break : RuntimeException()
     private class Continue : RuntimeException()
+    class Return(val value: Any?) : RuntimeException()
 }
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)

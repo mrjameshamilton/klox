@@ -1,0 +1,5 @@
+fun foo() {
+    return "foo";
+}
+
+print foo(); // expect: foo

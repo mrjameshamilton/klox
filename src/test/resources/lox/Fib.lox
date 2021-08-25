@@ -1,0 +1,29 @@
+fun fib(n) {
+    if (n <= 1) return n;
+    return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+    print(fib(i));
+}
+
+// expect: 0
+// expect: 1
+// expect: 1
+// expect: 2
+// expect: 3
+// expect: 5
+// expect: 8
+// expect: 13
+// expect: 21
+// expect: 34
+// expect: 55
+// expect: 89
+// expect: 144
+// expect: 233
+// expect: 377
+// expect: 610
+// expect: 987
+// expect: 1597
+// expect: 2584
+// expect: 4181

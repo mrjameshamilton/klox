@@ -12,6 +12,7 @@ interface Expr {
         fun visitVariableExpr(variableExpr: VariableExpr): R
         fun visitAssignExpr(assignExpr: AssignExpr): R
         fun visitLogicalExpr(logicalExpr: LogicalExpr): R
+        fun visitCallExpr(callExpr: CallExpr): R
     }
 }
 
@@ -50,6 +51,11 @@ data class LogicalExpr(val left: Expr, val operator: Token, val right: Expr) : E
         visitor.visitLogicalExpr(this)
 }
 
+data class CallExpr(val callee: Expr, val paren: Token, val arguments: List<Expr> = emptyList()) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitCallExpr(this)
+}
+
 interface Stmt {
     fun <R> accept(visitor: Visitor<R>): R
 
@@ -62,6 +68,8 @@ interface Stmt {
         fun visitWhileStmt(whileStmt: WhileStmt): R
         fun visitBreakStmt(breakStmt: BreakStmt): R
         fun visitContinueStmt(continueStmt: ContinueStmt): R
+        fun visitFunctionStmt(functionStmt: FunctionStmt): R
+        fun visitReturnStmt(returnStmt: ReturnStmt): R
     }
 }
 
@@ -103,6 +111,16 @@ class BreakStmt : Stmt {
 class ContinueStmt : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitContinueStmt(this)
+}
+
+data class FunctionStmt(val name: Token, val params: List<Token>, val body: List<Stmt>) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitFunctionStmt(this)
+}
+
+data class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitReturnStmt(this)
 }
 
 class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
@@ -170,6 +188,18 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitContinueStmt(continueStmt: ContinueStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitCallExpr(callExpr: CallExpr): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitFunctionStmt(functionStmt: FunctionStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitReturnStmt(returnStmt: ReturnStmt): String {
         TODO("Not yet implemented")
     }
 }

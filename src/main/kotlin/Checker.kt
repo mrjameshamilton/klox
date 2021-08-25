@@ -73,4 +73,17 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         logicalExpr.left.accept(this)
         logicalExpr.right.accept(this)
     }
+
+    override fun visitCallExpr(callExpr: CallExpr) {
+        callExpr.callee.accept(this)
+        callExpr.arguments.forEach { it.accept(this) }
+    }
+
+    override fun visitFunctionStmt(functionStmt: FunctionStmt) {
+        functionStmt.body.forEach { it.accept(this) }
+    }
+
+    override fun visitReturnStmt(returnStmt: ReturnStmt) {
+        returnStmt.value?.accept(this)
+    }
 }
