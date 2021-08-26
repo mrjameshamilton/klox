@@ -24,17 +24,25 @@ class KLoxTest : FunSpec({
                 System.setOut(PrintStream(myOut))
                 System.setErr(PrintStream(myErr))
                 run(text)
-                withClue("hadError") { hadError shouldBe expectError }
-                withClue("hadRuntimeError") { hadRuntimeError shouldBe expectRuntimeError }
-                if (expected.isNotBlank()) {
-                    if (expectError || expectRuntimeError) {
-                        myErr.toByteArray().decodeToString() shouldContain expected
-                    } else {
-                        myOut.toByteArray().decodeToString() shouldBe expected
-                    }
-                }
                 System.setOut(oldOut)
                 System.setErr(oldErr)
+                val errText = myErr.toByteArray().decodeToString()
+
+                if (!(expectError || expectRuntimeError)) {
+                    errText shouldBe ""
+                }
+
+                if (expected.isNotBlank()) {
+                    if (expectError || expectRuntimeError) {
+                        errText shouldContain expected
+                    } else {
+                        val outText = myOut.toByteArray().decodeToString()
+                        outText shouldBe expected
+                    }
+                }
+
+                withClue("hadError") { hadError shouldBe expectError }
+                withClue("hadRuntimeError") { hadRuntimeError shouldBe expectRuntimeError }
             }
         }
     }
