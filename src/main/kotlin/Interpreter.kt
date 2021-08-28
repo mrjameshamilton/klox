@@ -162,6 +162,8 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     private fun checkNumberOperands(operator: Token, left: Any?, right: Any?) {
+        if (left == null && right == null) return
+
         if (!(left is Double && right is Double)) {
             throw RuntimeError(operator, "Operands must be numbers")
         }
