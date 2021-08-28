@@ -10,3 +10,4 @@ Currently, implements up to and including chapter 12 (classes).
 
 * `break` and `continue` statements
 * static class methods
+* property getters

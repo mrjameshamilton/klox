@@ -135,5 +135,6 @@ enum class FunctionType {
     METHOD,
     FUNCTION,
     INITIALIZER,
-    CLASS
+    CLASS,
+    GETTER
 }

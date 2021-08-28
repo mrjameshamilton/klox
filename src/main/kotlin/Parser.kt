@@ -32,9 +32,7 @@ class Parser(private val tokens: List<Token>) {
 
         val methods = mutableListOf<FunctionStmt>()
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            val isClassMethod = check(CLASS)
-            if (isClassMethod) consume(CLASS, "")
-            methods.add(function(if (isClassMethod) FunctionType.CLASS else METHOD))
+            methods.add(function(METHOD))
         }
 
         consume(RIGHT_BRACE, "Expected '}' after class body")
@@ -42,21 +40,36 @@ class Parser(private val tokens: List<Token>) {
         return ClassStmt(name, methods)
     }
 
-    private fun function(kind: FunctionType): FunctionStmt {
-        val name = consume(IDENTIFIER, "Expected $kind name")
-        consume(LEFT_PAREN, "Expected '(' after $kind name")
+    private fun function(originalKind: FunctionType): FunctionStmt {
+        val isClassMethod = check(CLASS)
+        if (isClassMethod) consume(CLASS, "")
+
+        val name = consume(IDENTIFIER, "Expected $originalKind name")
         val parameters = mutableListOf<Token>()
-        if (!check(RIGHT_PAREN)) {
-            do {
-                if (parameters.size >= 255) {
-                    error(peek(), "Can't have more than 255 parameters")
-                }
-                parameters.add(consume(IDENTIFIER, "Expected parameter name"))
-            } while (match(COMMA))
+
+        var kind = when {
+            isClassMethod -> FunctionType.CLASS
+            originalKind == METHOD && name.lexeme == "init" -> INITIALIZER
+            else -> originalKind
         }
-        consume(RIGHT_PAREN, "Expected ')' after parameters")
+
+        if (check(LEFT_PAREN)) {
+            consume(LEFT_PAREN, "Expected '(' after $kind name")
+            if (!check(RIGHT_PAREN)) {
+                do {
+                    if (parameters.size >= 255) {
+                        error(peek(), "Can't have more than 255 parameters")
+                    }
+                    parameters.add(consume(IDENTIFIER, "Expected parameter name"))
+                } while (match(COMMA))
+            }
+            consume(RIGHT_PAREN, "Expected ')' after parameters")
+        } else {
+            kind = GETTER
+        }
+
         consume(LEFT_BRACE, "Expected '{' before $kind body")
-        return FunctionStmt(name, if (kind == METHOD && name.lexeme == "init") INITIALIZER else kind, parameters, body = block())
+        return FunctionStmt(name, kind, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {

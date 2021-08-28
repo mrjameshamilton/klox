@@ -2,10 +2,10 @@ import FunctionType.*
 
 interface LoxCallable {
     fun arity(): Int = 0
-    fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
+    fun call(interpreter: Interpreter, arguments: List<Any?> = emptyList()): Any?
 }
 
-open class LoxFunction(private val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
+open class LoxFunction(val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
 
     override fun arity(): Int = declaration.params.size
 
