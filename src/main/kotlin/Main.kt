@@ -53,6 +53,12 @@ fun run(code: String, interpreter: Interpreter = Interpreter()) {
 
     if (hadError) return
 
+    val resolver = Resolver(interpreter)
+
+    resolver.resolve(stmts)
+
+    if (hadError) return
+
     interpreter.interpret(stmts)
 }
 

@@ -16,6 +16,8 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         )
     }
 
+    private val locals = mutableMapOf<Expr, Int>()
+
     private var environment = globals
 
     fun interpret(stmts: List<Stmt>) {
@@ -24,6 +26,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         } catch (e: RuntimeError) {
             runtimeError(e)
         }
+    }
+
+    fun resolve(expr: Expr, depth: Int) {
+        locals[expr] = depth
     }
 
     private fun execute(stmt: Stmt) {
@@ -204,14 +210,24 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitVariableExpr(variableExpr: VariableExpr): Any? =
-        environment.get(variableExpr.name)
+        lookupVariable(variableExpr.name, variableExpr)
 
-    override fun visitAssignExpr(assignExpr: AssignExpr) {
-        environment.assign(assignExpr.name, evaluate(assignExpr.value))
+    override fun visitAssignExpr(assignExpr: AssignExpr): Any? {
+        val value = evaluate(assignExpr.value)
+        val distance = locals[assignExpr]
+        if (distance != null) {
+            environment.assignAt(distance, assignExpr.name, value)
+        } else globals.assign(assignExpr.name, value)
+        return value
     }
 
     override fun visitBlockStmt(block: BlockStmt) =
         executeBlock(block.stmts, Environment(environment))
+
+    private fun lookupVariable(name: Token, expr: Expr): Any? {
+        val distance = locals[expr]
+        return if (distance != null) environment.getAt(distance, name.lexeme); else globals.get(name)
+    }
 
     private class Break : RuntimeException()
     private class Continue : RuntimeException()
@@ -230,12 +246,30 @@ class Environment(private val enclosing: Environment? = null) {
     fun get(name: Token): Any? {
         return if (values.containsKey(name.lexeme)) values[name.lexeme]
         else if (enclosing != null) enclosing.get(name)
-        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+        else {
+            throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+        }
+    }
+
+    fun getAt(distance: Int, name: String): Any? {
+        return ancestor(distance).values[name]
     }
 
     fun assign(name: Token, value: Any?) {
         return if (values.containsKey(name.lexeme)) values[name.lexeme] = value
         else if (enclosing != null) enclosing.assign(name, value)
         else throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+    }
+
+    fun assignAt(distance: Int, name: Token, value: Any?) {
+        ancestor(distance).values[name.lexeme] = value
+    }
+
+    private fun ancestor(distance: Int): Environment {
+        var environment = this
+        for (i in 0 until distance) {
+            environment = environment.enclosing!!
+        }
+        return environment
     }
 }

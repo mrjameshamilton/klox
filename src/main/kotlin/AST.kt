@@ -16,42 +16,42 @@ interface Expr {
     }
 }
 
-data class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
+class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitBinaryExpr(this)
 }
 
-data class UnaryExpr(val operator: Token, val right: Expr) : Expr {
+class UnaryExpr(val operator: Token, val right: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitUnaryExpr(this)
 }
 
-data class GroupingExpr(val expression: Expr) : Expr {
+class GroupingExpr(val expression: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>) =
         visitor.visitGroupingExpr(this)
 }
 
-data class LiteralExpr(val value: Any?) : Expr {
+class LiteralExpr(val value: Any?) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitLiteralExpr(this)
 }
 
-data class VariableExpr(val name: Token) : Expr {
+class VariableExpr(val name: Token) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitVariableExpr(this)
 }
 
-data class AssignExpr(val name: Token, val value: Expr) : Expr {
+class AssignExpr(val name: Token, val value: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitAssignExpr(this)
 }
 
-data class LogicalExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
+class LogicalExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitLogicalExpr(this)
 }
 
-data class CallExpr(val callee: Expr, val paren: Token, val arguments: List<Expr> = emptyList()) : Expr {
+class CallExpr(val callee: Expr, val paren: Token, val arguments: List<Expr> = emptyList()) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitCallExpr(this)
 }
@@ -73,32 +73,32 @@ interface Stmt {
     }
 }
 
-data class ExprStmt(val expression: Expr) : Stmt {
+class ExprStmt(val expression: Expr) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitExprStmt(this)
 }
 
-data class PrintStmt(val expression: Expr) : Stmt {
+class PrintStmt(val expression: Expr) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitPrintStmt(this)
 }
 
-data class VarStmt(val token: Token, val initializer: Expr? = null) : Stmt {
+class VarStmt(val token: Token, val initializer: Expr? = null) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitVarStmt(this)
 }
 
-data class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt {
+class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitIfStmt(this)
 }
 
-data class BlockStmt(val stmts: List<Stmt>) : Stmt {
+class BlockStmt(val stmts: List<Stmt>) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitBlockStmt(this)
 }
 
-data class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
+class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitWhileStmt(this)
 }
@@ -113,12 +113,12 @@ class ContinueStmt : Stmt {
         visitor.visitContinueStmt(this)
 }
 
-data class FunctionStmt(val name: Token, val params: List<Token>, val body: List<Stmt>) : Stmt {
+class FunctionStmt(val name: Token, val params: List<Token>, val body: List<Stmt>) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)
 }
 
-data class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
+class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitReturnStmt(this)
 }
