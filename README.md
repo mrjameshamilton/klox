@@ -4,7 +4,7 @@ A Kotlin implementation of lox, the language from [Crafting Interpreters](https:
 
 # Status
 
-Currently implements up to and includig chapter 10 (functions).
+Currently implements up to and includig chapter 11 (variable resolution pass).
 
 # Extra features
 
