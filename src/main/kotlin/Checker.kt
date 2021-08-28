@@ -1,3 +1,4 @@
+import ClassType.*
 import FunctionType.*
 import TokenType.*
 
@@ -96,6 +97,17 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     override fun visitClassStmt(classStmt: ClassStmt) {
         val enclosingClass = currentClassType
         currentClassType = ClassType.CLASS
+        if (classStmt.superClass != null) {
+            currentClassType = SUBCLASS
+            if (classStmt.name.lexeme == classStmt.superClass.name.lexeme) {
+                error(
+                    classStmt.superClass.name,
+                    "A class can't inherit from itself."
+                )
+            }
+
+            classStmt.superClass.accept(this)
+        }
         classStmt.methods.forEach { resolveFunction(it) }
         currentClassType = enclosingClass
     }
@@ -116,6 +128,14 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         setExpr.value.accept(this)
     }
 
+    override fun visitSuperExpr(superExpr: SuperExpr) {
+        if (currentClassType == ClassType.NONE) {
+            error(superExpr.keyword, "Can't use 'super' outside of a class")
+        } else if (currentClassType != SUBCLASS) {
+            error(superExpr.keyword, "Can't use 'super' in a class with no superclass")
+        }
+    }
+
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == ClassType.NONE) {
             error(thisExpr.keyword, "Can't use this outside of a class")
@@ -127,7 +147,8 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
 
 enum class ClassType {
     NONE,
-    CLASS
+    CLASS,
+    SUBCLASS
 }
 
 enum class FunctionType {

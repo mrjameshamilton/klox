@@ -32,7 +32,7 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
 }
 
-class LoxClass(val name: String, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
+class LoxClass(val name: String, val superClass: LoxClass? = null, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
         val instance = LoxInstance(this)
@@ -44,7 +44,11 @@ class LoxClass(val name: String, private val methods: MutableMap<String, LoxFunc
     override fun arity(): Int =
         findMethod("init")?.arity() ?: super.arity()
 
-    fun findMethod(name: String): LoxFunction? = methods[name]
+    fun findMethod(name: String): LoxFunction? = when {
+        methods.containsKey(name) -> methods[name]
+        superClass != null -> superClass.findMethod(name)
+        else -> null
+    }
 
     override fun toString(): String = name
 }

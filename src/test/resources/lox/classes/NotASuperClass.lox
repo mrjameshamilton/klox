@@ -1,0 +1,2 @@
+var NotAClass = "NotAClass";
+class Foo < NotAClass {} // expect runtime error: Superclass must be a class

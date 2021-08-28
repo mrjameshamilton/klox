@@ -1,0 +1,6 @@
+class Eclair {
+    cook() {
+        super.cook();
+        print "Pipe full of creme pat"; // expect error: Can't use 'super' in a class with no superclass
+    }
+}

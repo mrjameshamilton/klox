@@ -1,0 +1,1 @@
+super.notEventInAClass(); // expect error: Can't use 'super' outside of a class

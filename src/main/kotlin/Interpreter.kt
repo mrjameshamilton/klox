@@ -246,15 +246,46 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         executeBlock(block.stmts, Environment(environment))
 
     override fun visitClassStmt(classStmt: ClassStmt) {
+        val superClass = if (classStmt.superClass != null) {
+            evaluate(classStmt.superClass)
+        } else null
+
+        if (classStmt.superClass != null && superClass !is LoxClass) {
+            throw RuntimeError(classStmt.superClass.name, "Superclass must be a class")
+        }
+
         environment.define(classStmt.name.lexeme)
+
+        if (classStmt.superClass != null) {
+            environment = Environment(environment)
+            environment.define("super", superClass)
+        }
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
             methods[it.name.lexeme] = LoxFunction(it, environment)
         }
 
-        val klass = LoxClass(classStmt.name.lexeme, methods)
+        val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)
+
+        if (superClass != null) {
+            environment = environment.enclosing!!
+        }
+
         environment.assign(classStmt.name, klass)
+    }
+
+    override fun visitSuperExpr(superExpr: SuperExpr): Any {
+        val distance = locals.getOrDefault(superExpr, 0)
+        val superClass = environment.getAt(distance, "super") as LoxClass
+
+        // Look up this in the inner environment
+        val obj = environment.getAt(distance - 1, "this") as LoxInstance
+
+        val method = superClass.findMethod(superExpr.method.lexeme)
+            ?: throw RuntimeError(superExpr.method, "Undefined property '${superExpr.method.lexeme}'")
+
+        return method.bind(obj)
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr): Any? =
@@ -272,7 +303,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)
 
-class Environment(private val enclosing: Environment? = null) {
+class Environment(val enclosing: Environment? = null) {
     private val values: MutableMap<String, Any?> = mutableMapOf()
 
     fun define(name: String, value: Any? = null) {

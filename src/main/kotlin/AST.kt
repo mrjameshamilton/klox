@@ -16,6 +16,7 @@ interface Expr {
         fun visitGetExpr(getExpr: GetExpr): R
         fun visitSetExpr(setExpr: SetExpr): R
         fun visitThisExpr(thisExpr: ThisExpr): R
+        fun visitSuperExpr(superExpr: SuperExpr): R
     }
 }
 
@@ -72,6 +73,11 @@ class SetExpr(val obj: Expr, val name: Token, val value: Expr) : Expr {
 class ThisExpr(val keyword: Token) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitThisExpr(this)
+}
+
+class SuperExpr(val keyword: Token, val method: Token) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitSuperExpr(this)
 }
 
 interface Stmt {
@@ -142,7 +148,7 @@ class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
         visitor.visitReturnStmt(this)
 }
 
-class ClassStmt(val name: Token, val methods: List<FunctionStmt>) : Stmt {
+class ClassStmt(val name: Token, val superClass: VariableExpr?, val methods: List<FunctionStmt> = emptyList()) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitClassStmt(this)
 }
@@ -240,6 +246,10 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitSuperExpr(superExpr: SuperExpr): String {
         TODO("Not yet implemented")
     }
 }

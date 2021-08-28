@@ -142,12 +142,21 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
         declare(classStmt.name)
         define(classStmt.name)
 
+        classStmt.superClass?.let { resolve(it) }
+
+        if (classStmt.superClass != null) {
+            beginScope()
+            scopes.peek().put("super", true)
+        }
+
         beginScope()
         scopes.peek()["this"] = true
 
         classStmt.methods.forEach { resolveFunction(it) }
 
         endScope()
+
+        if (classStmt.superClass != null) endScope()
     }
 
     override fun visitGetExpr(getExpr: GetExpr) {
@@ -157,6 +166,10 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     override fun visitSetExpr(setExpr: SetExpr) {
         resolve(setExpr.obj)
         resolve(setExpr.value)
+    }
+
+    override fun visitSuperExpr(superExpr: SuperExpr) {
+        resolveLocal(superExpr, superExpr.keyword)
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr) {

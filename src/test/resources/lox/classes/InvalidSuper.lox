@@ -1,0 +1,1 @@
+print super; // expect error: Expect '.' after 'super'
