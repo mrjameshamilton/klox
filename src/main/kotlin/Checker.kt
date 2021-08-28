@@ -83,7 +83,7 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        resolveFunction(functionStmt, FUNCTION)
+        resolveFunction(functionStmt)
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
@@ -96,15 +96,13 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     override fun visitClassStmt(classStmt: ClassStmt) {
         val enclosingClass = currentClassType
         currentClassType = ClassType.CLASS
-        classStmt.methods.forEach {
-            resolveFunction(it, if (it.name.lexeme == "init") INITIALIZER; else METHOD)
-        }
+        classStmt.methods.forEach { resolveFunction(it) }
         currentClassType = enclosingClass
     }
 
-    private fun resolveFunction(functionStmt: FunctionStmt, type: FunctionType) {
+    private fun resolveFunction(functionStmt: FunctionStmt) {
         val enclosingFunctionType = currentFunctionType
-        currentFunctionType = type
+        currentFunctionType = functionStmt.kind
         functionStmt.body.forEach { it.accept(this) }
         currentFunctionType = enclosingFunctionType
     }
@@ -121,6 +119,8 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == ClassType.NONE) {
             error(thisExpr.keyword, "Can't use this outside of a class")
+        } else if (currentFunctionType == FunctionType.CLASS) {
+            error(thisExpr.keyword, "Can't use this in a static method")
         }
     }
 }
@@ -134,5 +134,6 @@ enum class FunctionType {
     NONE,
     METHOD,
     FUNCTION,
-    INITIALIZER
+    INITIALIZER,
+    CLASS
 }

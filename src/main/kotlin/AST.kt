@@ -132,7 +132,7 @@ class ContinueStmt : Stmt {
         visitor.visitContinueStmt(this)
 }
 
-class FunctionStmt(val name: Token, val params: List<Token>, val body: List<Stmt>) : Stmt {
+class FunctionStmt(val name: Token, val kind: FunctionType, val params: List<Token>, val body: List<Stmt>) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)
 }

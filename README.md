@@ -4,8 +4,9 @@ A Kotlin implementation of lox, the language from [Crafting Interpreters](https:
 
 # Status
 
-Currently implements up to and includig chapter 11 (variable resolution pass).
+Currently, implements up to and including chapter 12 (classes).
 
 # Extra features
 
 * `break` and `continue` statements
+* static class methods

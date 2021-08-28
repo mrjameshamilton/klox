@@ -159,7 +159,6 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
         resolve(setExpr.value)
     }
 
-
     override fun visitThisExpr(thisExpr: ThisExpr) {
         resolveLocal(thisExpr, thisExpr.keyword)
     }

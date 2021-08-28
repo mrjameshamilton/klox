@@ -1,0 +1,11 @@
+class Math {
+    class square(n) {
+        return n * n;
+    }
+    sum(a, b) {
+        return a + b;
+    }
+}
+
+print Math.square(3); // expect: 9
+print Math().sum(1, 1); // expect: 2

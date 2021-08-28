@@ -1,4 +1,6 @@
+import FunctionType.*
 import TokenType.*
+import TokenType.CLASS
 import error as errorFun
 
 class Parser(private val tokens: List<Token>) {
@@ -15,7 +17,7 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Stmt? {
         try {
             if (match(CLASS)) return classDeclaration()
-            if (match(FUN)) return function("function")
+            if (match(FUN)) return function(FUNCTION)
             if (match(VAR)) return varDeclaration()
             return statement()
         } catch (error: ParseError) {
@@ -30,7 +32,9 @@ class Parser(private val tokens: List<Token>) {
 
         val methods = mutableListOf<FunctionStmt>()
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function("method"))
+            val isClassMethod = check(CLASS)
+            if (isClassMethod) consume(CLASS, "")
+            methods.add(function(if (isClassMethod) FunctionType.CLASS else METHOD))
         }
 
         consume(RIGHT_BRACE, "Expected '}' after class body")
@@ -38,7 +42,7 @@ class Parser(private val tokens: List<Token>) {
         return ClassStmt(name, methods)
     }
 
-    private fun function(kind: String): FunctionStmt {
+    private fun function(kind: FunctionType): FunctionStmt {
         val name = consume(IDENTIFIER, "Expected $kind name")
         consume(LEFT_PAREN, "Expected '(' after $kind name")
         val parameters = mutableListOf<Token>()
@@ -52,7 +56,7 @@ class Parser(private val tokens: List<Token>) {
         }
         consume(RIGHT_PAREN, "Expected ')' after parameters")
         consume(LEFT_BRACE, "Expected '{' before $kind body")
-        return FunctionStmt(name, parameters, body = block())
+        return FunctionStmt(name, if (kind == METHOD && name.lexeme == "init") INITIALIZER else kind, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {

@@ -1,11 +1,11 @@
+import FunctionType.*
+
 interface LoxCallable {
     fun arity(): Int = 0
     fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
 }
 
 open class LoxFunction(private val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
-
-    private val isInitializer = declaration.name.lexeme == "init"
 
     override fun arity(): Int = declaration.params.size
 
@@ -20,7 +20,7 @@ open class LoxFunction(private val declaration: FunctionStmt, private val closur
             return e.value
         }
 
-        return if (isInitializer) closure.getAt(0, "this"); else null
+        return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else null
     }
 
     fun bind(instance: LoxInstance): LoxFunction {
