@@ -17,10 +17,10 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
         try {
             interpreter.executeBlock(declaration.body, environment)
         } catch (e: Interpreter.Return) {
-            return e.value
+            return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else e.value
         }
 
-        return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else null
+        return null
     }
 
     fun bind(instance: LoxInstance): LoxFunction {
