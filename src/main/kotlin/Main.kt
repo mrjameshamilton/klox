@@ -6,7 +6,6 @@ import kotlin.system.exitProcess
 
 var hadError: Boolean = false
 var hadRuntimeError: Boolean = false
-val interpreter = Interpreter()
 
 fun main(args: Array<String>) {
     if (args.size > 1) {
@@ -22,10 +21,11 @@ fun main(args: Array<String>) {
 fun runPrompt() {
     val input = InputStreamReader(System.`in`)
     val reader = BufferedReader(input)
+    val interpreter = Interpreter()
     while (true) {
         print("> ")
         val line = reader.readLine() ?: break
-        run(line)
+        run(line, interpreter)
         hadError = false
     }
 }
@@ -36,7 +36,7 @@ fun runFile(path: String) {
     if (hadError) exitProcess(75)
 }
 
-fun run(code: String) {
+fun run(code: String, interpreter: Interpreter = Interpreter()) {
     hadError = false
     hadRuntimeError = false
 
