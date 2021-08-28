@@ -54,7 +54,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         val left = evaluate(expr.left)
 
         when (expr.operator.type) {
-            MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, BANG_EQUAL, EQUAL_EQUAL ->
+            MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL ->
                 checkNumberOperands(expr.operator, left, right)
             else -> { }
         }
