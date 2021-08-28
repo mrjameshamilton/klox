@@ -20,7 +20,7 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
             return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else e.value
         }
 
-        return null
+        return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else null
     }
 
     fun bind(instance: LoxInstance): LoxFunction {
