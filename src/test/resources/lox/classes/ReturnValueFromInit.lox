@@ -1,0 +1,5 @@
+class Foo {
+    init() {
+        return "string"; // expect error: Can't return a value from an initializer
+    }
+}

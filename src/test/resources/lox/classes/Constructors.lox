@@ -1,0 +1,7 @@
+class Foo {
+    init(bar) {
+        this.bar = bar;
+    }
+}
+
+print Foo("bar").bar; // expect: bar

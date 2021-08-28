@@ -1,0 +1,9 @@
+class Foo {
+    init() {
+        print this;
+    }
+}
+
+var foo = Foo(); // expect: Foo instance
+var result = foo.init(); // expect: Foo instance
+print result; // expect: Foo instance
