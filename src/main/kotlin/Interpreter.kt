@@ -89,7 +89,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         return when (unaryExpr.operator.type) {
             BANG -> !isTruthy(right)
             MINUS -> {
-                checkNumberOperand(unaryExpr.operator, unaryExpr.right)
+                checkNumberOperand(unaryExpr.operator, right)
                 -(right as Double)
             }
             else -> null
