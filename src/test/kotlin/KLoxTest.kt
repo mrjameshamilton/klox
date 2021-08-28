@@ -16,7 +16,7 @@ class KLoxTest : FunSpec({
                 val matches = regex.findAll(text)
                 val expectError = matches.any { it.groupValues[1] == " error" }
                 val expectRuntimeError = matches.any { it.groupValues[1] == " runtime error" }
-                val expected = matches.map { it.groupValues[3] }.joinToString(separator = "\n", postfix = "\n")
+                val expected = matches.map { it.groupValues[3] }.joinToString(separator = "\n")
                 val oldOut = System.out
                 val oldErr = System.err
                 val myOut = ByteArrayOutputStream()
@@ -29,15 +29,15 @@ class KLoxTest : FunSpec({
                 val errText = myErr.toByteArray().decodeToString()
 
                 if (!(expectError || expectRuntimeError)) {
-                    errText shouldBe ""
+                    errText.trimEnd() shouldBe ""
                 }
 
                 if (expected.isNotBlank()) {
                     if (expectError || expectRuntimeError) {
-                        errText shouldContain expected
+                        errText.trimEnd() shouldContain expected
                     } else {
                         val outText = myOut.toByteArray().decodeToString()
-                        outText shouldBe expected
+                        outText.trimEnd() shouldBe expected
                     }
                 }
 
