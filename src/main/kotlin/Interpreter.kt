@@ -111,6 +111,26 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         return callee.call(this, arguments)
     }
 
+    override fun visitGetExpr(getExpr: GetExpr): Any? {
+        val obj = evaluate(getExpr.obj)
+        if (obj !is LoxInstance) {
+            throw RuntimeError(getExpr.name, "Only instances have properties")
+        }
+
+        return obj.get(getExpr.name)
+    }
+
+    override fun visitSetExpr(setExpr: SetExpr): Any? {
+        val obj = evaluate(setExpr.obj)
+        if (obj !is LoxInstance) {
+            throw RuntimeError(setExpr.name, "Only instances have fields")
+        }
+
+        obj.set(setExpr.name, evaluate(setExpr.value))
+
+        return evaluate(setExpr.value)
+    }
+
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         val function = LoxFunction(functionStmt, environment)
         environment.define(functionStmt.name.lexeme, function)
@@ -224,6 +244,12 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitBlockStmt(block: BlockStmt) =
         executeBlock(block.stmts, Environment(environment))
 
+    override fun visitClassStmt(classStmt: ClassStmt) {
+        environment.define(classStmt.name.lexeme)
+        val klass = LoxClass(classStmt.name.lexeme)
+        environment.assign(classStmt.name, klass)
+    }
+
     private fun lookupVariable(name: Token, expr: Expr): Any? {
         val distance = locals[expr]
         return if (distance != null) environment.getAt(distance, name.lexeme); else globals.get(name)
@@ -239,7 +265,7 @@ class RuntimeError(val token: Token, override val message: String) : RuntimeExce
 class Environment(private val enclosing: Environment? = null) {
     private val values: MutableMap<String, Any?> = mutableMapOf()
 
-    fun define(name: String, value: Any?) {
+    fun define(name: String, value: Any? = null) {
         values[name] = value
     }
 

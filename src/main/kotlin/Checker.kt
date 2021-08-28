@@ -86,4 +86,17 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
         returnStmt.value?.accept(this)
     }
+
+    override fun visitClassStmt(classStmt: ClassStmt) {
+        classStmt.methods.forEach { it.accept(this) }
+    }
+
+    override fun visitGetExpr(getExpr: GetExpr) {
+        getExpr.obj.accept(this)
+    }
+
+    override fun visitSetExpr(setExpr: SetExpr) {
+        setExpr.obj.accept(this)
+        setExpr.value.accept(this)
+    }
 }

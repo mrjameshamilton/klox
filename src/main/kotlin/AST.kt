@@ -13,6 +13,8 @@ interface Expr {
         fun visitAssignExpr(assignExpr: AssignExpr): R
         fun visitLogicalExpr(logicalExpr: LogicalExpr): R
         fun visitCallExpr(callExpr: CallExpr): R
+        fun visitGetExpr(getExpr: GetExpr): R
+        fun visitSetExpr(setExpr: SetExpr): R
     }
 }
 
@@ -56,6 +58,16 @@ class CallExpr(val callee: Expr, val paren: Token, val arguments: List<Expr> = e
         visitor.visitCallExpr(this)
 }
 
+class GetExpr(val obj: Expr, val name: Token) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitGetExpr(this)
+}
+
+class SetExpr(val obj: Expr, val name: Token, val value: Expr) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitSetExpr(this)
+}
+
 interface Stmt {
     fun <R> accept(visitor: Visitor<R>): R
 
@@ -70,6 +82,7 @@ interface Stmt {
         fun visitContinueStmt(continueStmt: ContinueStmt): R
         fun visitFunctionStmt(functionStmt: FunctionStmt): R
         fun visitReturnStmt(returnStmt: ReturnStmt): R
+        fun visitClassStmt(classStmt: ClassStmt): R
     }
 }
 
@@ -121,6 +134,11 @@ class FunctionStmt(val name: Token, val params: List<Token>, val body: List<Stmt
 class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitReturnStmt(this)
+}
+
+class ClassStmt(val name: Token, val methods: List<FunctionStmt>) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitClassStmt(this)
 }
 
 class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
@@ -200,6 +218,18 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitClassStmt(classStmt: ClassStmt): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitGetExpr(getExpr: GetExpr): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitSetExpr(setExpr: SetExpr): String {
         TODO("Not yet implemented")
     }
 }

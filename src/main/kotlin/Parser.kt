@@ -14,6 +14,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun declaration(): Stmt? {
         try {
+            if (match(CLASS)) return classDeclaration()
             if (match(FUN)) return function("function")
             if (match(VAR)) return varDeclaration()
             return statement()
@@ -21,6 +22,20 @@ class Parser(private val tokens: List<Token>) {
             synchronize()
             return null
         }
+    }
+
+    private fun classDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expected class name")
+        consume(LEFT_BRACE, "Expected '{' before class body")
+
+        val methods = mutableListOf<FunctionStmt>()
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"))
+        }
+
+        consume(RIGHT_BRACE, "Expected '}' after class body")
+
+        return ClassStmt(name, methods)
     }
 
     private fun function(kind: String): FunctionStmt {
@@ -170,6 +185,8 @@ class Parser(private val tokens: List<Token>) {
 
             if (expr is VariableExpr) {
                 return AssignExpr(expr.name, value)
+            } else if (expr is GetExpr) {
+                return SetExpr(expr.obj, expr.name, value)
             }
 
             error(equals, "Invalid assignment target")
@@ -258,6 +275,8 @@ class Parser(private val tokens: List<Token>) {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr)
+            } else if (match(DOT)) {
+                expr = GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'"))
             } else {
                 break
             }

@@ -21,3 +21,26 @@ class LoxFunction(private val declaration: FunctionStmt, private val closure: En
 
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
 }
+
+class LoxClass(val name: String) : LoxCallable {
+    override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance = LoxInstance(this)
+
+    override fun toString(): String = name
+}
+
+class LoxInstance(private val klass: LoxClass, private val fields: MutableMap<String, Any?> = HashMap()) {
+
+    fun get(name: Token): Any? {
+        if (!fields.containsKey(name.lexeme)) {
+            throw RuntimeError(name, "Undefined property '${name.lexeme}'")
+        }
+
+        return fields[name.lexeme]
+    }
+
+    fun set(name: Token, value: Any?) {
+        fields[name.lexeme] = value
+    }
+
+    override fun toString(): String = "${klass.name} instance"
+}

@@ -137,4 +137,18 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
         returnStmt.value?.let { resolve(it) }
     }
+
+    override fun visitClassStmt(classStmt: ClassStmt) {
+        declare(classStmt.name)
+        define(classStmt.name)
+    }
+
+    override fun visitGetExpr(getExpr: GetExpr) {
+        resolve(getExpr.obj)
+    }
+
+    override fun visitSetExpr(setExpr: SetExpr) {
+        resolve(setExpr.obj)
+        resolve(setExpr.value)
+    }
 }
