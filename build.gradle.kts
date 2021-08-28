@@ -39,5 +39,5 @@ application {
 
 ktlint {
     enableExperimentalRules.set(true)
-    disabledRules.set(setOf("no-wildcard-imports"))
+    disabledRules.set(setOf("no-wildcard-imports", "experimental:argument-list-wrapping"))
 }
