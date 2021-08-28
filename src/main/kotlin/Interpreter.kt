@@ -246,9 +246,18 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     override fun visitClassStmt(classStmt: ClassStmt) {
         environment.define(classStmt.name.lexeme)
-        val klass = LoxClass(classStmt.name.lexeme)
+
+        val methods = mutableMapOf<String, LoxFunction>()
+        classStmt.methods.forEach {
+            methods[it.name.lexeme] = LoxFunction(it, environment)
+        }
+
+        val klass = LoxClass(classStmt.name.lexeme, methods)
         environment.assign(classStmt.name, klass)
     }
+
+    override fun visitThisExpr(thisExpr: ThisExpr): Any? =
+        lookupVariable(thisExpr.keyword, thisExpr)
 
     private fun lookupVariable(name: Token, expr: Expr): Any? {
         val distance = locals[expr]

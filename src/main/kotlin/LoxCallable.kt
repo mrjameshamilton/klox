@@ -3,7 +3,10 @@ interface LoxCallable {
     fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
 }
 
-class LoxFunction(private val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
+open class LoxFunction(private val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
+
+    private val isInitializer = declaration.name.lexeme == "init"
+
     override fun arity(): Int = declaration.params.size
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
@@ -16,26 +19,46 @@ class LoxFunction(private val declaration: FunctionStmt, private val closure: En
         } catch (e: Interpreter.Return) {
             return e.value
         }
-        return null
+
+        return if (isInitializer) closure.getAt(0, "this"); else null
+    }
+
+    fun bind(instance: LoxInstance): LoxFunction {
+        val environment = Environment(closure)
+        environment.define("this", instance)
+        return LoxFunction(declaration, environment)
     }
 
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
 }
 
-class LoxClass(val name: String) : LoxCallable {
-    override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance = LoxInstance(this)
+class LoxClass(val name: String, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
+
+    override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
+        val instance = LoxInstance(this)
+        val initializer = findMethod("init")
+        initializer?.bind(instance)?.call(interpreter, arguments)
+        return instance
+    }
+
+    override fun arity(): Int =
+        findMethod("init")?.arity() ?: super.arity()
+
+    fun findMethod(name: String): LoxFunction? = methods[name]
 
     override fun toString(): String = name
 }
 
 class LoxInstance(private val klass: LoxClass, private val fields: MutableMap<String, Any?> = HashMap()) {
 
-    fun get(name: Token): Any? {
-        if (!fields.containsKey(name.lexeme)) {
-            throw RuntimeError(name, "Undefined property '${name.lexeme}'")
-        }
+    fun get(name: Token): Any {
+        val field = fields[name.lexeme]
+        if (field != null) return field
 
-        return fields[name.lexeme]
+        val method = klass.findMethod(name.lexeme)
+        if (method != null) return method.bind(this)
+
+        throw RuntimeError(name, "Undefined property '${name.lexeme}'")
     }
 
     fun set(name: Token, value: Any?) {

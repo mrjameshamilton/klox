@@ -1,0 +1,13 @@
+class Breakfast {
+    cook() {
+        print "Eggs a-fryin'!";
+    }
+
+    serve(who) {
+        print "Enjoy your breakfast, " + who + ".";
+    }
+}
+
+var breakfast = Breakfast();
+breakfast.cook(); // expect: Eggs a-fryin'!
+breakfast.serve("James"); // expect: Enjoy your breakfast, James.

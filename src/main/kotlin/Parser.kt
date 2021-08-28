@@ -311,6 +311,8 @@ class Parser(private val tokens: List<Token>) {
             return LiteralExpr(previous().literal)
         }
 
+        if (match(THIS)) return ThisExpr(previous())
+
         if (match(IDENTIFIER)) {
             return VariableExpr(previous())
         }

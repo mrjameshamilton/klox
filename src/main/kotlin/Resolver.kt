@@ -141,6 +141,13 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     override fun visitClassStmt(classStmt: ClassStmt) {
         declare(classStmt.name)
         define(classStmt.name)
+
+        beginScope()
+        scopes.peek()["this"] = true
+
+        classStmt.methods.forEach { resolveFunction(it) }
+
+        endScope()
     }
 
     override fun visitGetExpr(getExpr: GetExpr) {
@@ -150,5 +157,10 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     override fun visitSetExpr(setExpr: SetExpr) {
         resolve(setExpr.obj)
         resolve(setExpr.value)
+    }
+
+
+    override fun visitThisExpr(thisExpr: ThisExpr) {
+        resolveLocal(thisExpr, thisExpr.keyword)
     }
 }

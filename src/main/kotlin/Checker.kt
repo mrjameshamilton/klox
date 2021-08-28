@@ -1,7 +1,10 @@
+import FunctionType.*
 import TokenType.*
 
 class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     private var inLoop = false
+    private var currentFunctionType = FunctionType.NONE
+    private var currentClassType = ClassType.NONE
 
     fun check(stmts: List<Stmt>) {
         stmts.forEach { it.accept(this) }
@@ -80,15 +83,30 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        functionStmt.body.forEach { it.accept(this) }
+        resolveFunction(functionStmt, FUNCTION)
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
-        returnStmt.value?.accept(this)
+        if (returnStmt.value != null) when (currentFunctionType) {
+            INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer")
+            else -> returnStmt.value.accept(this)
+        }
     }
 
     override fun visitClassStmt(classStmt: ClassStmt) {
-        classStmt.methods.forEach { it.accept(this) }
+        val enclosingClass = currentClassType
+        currentClassType = ClassType.CLASS
+        classStmt.methods.forEach {
+            resolveFunction(it, if (it.name.lexeme == "init") INITIALIZER; else METHOD)
+        }
+        currentClassType = enclosingClass
+    }
+
+    private fun resolveFunction(functionStmt: FunctionStmt, type: FunctionType) {
+        val enclosingFunctionType = currentFunctionType
+        currentFunctionType = type
+        functionStmt.body.forEach { it.accept(this) }
+        currentFunctionType = enclosingFunctionType
     }
 
     override fun visitGetExpr(getExpr: GetExpr) {
@@ -99,4 +117,22 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         setExpr.obj.accept(this)
         setExpr.value.accept(this)
     }
+
+    override fun visitThisExpr(thisExpr: ThisExpr) {
+        if (currentClassType == ClassType.NONE) {
+            error(thisExpr.keyword, "Can't use this outside of a class")
+        }
+    }
+}
+
+enum class ClassType {
+    NONE,
+    CLASS
+}
+
+enum class FunctionType {
+    NONE,
+    METHOD,
+    FUNCTION,
+    INITIALIZER
 }
