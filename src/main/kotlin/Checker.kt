@@ -89,7 +89,8 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
         if (returnStmt.value != null) when (currentFunctionType) {
-            INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer")
+            INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer.")
+            FunctionType.NONE -> error(returnStmt.keyword, "Can't return from top-level code.")
             else -> returnStmt.value.accept(this)
         }
     }
