@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "1.5.30"
     id("org.jlleitschuh.gradle.ktlint") version "10.1.0"
     application
+    jacoco
 }
 
 group = "eu.jameshamilton"

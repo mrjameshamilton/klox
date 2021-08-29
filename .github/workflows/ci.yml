@@ -40,7 +40,9 @@ jobs:
       - name: Build
         uses: gradle/gradle-build-action@v1.5.1
         with:
-          arguments: build --info
+          arguments: build jacocoTestReport --info
+      - name: jacoco-badge-generator
+        uses: cicirello/jacoco-badge-generator@v2.4.1
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
