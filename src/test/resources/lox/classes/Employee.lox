@@ -1,0 +1,25 @@
+class Person {
+    init(name, surname) {
+        this.name = name;
+        this.surname = surname;
+    }
+
+    fullname() {
+        return this.name + " " + this.surname + ".";
+    }
+
+    greet() {
+        print "Hello, " + this.fullname();
+    }
+}
+
+class Employee < Person {
+    greet() {
+        super.greet();
+        print "Keep up the good work!";
+    }
+}
+
+Employee("John", "Smith").greet();
+// expect: Hello, John Smith.
+// expect: Keep up the good work!
