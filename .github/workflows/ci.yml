@@ -29,8 +29,9 @@ jobs:
         with:
           repository: munificent/craftinginterpreters
           path: craftinginterpreters
-      - name: symlink craftinginterpreters tests
+      - name: Copy craftinginterpreters tests
         run: |
+          rm -rf src/test/resources/lox/book-tests
           mkdir src/test/resources/lox/book-tests
           cp -R craftinginterpreters/test src/test/resources/lox/book-tests    
       - uses: actions/setup-java@v1
