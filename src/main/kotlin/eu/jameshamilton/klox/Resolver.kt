@@ -156,7 +156,7 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
 
         if (classStmt.superClass != null) {
             beginScope()
-            scopes.peek().put("super", true)
+            scopes.peek()["super"] = true
         }
 
         beginScope()
