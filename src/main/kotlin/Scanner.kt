@@ -1,5 +1,4 @@
 import TokenType.*
-import org.apache.logging.log4j.ThreadContext.peek
 
 class Scanner(private val source: String) {
 
