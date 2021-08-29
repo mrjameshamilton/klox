@@ -34,7 +34,7 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
 }
 
-class LoxClass(val name: String, val superClass: LoxClass? = null, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
+class LoxClass(val name: String, private val superClass: LoxClass? = null, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
         val instance = LoxInstance(this)
