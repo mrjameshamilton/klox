@@ -76,7 +76,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 left is Double && right is Double -> left + right
                 left is String && right is String -> "$left$right"
                 left is Double && right is String -> "${stringify(left)}$right"
-                right is Double && left is String-> "$left${stringify(right)}"
+                right is Double && left is String -> "$left${stringify(right)}"
                 else -> throw RuntimeError(expr.operator, "Operands must be two numbers or two strings.")
             }
             else -> throw RuntimeError(expr.operator, "Not implemented")

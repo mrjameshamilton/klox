@@ -61,7 +61,7 @@ fun run(code: String, interpreter: Interpreter = Interpreter()) {
 
     try {
         interpreter.interpret(stmts)
-    } catch (e : StackOverflowError) {
+    } catch (e: StackOverflowError) {
         System.err.println("Stack overflow.")
         hadRuntimeError = true
     }

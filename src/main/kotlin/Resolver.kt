@@ -22,11 +22,13 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     private fun declare(name: Token) {
         if (scopes.empty()) return
 
-        if (scopes.peek().size > 254)
+        if (scopes.peek().size > 254) {
             error(name, "Too many local variables in function.")
+        }
 
-        if (scopes.peek()[name.lexeme] != null)
+        if (scopes.peek()[name.lexeme] != null) {
             error(name, "Already a variable with this name in this scope.")
+        }
 
         scopes.peek()[name.lexeme] = false
     }

@@ -31,30 +31,31 @@ class KLoxTest : FunSpec({
     val dir = File(object {}.javaClass.getResource("lox").file)
     val regex = Regex("// (.*)")
     dir.walk().forEach { file ->
-        if (!file.path.contains("/benchmark/")
+        if (!file.path.contains("/benchmark/") &&
 
-            && !file.path.contains("/expressions/") // only for AST printing chapter
-            && !file.path.contains("/scanning/") // only for expression scanning chapter
-            && !file.path.contains("field/get_on_class.lox") // klox implements static methods
-            && !file.path.contains("super/extra_arguments.lox") // TODO: need to check stdout / stderr separately
+            !file.path.contains("/expressions/") && // only for AST printing chapter
+            !file.path.contains("/scanning/") && // only for expression scanning chapter
+            !file.path.contains("field/get_on_class.lox") && // klox implements static methods
+            !file.path.contains("super/extra_arguments.lox") && // TODO: need to check stdout / stderr separately
 
             // not relevant for klox?
-            && !file.path.contains("limit/too_many_constants.lox")
-            && !file.path.contains("limit/loop_too_large.lox")
-            && !file.path.contains("limit/no_reuse_constants.lox")
-            && !file.path.contains("limit/too_many_upvalues.lox")
+            !file.path.contains("limit/too_many_constants.lox") &&
+            !file.path.contains("limit/loop_too_large.lox") &&
+            !file.path.contains("limit/no_reuse_constants.lox") &&
+            !file.path.contains("limit/too_many_upvalues.lox") &&
 
-            && file.name.endsWith(".lox")) {
+            file.name.endsWith(".lox")
+        ) {
             test(file.path.removePrefix(dir.path + "/").substringBefore(".lox")) {
                 val text = file.readText()
                 val matches = regex.findAll(text)
                 // only include comments that have "expect" or "Error"
                 val map = matches.map { it.groupValues[1] }.filter { (it.contains("expect") || it.contains("Error at") || it.contains("Error:")) }
                 // An error is expected if "error" is in the expected string
-                val expectError = map.count { it.contains("expect error") || it.contains("Error at") || it.contains("Error:")} > 0
+                val expectError = map.count { it.contains("expect error") || it.contains("Error at") || it.contains("Error:") } > 0
                 val expectRuntimeError = map.count { it.contains("expect runtime error") } > 0
 
-                val expected = if (map.count { it.contains("Error at") || it.contains("[line ") || it.contains("] Error:")} > 0) {
+                val expected = if (map.count { it.contains("Error at") || it.contains("[line ") || it.contains("] Error:") } > 0) {
                     // Some of the official lox tests don't include the "expect" in the comment;
                     // the whole comment is the expected value.
                     // Strip the "[c...]" and "[java...]" lines from official tests
@@ -98,7 +99,6 @@ class KLoxTest : FunSpec({
             }
         }
     }
-
 })
 
 fun removeLineInfo(str: String): String {
