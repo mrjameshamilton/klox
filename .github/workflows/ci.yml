@@ -52,7 +52,7 @@ jobs:
           jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
       - name: Update coverage bade
         run: |
-          if [[ `git status --porcelain` ]]; then
+          if [[ `git status --porcelain` .github/badges ]]; then
             git config --global user.name 'James Hamilton'
             git config --global user.email 'mrjameshamilton@gmail.com'
             git add .github/badges/jacoco.svg
