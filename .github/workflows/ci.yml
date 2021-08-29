@@ -33,7 +33,8 @@ jobs:
         run: |
           rm -rf src/test/resources/lox/book-tests
           mkdir src/test/resources/lox/book-tests
-          cp -R craftinginterpreters/test src/test/resources/lox/book-tests    
+          cp -R craftinginterpreters/test src/test/resources/lox/book-tests
+          git rm craftinginterpreters
       - uses: actions/setup-java@v1
         with:
           java-version: 11
