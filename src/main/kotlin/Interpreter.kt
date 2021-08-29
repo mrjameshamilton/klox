@@ -62,7 +62,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         return when (expr.operator.type) {
             MINUS -> (left as Double) - (right as Double)
             SLASH -> {
-                if (right as Double == 0.0) throw RuntimeError(expr.operator, "Cannot divide ${stringify(left)} by zero")
+                if (right as Double == 0.0) return Double.NaN
                 return left as Double / right
             }
             STAR -> (left as Double) * (right as Double)
@@ -176,7 +176,11 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     private fun isEqual(a: Any?, b: Any?): Boolean =
-        if (a == null && b == null) true else a?.equals(b) ?: false
+        if (a == null && b == null) true
+        else when {
+            a is Double && b is Double && a.isNaN() && b.isNaN() -> false
+            else -> a?.equals(b) ?: false
+        }
 
     private fun stringify(value: Any?): String = when (value) {
         null -> "nil"
