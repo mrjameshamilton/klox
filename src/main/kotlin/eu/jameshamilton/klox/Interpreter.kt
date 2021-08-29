@@ -51,17 +51,17 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     private fun evaluate(expr: Expr): Any? = expr.accept(this)
 
-    override fun visitBinaryExpr(expr: BinaryExpr): Any {
-        val right = evaluate(expr.right)
-        val left = evaluate(expr.left)
+    override fun visitBinaryExpr(binaryExpr: BinaryExpr): Any {
+        val right = evaluate(binaryExpr.right)
+        val left = evaluate(binaryExpr.left)
 
-        when (expr.operator.type) {
+        when (binaryExpr.operator.type) {
             MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL ->
-                checkNumberOperands(expr.operator, left, right)
+                checkNumberOperands(binaryExpr.operator, left, right)
             else -> { }
         }
 
-        return when (expr.operator.type) {
+        return when (binaryExpr.operator.type) {
             MINUS -> (left as Double) - (right as Double)
             SLASH -> {
                 if (right as Double == 0.0) return Double.NaN
@@ -79,9 +79,9 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 left is String && right is String -> "$left$right"
                 left is Double && right is String -> "${stringify(left)}$right"
                 right is Double && left is String -> "$left${stringify(right)}"
-                else -> throw RuntimeError(expr.operator, "Operands must be two numbers or two strings.")
+                else -> throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
             }
-            else -> throw RuntimeError(expr.operator, "Not implemented")
+            else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }
 
@@ -193,8 +193,8 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         else -> value.toString()
     }
 
-    override fun visitExprStmt(stmt: ExprStmt) {
-        evaluate(stmt.expression)
+    override fun visitExprStmt(exprStmt: ExprStmt) {
+        evaluate(exprStmt.expression)
     }
 
     override fun visitIfStmt(ifStmt: IfStmt) {
@@ -205,8 +205,8 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         }
     }
 
-    override fun visitPrintStmt(print: PrintStmt) {
-        println(stringify(evaluate(print.expression)))
+    override fun visitPrintStmt(printStmt: PrintStmt) {
+        println(stringify(evaluate(printStmt.expression)))
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
@@ -231,10 +231,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitContinueStmt(continueStmt: ContinueStmt) =
         throw Continue()
 
-    override fun visitVarStmt(`var`: VarStmt) {
+    override fun visitVarStmt(varStmt: VarStmt) {
         environment.define(
-            `var`.token.lexeme,
-            if (`var`.initializer != null) evaluate(`var`.initializer) else null
+            varStmt.token.lexeme,
+            if (varStmt.initializer != null) evaluate(varStmt.initializer) else null
         )
     }
 

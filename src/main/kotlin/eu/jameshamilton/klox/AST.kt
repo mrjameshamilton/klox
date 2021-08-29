@@ -7,7 +7,7 @@ interface Expr {
     fun <R> accept(visitor: Visitor<R>): R
 
     interface Visitor<R> {
-        fun visitBinaryExpr(expr: BinaryExpr): R
+        fun visitBinaryExpr(binaryExpr: BinaryExpr): R
         fun visitUnaryExpr(unaryExpr: UnaryExpr): R
         fun visitGroupingExpr(groupingExpr: GroupingExpr): R
         fun visitLiteralExpr(literalExpr: LiteralExpr): R
@@ -86,9 +86,9 @@ interface Stmt {
     fun <R> accept(visitor: Visitor<R>): R
 
     interface Visitor<R> {
-        fun visitExprStmt(stmt: ExprStmt): R
-        fun visitPrintStmt(print: PrintStmt): R
-        fun visitVarStmt(`var`: VarStmt): R
+        fun visitExprStmt(exprStmt: ExprStmt): R
+        fun visitPrintStmt(printStmt: PrintStmt): R
+        fun visitVarStmt(varStmt: VarStmt): R
         fun visitBlockStmt(block: BlockStmt): R
         fun visitIfStmt(ifStmt: IfStmt): R
         fun visitWhileStmt(whileStmt: WhileStmt): R
@@ -158,8 +158,8 @@ class ClassStmt(val name: Token, val superClass: VariableExpr?, val methods: Lis
 class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     fun print(expr: Expr) = expr.accept(this)
 
-    override fun visitBinaryExpr(expr: BinaryExpr): String =
-        parenthesize(expr.operator.lexeme, expr.left, expr.right)
+    override fun visitBinaryExpr(binaryExpr: BinaryExpr): String =
+        parenthesize(binaryExpr.operator.lexeme, binaryExpr.left, binaryExpr.right)
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr): String =
         parenthesize(unaryExpr.operator.lexeme, unaryExpr.right)
@@ -183,15 +183,15 @@ class AstPrinter : Expr.Visitor<String>, Stmt.Visitor<String> {
     override fun visitVariableExpr(variableExpr: VariableExpr): String =
         "var ${variableExpr.name}"
 
-    override fun visitExprStmt(stmt: ExprStmt): String {
-        return parenthesize("exprStmt", stmt.expression)
+    override fun visitExprStmt(exprStmt: ExprStmt): String {
+        return parenthesize("exprStmt", exprStmt.expression)
     }
 
-    override fun visitPrintStmt(print: PrintStmt): String {
-        return parenthesize("print", print.expression)
+    override fun visitPrintStmt(printStmt: PrintStmt): String {
+        return parenthesize("print", printStmt.expression)
     }
 
-    override fun visitVarStmt(`var`: VarStmt): String {
+    override fun visitVarStmt(varStmt: VarStmt): String {
         TODO("Not yet implemented")
     }
 

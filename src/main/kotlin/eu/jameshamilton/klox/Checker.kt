@@ -14,16 +14,16 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         stmts.forEach { it.accept(this) }
     }
 
-    override fun visitExprStmt(stmt: ExprStmt) {
-        stmt.expression.accept(this)
+    override fun visitExprStmt(exprStmt: ExprStmt) {
+        exprStmt.expression.accept(this)
     }
 
-    override fun visitPrintStmt(print: PrintStmt) {
-        print.expression.accept(this)
+    override fun visitPrintStmt(printStmt: PrintStmt) {
+        printStmt.expression.accept(this)
     }
 
-    override fun visitVarStmt(`var`: VarStmt) {
-        `var`.initializer?.accept(this)
+    override fun visitVarStmt(varStmt: VarStmt) {
+        varStmt.initializer?.accept(this)
     }
 
     override fun visitBlockStmt(block: BlockStmt) {
@@ -55,9 +55,9 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         }
     }
 
-    override fun visitBinaryExpr(expr: BinaryExpr) {
-        expr.left.accept(this)
-        expr.right.accept(this)
+    override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
+        binaryExpr.left.accept(this)
+        binaryExpr.right.accept(this)
     }
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr) {

@@ -60,18 +60,18 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
         endScope()
     }
 
-    override fun visitExprStmt(stmt: ExprStmt) {
-        resolve(stmt.expression)
+    override fun visitExprStmt(exprStmt: ExprStmt) {
+        resolve(exprStmt.expression)
     }
 
-    override fun visitPrintStmt(print: PrintStmt) {
-        resolve(print.expression)
+    override fun visitPrintStmt(printStmt: PrintStmt) {
+        resolve(printStmt.expression)
     }
 
-    override fun visitVarStmt(`var`: VarStmt) {
-        declare(`var`.token)
-        `var`.initializer?.let { resolve(it) }
-        define(`var`.token)
+    override fun visitVarStmt(varStmt: VarStmt) {
+        declare(varStmt.token)
+        varStmt.initializer?.let { resolve(it) }
+        define(varStmt.token)
     }
 
     override fun visitBlockStmt(block: BlockStmt) {
@@ -97,9 +97,9 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     override fun visitContinueStmt(continueStmt: ContinueStmt) {
     }
 
-    override fun visitBinaryExpr(expr: BinaryExpr) {
-        resolve(expr.left)
-        resolve(expr.right)
+    override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
+        resolve(binaryExpr.left)
+        resolve(binaryExpr.right)
     }
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr) {
