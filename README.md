@@ -1,7 +1,6 @@
 # klox
 
-<img src=https://img.shields.io/github/workflow/status/mrjameshamilton/klox/CI />
-![Coverage](.github/badges/jacoco.svg)
+![Build status](https://img.shields.io/github/workflow/status/mrjameshamilton/klox/CI) ![Coverage](.github/badges/jacoco.svg)
 
 A Kotlin implementation of lox, the language from [Crafting Interpreters](https://craftinginterpreters.com/).
 
