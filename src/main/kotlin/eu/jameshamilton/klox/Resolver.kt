@@ -69,9 +69,9 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     }
 
     override fun visitVarStmt(varStmt: VarStmt) {
-        declare(varStmt.token)
+        declare(varStmt.name)
         varStmt.initializer?.let { resolve(it) }
-        define(varStmt.token)
+        define(varStmt.name)
     }
 
     override fun visitBlockStmt(block: BlockStmt) {

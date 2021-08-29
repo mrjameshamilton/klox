@@ -233,7 +233,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     override fun visitVarStmt(varStmt: VarStmt) {
         environment.define(
-            varStmt.token.lexeme,
+            varStmt.name.lexeme,
             if (varStmt.initializer != null) evaluate(varStmt.initializer) else null
         )
     }

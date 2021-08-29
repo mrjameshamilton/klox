@@ -110,7 +110,7 @@ class PrintStmt(val expression: Expr) : Stmt {
         visitor.visitPrintStmt(this)
 }
 
-class VarStmt(val token: Token, val initializer: Expr? = null) : Stmt {
+class VarStmt(val name: Token, val initializer: Expr? = null) : Stmt {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitVarStmt(this)
 }
