@@ -19,8 +19,6 @@ class Scanner(private val source: String) {
         return tokens
     }
 
-    private var isComment = false
-
     private fun scanToken() {
         when (val c = advance()) {
             '(' -> addToken(LEFT_PAREN)
