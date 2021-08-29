@@ -28,13 +28,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: munificent/craftinginterpreters
-          path: craftinginterpreters
+          path: temp-craftinginterpreters
       - name: Copy craftinginterpreters tests
         run: |
           rm -rf src/test/resources/lox/book-tests
           mkdir src/test/resources/lox/book-tests
-          cp -R craftinginterpreters/test src/test/resources/lox/book-tests
-          git rm craftinginterpreters
+          cp -R temp-craftinginterpreters/test src/test/resources/lox/book-tests
+          rm -rf temp-craftinginterpreters
       - uses: actions/setup-java@v1
         with:
           java-version: 11
