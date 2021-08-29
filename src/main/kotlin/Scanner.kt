@@ -46,7 +46,7 @@ class Scanner(private val source: String) {
             else -> {
                 if (isDigit(c)) number()
                 else if (isAlpha(c)) identifier()
-                else error(line, "Unexpected character '$c'")
+                else error(line, "Unexpected character.")
             }
         }
     }
@@ -80,7 +80,7 @@ class Scanner(private val source: String) {
         }
 
         if (isAtEnd()) {
-            error(line, "Unterminated string")
+            error(line, "Unterminated string.")
             return
         }
 

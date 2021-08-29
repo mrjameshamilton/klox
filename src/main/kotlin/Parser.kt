@@ -27,20 +27,20 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun classDeclaration(): Stmt {
-        val name = consume(IDENTIFIER, "Expected class name")
+        val name = consume(IDENTIFIER, "Expect class name.")
         val superClass = if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.")
             VariableExpr(previous())
         } else null
 
-        consume(LEFT_BRACE, "Expected '{' before class body")
+        consume(LEFT_BRACE, "Expect '{' before class body.")
 
         val methods = mutableListOf<FunctionStmt>()
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             methods.add(function(METHOD))
         }
 
-        consume(RIGHT_BRACE, "Expected '}' after class body")
+        consume(RIGHT_BRACE, "Expect '}' after class body.")
 
         return ClassStmt(name, superClass, methods)
     }
@@ -49,7 +49,7 @@ class Parser(private val tokens: List<Token>) {
         val isClassMethod = check(CLASS)
         if (isClassMethod) consume(CLASS, "")
 
-        val name = consume(IDENTIFIER, "Expected $originalKind name")
+        val name = consume(IDENTIFIER, "Expect $originalKind name.")
         val parameters = mutableListOf<Token>()
 
         var kind = when {
@@ -63,24 +63,24 @@ class Parser(private val tokens: List<Token>) {
             if (!check(RIGHT_PAREN)) {
                 do {
                     if (parameters.size >= 255) {
-                        error(peek(), "Can't have more than 255 parameters")
+                        error(peek(), "Can't have more than 255 parameters.")
                     }
-                    parameters.add(consume(IDENTIFIER, "Expected parameter name"))
+                    parameters.add(consume(IDENTIFIER, "Expect parameter name."))
                 } while (match(COMMA))
             }
-            consume(RIGHT_PAREN, "Expected ')' after parameters")
+            consume(RIGHT_PAREN, "Expect ')' after parameters.")
         } else {
             kind = GETTER
         }
 
-        consume(LEFT_BRACE, "Expected '{' before $kind body")
+        consume(LEFT_BRACE, "Expect '{' before $kind body.")
         return FunctionStmt(name, kind, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {
-        val name = consume(IDENTIFIER, "Expected variable name")
+        val name = consume(IDENTIFIER, "Expect variable name.")
         val initializer = if (match(EQUAL)) expression() else null
-        consume(SEMICOLON, "Expected ';' after variable declaration")
+        consume(SEMICOLON, "Expect ';' after variable declaration.")
         return VarStmt(name, initializer)
     }
 
@@ -102,41 +102,41 @@ class Parser(private val tokens: List<Token>) {
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             declaration()?.let { stmts.add(it) }
         }
-        consume(RIGHT_BRACE, "Expected '}' after block")
+        consume(RIGHT_BRACE, "Expect '}' after block.")
         return stmts
     }
 
     private fun expressionStmt(): ExprStmt {
         val expr = expression()
-        consume(SEMICOLON, "Expected ';' after expression")
+        consume(SEMICOLON, "Expect ';' after expression.")
         return ExprStmt(expr)
     }
 
     private fun ifStatement(): IfStmt {
-        consume(LEFT_PAREN, "Expected '(' after 'if'")
+        consume(LEFT_PAREN, "Expect '(' after 'if'.")
         val condition = expression()
-        consume(RIGHT_PAREN, "Expected ')' after 'if' condition")
+        consume(RIGHT_PAREN, "Expect ')' after 'if' condition.")
 
         return IfStmt(condition, statement(), if (match(ELSE)) statement() else null)
     }
 
     private fun printStatement(): PrintStmt {
         val expr = expression()
-        consume(SEMICOLON, "Expected ';' after value")
+        consume(SEMICOLON, "Expect ';' after value.")
         return PrintStmt(expr)
     }
 
     private fun returnStatement(): ReturnStmt {
         val keyword = previous()
         val value = if (!check(SEMICOLON)) expression(); else null
-        consume(SEMICOLON, "Expected ';' after return value")
+        consume(SEMICOLON, "Expect ';' after return value.")
         return ReturnStmt(keyword, value)
     }
 
     private fun whileStatement(): WhileStmt {
-        consume(LEFT_PAREN, "Expected '(' after 'while'")
+        consume(LEFT_PAREN, "Expect '(' after 'while'.")
         val condition = expression()
-        consume(RIGHT_PAREN, "Expected ')' after 'while' condition")
+        consume(RIGHT_PAREN, "Expect ')' after 'while' condition.")
 
         return WhileStmt(condition, body = statement())
     }
@@ -144,7 +144,7 @@ class Parser(private val tokens: List<Token>) {
     private fun forStatement(): Stmt {
         // desugar for loops to while loops
 
-        consume(LEFT_PAREN, "Expected '(' after 'for'")
+        consume(LEFT_PAREN, "Expect '(' after 'for'.")
 
         val initializer: Stmt? = if (match(SEMICOLON)) null
         else if (match(VAR)) varDeclaration()
@@ -152,11 +152,11 @@ class Parser(private val tokens: List<Token>) {
 
         val condition = if (!check(SEMICOLON)) expression(); else LiteralExpr(true)
 
-        consume(SEMICOLON, "Expected ';' after loop condition")
+        consume(SEMICOLON, "Expect ';' after loop condition.")
 
         val increment = if (!check(RIGHT_PAREN)) expression(); else null
 
-        consume(RIGHT_PAREN, "Expected ')' after for clauses")
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.")
 
         var body = statement()
 
@@ -175,13 +175,13 @@ class Parser(private val tokens: List<Token>) {
 
     private fun breakStatement(): Stmt {
         val breakStmt = BreakStmt()
-        consume(SEMICOLON, "Expected ';' after 'break'")
+        consume(SEMICOLON, "Expect ';' after 'break'.")
         return breakStmt
     }
 
     private fun continueStatement(): Stmt {
         val continueStmt = ContinueStmt()
-        consume(SEMICOLON, "Expected ';' after 'continue'")
+        consume(SEMICOLON, "Expect ';' after 'continue'.")
         return continueStmt
     }
 
@@ -211,7 +211,7 @@ class Parser(private val tokens: List<Token>) {
                 return SetExpr(expr.obj, expr.name, value)
             }
 
-            error(equals, "Invalid assignment target")
+            error(equals, "Invalid assignment target.")
         }
 
         return expr
@@ -298,7 +298,7 @@ class Parser(private val tokens: List<Token>) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr)
             } else if (match(DOT)) {
-                expr = GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'"))
+                expr = GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
             } else {
                 break
             }
@@ -313,13 +313,13 @@ class Parser(private val tokens: List<Token>) {
         if (!check(RIGHT_PAREN)) {
             do {
                 if (arguments.size >= 255) {
-                    error(peek(), "Can't have more than 255 arguments")
+                    error(peek(), "Can't have more than 255 arguments.")
                 }
                 arguments.add(expression())
             } while (match(COMMA))
         }
 
-        val paren = consume(RIGHT_PAREN, "Expected ')' after arguments")
+        val paren = consume(RIGHT_PAREN, "Expect ')' after arguments.")
 
         return CallExpr(callee, paren, arguments)
     }
@@ -335,10 +335,10 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(SUPER)) {
             val keyword = previous()
-            consume(DOT, "Expect '.' after 'super'")
+            consume(DOT, "Expect '.' after 'super'.")
             return SuperExpr(
                 keyword,
-                method = consume(IDENTIFIER, "Expect superclass method name")
+                method = consume(IDENTIFIER, "Expect superclass method name.")
             )
         }
 
@@ -350,11 +350,11 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(LEFT_PAREN)) {
             val expr = expression()
-            consume(RIGHT_PAREN, "Expected ')' after expression")
+            consume(RIGHT_PAREN, "Expect ')' after expression.")
             return GroupingExpr(expr)
         }
 
-        throw error(peek(), "Expect expression")
+        throw error(peek(), "Expect expression.")
     }
 
     private fun consume(type: TokenType, message: String): Token {

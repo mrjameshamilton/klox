@@ -1,3 +1,3 @@
 fun foo(a, b) { }
 
-foo(1, 2, 3); // expect runtime error: Expected 2 arguments but got 3 [line 3]
+foo(1, 2, 3); // expect runtime error: [line 3] Expected 2 arguments but got 3

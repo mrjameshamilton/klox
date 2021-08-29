@@ -12,7 +12,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any =
                     System.currentTimeMillis() / 1000.0
 
-                override fun toString(): String = "<native fn clock>"
+                override fun toString(): String = "<native fn>"
             }
         )
     }
@@ -102,11 +102,11 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         val arguments = callExpr.arguments.map { evaluate(it) }
 
         if (callee !is LoxCallable) {
-            throw RuntimeError(callExpr.paren, "Can only call functions and classes")
+            throw RuntimeError(callExpr.paren, "Can only call functions and classes.")
         }
 
         if (callee.arity() != arguments.size) {
-            throw RuntimeError(callExpr.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}")
+            throw RuntimeError(callExpr.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}.")
         }
 
         return callee.call(this, arguments)
@@ -118,13 +118,13 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             if (value is LoxFunction && value.declaration.kind == GETTER) value.call(this) else value
         }
         is LoxClass -> obj.findMethod(getExpr.name.lexeme)
-        else -> throw RuntimeError(getExpr.name, "Only instances have properties")
+        else -> throw RuntimeError(getExpr.name, "Only instances have properties.")
     }
 
     override fun visitSetExpr(setExpr: SetExpr): Any? {
         val obj = evaluate(setExpr.obj)
         if (obj !is LoxInstance) {
-            throw RuntimeError(setExpr.name, "Only instances have fields")
+            throw RuntimeError(setExpr.name, "Only instances have fields.")
         }
 
         obj.set(setExpr.name, evaluate(setExpr.value))
@@ -149,7 +149,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         when (logicalExpr.operator.type) {
             OR -> if (isTruthy(left)) return left
             AND -> if (!isTruthy(left)) return left
-            else -> throw RuntimeError(logicalExpr.operator, "Invalid logical operator")
+            else -> throw RuntimeError(logicalExpr.operator, "Invalid logical operator.")
         }
 
         return evaluate(logicalExpr.right)
@@ -157,7 +157,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {
         if (operand !is Double) {
-            throw RuntimeError(operator, "Operand must be a number")
+            throw RuntimeError(operator, "Operand must be a number.")
         }
     }
 
@@ -165,7 +165,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         if (left == null && right == null) return
 
         if (!(left is Double && right is Double)) {
-            throw RuntimeError(operator, "Operands must be numbers")
+            throw RuntimeError(operator, "Operands must be numbers.")
         }
     }
 
@@ -257,7 +257,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         } else null
 
         if (classStmt.superClass != null && superClass !is LoxClass) {
-            throw RuntimeError(classStmt.superClass.name, "Superclass must be a class")
+            throw RuntimeError(classStmt.superClass.name, "Superclass must be a class.")
         }
 
         environment.define(classStmt.name.lexeme)
@@ -289,7 +289,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         val obj = environment.getAt(distance - 1, "this") as LoxInstance
 
         val method = superClass.findMethod(superExpr.method.lexeme)
-            ?: throw RuntimeError(superExpr.method, "Undefined property '${superExpr.method.lexeme}'")
+            ?: throw RuntimeError(superExpr.method, "Undefined property '${superExpr.method.lexeme}'.")
 
         return method.bind(obj)
     }
@@ -320,7 +320,7 @@ class Environment(val enclosing: Environment? = null) {
         return if (values.containsKey(name.lexeme)) values[name.lexeme]
         else if (enclosing != null) enclosing.get(name)
         else {
-            throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+            throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
         }
     }
 
@@ -331,7 +331,7 @@ class Environment(val enclosing: Environment? = null) {
     fun assign(name: Token, value: Any?) {
         return if (values.containsKey(name.lexeme)) values[name.lexeme] = value
         else if (enclosing != null) enclosing.assign(name, value)
-        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'")
+        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
     }
 
     fun assignAt(distance: Int, name: Token, value: Any?) {

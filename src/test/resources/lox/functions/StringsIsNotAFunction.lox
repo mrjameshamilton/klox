@@ -1,1 +1,1 @@
-"Not a function"(); // expect runtime error: Can only call functions and classes [line 1]
+"Not a function"(); // expect runtime error: [line 1] Can only call functions and classes

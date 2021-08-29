@@ -22,6 +22,12 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     private fun declare(name: Token) {
         if (scopes.empty()) return
 
+        if (scopes.peek().size > 254)
+            error(name, "Too many local variables in function.")
+
+        if (scopes.peek()[name.lexeme] != null)
+            error(name, "Already a variable with this name in this scope.")
+
         scopes.peek()[name.lexeme] = false
     }
 
@@ -107,7 +113,7 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
             scopes.peek().containsKey(variableExpr.name.lexeme) &&
             scopes.peek()[variableExpr.name.lexeme] == false
         ) {
-            error(variableExpr.name, "Can't read local variable in its own initializer")
+            error(variableExpr.name, "Can't read local variable in its own initializer.")
         }
 
         resolveLocal(variableExpr, variableExpr.name)

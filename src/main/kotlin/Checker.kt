@@ -1,6 +1,7 @@
 import ClassType.*
 import FunctionType.*
 import TokenType.*
+import java.util.Locale
 
 class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     private var inLoop = false
@@ -42,13 +43,13 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
 
     override fun visitBreakStmt(breakStmt: BreakStmt) {
         if (!inLoop) {
-            error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops")
+            error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops.")
         }
     }
 
     override fun visitContinueStmt(continueStmt: ContinueStmt) {
         if (!inLoop) {
-            error(Token(CONTINUE, "continue", null, -1), "continue statement is only allowed in loops")
+            error(Token(CONTINUE, "continue", null, -1), "continue statement is only allowed in loops.")
         }
     }
 
@@ -131,17 +132,17 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
 
     override fun visitSuperExpr(superExpr: SuperExpr) {
         if (currentClassType == ClassType.NONE) {
-            error(superExpr.keyword, "Can't use 'super' outside of a class")
+            error(superExpr.keyword, "Can't use 'super' outside of a class.")
         } else if (currentClassType != SUBCLASS) {
-            error(superExpr.keyword, "Can't use 'super' in a class with no superclass")
+            error(superExpr.keyword, "Can't use 'super' in a class with no superclass.")
         }
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == ClassType.NONE) {
-            error(thisExpr.keyword, "Can't use this outside of a class")
+            error(thisExpr.keyword, "Can't use 'this' outside of a class.")
         } else if (currentFunctionType == FunctionType.CLASS) {
-            error(thisExpr.keyword, "Can't use this in a static method")
+            error(thisExpr.keyword, "Can't use 'this' in a static method.")
         }
     }
 }
@@ -158,5 +159,9 @@ enum class FunctionType {
     FUNCTION,
     INITIALIZER,
     CLASS,
-    GETTER
+    GETTER;
+
+    override fun toString(): String {
+        return super.toString().lowercase(Locale.getDefault())
+    }
 }

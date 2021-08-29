@@ -59,7 +59,12 @@ fun run(code: String, interpreter: Interpreter = Interpreter()) {
 
     if (hadError) return
 
-    interpreter.interpret(stmts)
+    try {
+        interpreter.interpret(stmts)
+    } catch (e : StackOverflowError) {
+        System.err.println("Stack overflow.")
+        hadRuntimeError = true
+    }
 }
 
 fun error(line: Int, message: String) {
@@ -68,18 +73,18 @@ fun error(line: Int, message: String) {
 
 fun error(token: Token, message: String) {
     if (token.type == EOF) {
-        report(token.line, " at end", message)
+        report(token.line, "at end", message)
     } else {
         report(token.line, "at '${token.lexeme}'", message)
     }
 }
 
 fun runtimeError(error: RuntimeError) {
-    System.err.println("${error.message} [line ${error.token.line}]")
+    System.err.println("[line ${error.token.line}] ${error.message}")
     hadRuntimeError = true
 }
 
 fun report(line: Int, where: String, message: String) {
-    System.err.println("[line $line] Error $where: $message")
+    System.err.println("[line $line] Error${if (where.isNotBlank()) " " else ""}$where: $message")
     hadError = true
 }
