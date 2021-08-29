@@ -69,3 +69,10 @@ tasks.named("clean") {
         File("$rootDir/lib/klox.jar").delete()
     }
 }
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        csv.required.set(true)
+    }
+}

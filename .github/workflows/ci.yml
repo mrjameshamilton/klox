@@ -43,6 +43,8 @@ jobs:
           arguments: build jacocoTestReport --info
       - name: jacoco-badge-generator
         uses: cicirello/jacoco-badge-generator@v2.4.1
+        with:
+          jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1.19
         if: always()
