@@ -7,3 +7,4 @@ A Kotlin implementation of lox, the language from [Crafting Interpreters](https:
 * `break` and `continue` statements
 * static class methods
 * property getters
+* multi-line comments (nestable)

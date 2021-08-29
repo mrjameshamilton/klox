@@ -1,0 +1,9 @@
+/*
+    comment 1
+    /*
+        comment 2
+    */
+*/
+print "hello"; // expect: hello
+
+/* /* */ */print "foo"; // expect: foo

@@ -1,4 +1,5 @@
 import TokenType.*
+import org.apache.logging.log4j.ThreadContext.peek
 
 class Scanner(private val source: String) {
 
@@ -17,6 +18,8 @@ class Scanner(private val source: String) {
         return tokens
     }
 
+    private var isComment = false
+
     private fun scanToken() {
         when (val c = advance()) {
             '(' -> addToken(LEFT_PAREN)
@@ -34,7 +37,15 @@ class Scanner(private val source: String) {
             '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
             '>' -> addToken(if (match('=')) GREATER_EQUAL else GREATER)
             '/' -> {
-                if (match('/')) {
+                if (match('*')) {
+                    var depth = 1 // Already at depth 1
+                    while (!isAtEnd()) when {
+                        match('/', '*') -> depth++
+                        match('*', '/') -> if (--depth == 0) break
+                        else -> advance()
+                    }
+                    if (depth != 0) error(line, "Unterminated multi-line comment.")
+                } else if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) advance()
                 } else {
                     addToken(SLASH)
@@ -99,6 +110,16 @@ class Scanner(private val source: String) {
 
         current++
         return true
+    }
+
+    private fun match(expected: Char, expectedNext: Char): Boolean {
+        if (isAtEnd()) return false
+        if (peek() == expected && peekNext() == expectedNext) {
+            current += 2
+            return true
+        }
+
+        return false
     }
 
     private fun addToken(type: TokenType) = addToken(type, null)
