@@ -1,4 +1,3 @@
-
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -8,16 +7,13 @@ plugins {
 }
 
 group = "eu.jameshamilton"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.apache.logging.log4j:log4j-api:2.14.1")
-    implementation("org.apache.logging.log4j:log4j-core:2.14.1")
-
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.5.21")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.1")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.1")
@@ -40,4 +36,35 @@ application {
 ktlint {
     enableExperimentalRules.set(true)
     disabledRules.set(setOf("no-wildcard-imports", "experimental:argument-list-wrapping"))
+}
+
+tasks.register<Jar>("fatJar") {
+    archiveFileName.set("klox.jar")
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes["Main-Class"] = "MainKt"
+        attributes["Implementation-Version"] = project.version
+    }
+}
+
+tasks.register<Copy>("copyJar") {
+    from(tasks.named("fatJar"))
+    into("$rootDir/lib")
+}
+
+tasks.named("build") {
+    finalizedBy(":copyJar")
+}
+
+tasks.named("clean") {
+    doFirst {
+        File("$rootDir/lib/klox.jar").delete()
+    }
 }

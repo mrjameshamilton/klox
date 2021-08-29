@@ -1,0 +1,4 @@
+#!/bin/sh
+
+java -jar lib/klox.jar $@
+
