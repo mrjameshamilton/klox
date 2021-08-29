@@ -30,7 +30,7 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("eu.jameshamilton.klox.MainKt")
 }
 
 ktlint {
@@ -49,7 +49,7 @@ tasks.register<Jar>("fatJar") {
     })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
-        attributes["Main-Class"] = "MainKt"
+        attributes["Main-Class"] = "eu.jameshamilton.klox.MainKt"
         attributes["Implementation-Version"] = project.version
     }
 }

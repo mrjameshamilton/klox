@@ -1,3 +1,5 @@
+package eu.jameshamilton.klox
+
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
@@ -28,7 +30,8 @@ import java.io.PrintStream
  * The lack of "expect *." in some official lox tests is taken into account.
  */
 class KLoxTest : FunSpec({
-    val dir = File(object {}.javaClass.getResource("lox").file)
+    val resource = object {}.javaClass.getResource("/lox")
+    val dir = File(resource.file)
     val regex = Regex("// (.*)")
     dir.walk().forEach { file ->
         if (!file.path.contains("/benchmark/") &&

@@ -1,4 +1,6 @@
-import TokenType.EOF
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.TokenType.EOF
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader

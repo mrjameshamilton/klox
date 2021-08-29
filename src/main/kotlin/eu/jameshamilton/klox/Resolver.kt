@@ -1,3 +1,5 @@
+package eu.jameshamilton.klox
+
 import java.util.Stack
 
 class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {

@@ -1,7 +1,9 @@
-import FunctionType.*
-import TokenType.*
-import TokenType.CLASS
-import error as errorFun
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.FunctionType.*
+import eu.jameshamilton.klox.TokenType.*
+import eu.jameshamilton.klox.TokenType.CLASS
+import eu.jameshamilton.klox.error as errorFun
 
 class Parser(private val tokens: List<Token>) {
     private var current = 0

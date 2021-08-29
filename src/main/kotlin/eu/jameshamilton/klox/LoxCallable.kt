@@ -1,4 +1,6 @@
-import FunctionType.*
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.FunctionType.*
 
 interface LoxCallable {
     fun arity(): Int = 0

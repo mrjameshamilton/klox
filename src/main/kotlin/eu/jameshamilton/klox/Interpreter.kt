@@ -1,7 +1,9 @@
-import FunctionType.*
-import TokenType.*
-import Expr.Visitor as ExprVisitor
-import Stmt.Visitor as StmtVisitor
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.FunctionType.*
+import eu.jameshamilton.klox.TokenType.*
+import eu.jameshamilton.klox.Expr.Visitor as ExprVisitor
+import eu.jameshamilton.klox.Stmt.Visitor as StmtVisitor
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 

@@ -1,4 +1,6 @@
-import TokenType.*
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.TokenType.*
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 // TODO re-enable, changed AST nodes to normal class, so the shouldBe doesn't work

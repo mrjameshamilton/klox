@@ -1,6 +1,8 @@
-import ClassType.*
-import FunctionType.*
-import TokenType.*
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.ClassType.*
+import eu.jameshamilton.klox.FunctionType.*
+import eu.jameshamilton.klox.TokenType.*
 import java.util.Locale
 
 class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {

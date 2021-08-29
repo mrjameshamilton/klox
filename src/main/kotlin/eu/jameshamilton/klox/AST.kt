@@ -1,5 +1,7 @@
-import TokenType.MINUS
-import TokenType.STAR
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.TokenType.MINUS
+import eu.jameshamilton.klox.TokenType.STAR
 
 interface Expr {
     fun <R> accept(visitor: Visitor<R>): R

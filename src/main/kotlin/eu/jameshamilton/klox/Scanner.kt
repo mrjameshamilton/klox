@@ -1,4 +1,6 @@
-import TokenType.*
+package eu.jameshamilton.klox
+
+import eu.jameshamilton.klox.TokenType.*
 
 class Scanner(private val source: String) {
 
