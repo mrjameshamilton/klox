@@ -3,9 +3,12 @@ fun fib(n) {
     return fib(n - 2) + fib(n - 1);
 }
 
+var start = clock();
 for (var i = 0; i < 20; i = i + 1) {
-    print(fib(i));
+    print fib(i);
 }
+var end = clock();
+//print "took:" + (end - start);
 
 // expect: 0
 // expect: 1
