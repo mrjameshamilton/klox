@@ -1,19 +1,19 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.parse
 
-import eu.jameshamilton.klox.FunctionType.*
-import eu.jameshamilton.klox.TokenType.*
-import eu.jameshamilton.klox.TokenType.CLASS
+import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.TokenType.*
+import eu.jameshamilton.klox.parse.TokenType.CLASS
 import eu.jameshamilton.klox.error as errorFun
 
 class Parser(private val tokens: List<Token>) {
     private var current = 0
 
-    fun parse(): List<Stmt> {
+    fun parse(): Program {
         val statements = mutableListOf<Stmt>()
         while (!isAtEnd()) {
             declaration()?.let { statements.add(it) }
         }
-        return statements
+        return Program(statements)
     }
 
     private fun declaration(): Stmt? {
@@ -52,7 +52,7 @@ class Parser(private val tokens: List<Token>) {
         if (isClassMethod) consume(CLASS, "")
 
         val name = consume(IDENTIFIER, "Expect $originalKind name.")
-        val parameters = mutableListOf<Token>()
+        val parameters = mutableListOf<Parameter>()
 
         var kind = when {
             isClassMethod -> FunctionType.CLASS
@@ -67,7 +67,7 @@ class Parser(private val tokens: List<Token>) {
                     if (parameters.size >= 255) {
                         error(peek(), "Can't have more than 255 parameters.")
                     }
-                    parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+                    parameters.add(Parameter(consume(IDENTIFIER, "Expect parameter name.")))
                 } while (match(COMMA))
             }
             consume(RIGHT_PAREN, "Expect ')' after parameters.")
@@ -99,7 +99,7 @@ class Parser(private val tokens: List<Token>) {
         return expressionStmt()
     }
 
-    private fun block(): List<Stmt> {
+    private fun block(): MutableList<Stmt> {
         val stmts = mutableListOf<Stmt>()
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             declaration()?.let { stmts.add(it) }

@@ -1,6 +1,7 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.parse
 
-import eu.jameshamilton.klox.TokenType.*
+import eu.jameshamilton.klox.error
+import eu.jameshamilton.klox.parse.TokenType.*
 
 class Scanner(private val source: String) {
 

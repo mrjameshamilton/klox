@@ -1,6 +1,8 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.interpret
 
-import eu.jameshamilton.klox.FunctionType.*
+import eu.jameshamilton.klox.parse.FunctionStmt
+import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.Token
 
 interface LoxCallable {
     fun arity(): Int = 0
@@ -14,7 +16,7 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         val environment = Environment(closure)
         if (declaration.params.isNotEmpty()) for (i in 0 until declaration.params.size) {
-            environment.define(declaration.params[i].lexeme, arguments[i])
+            environment.define(declaration.params[i].name.lexeme, arguments[i])
         }
         try {
             interpreter.executeBlock(declaration.body, environment)
@@ -34,7 +36,8 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
 }
 
-class LoxClass(val name: String, private val superClass: LoxClass? = null, private val methods: MutableMap<String, LoxFunction>) : LoxCallable {
+class LoxClass(val name: String, private val superClass: LoxClass? = null, private val methods: MutableMap<String, LoxFunction>) :
+    LoxCallable {
 
     override fun call(interpreter: Interpreter, arguments: List<Any?>): LoxInstance {
         val instance = LoxInstance(this)

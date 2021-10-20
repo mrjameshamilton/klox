@@ -1,17 +1,21 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.parse
 
-import eu.jameshamilton.klox.ClassType.*
-import eu.jameshamilton.klox.FunctionType.*
-import eu.jameshamilton.klox.TokenType.*
+import eu.jameshamilton.klox.error
+import eu.jameshamilton.klox.parse.ClassType.NONE
+import eu.jameshamilton.klox.parse.ClassType.SUBCLASS
+import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
+import eu.jameshamilton.klox.parse.FunctionType.SCRIPT
+import eu.jameshamilton.klox.parse.TokenType.BREAK
+import eu.jameshamilton.klox.parse.TokenType.CONTINUE
 import java.util.Locale
 
-class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
+class Checker : ASTVisitor<Unit> {
     private var inLoop = false
-    private var currentFunctionType = FunctionType.NONE
-    private var currentClassType = ClassType.NONE
+    private var currentFunctionType = SCRIPT
+    private var currentClassType = NONE
 
-    fun check(stmts: List<Stmt>) {
-        stmts.forEach { it.accept(this) }
+    override fun visitProgram(program: Program) {
+        program.stmts.forEach { it.accept(this) }
     }
 
     override fun visitExprStmt(exprStmt: ExprStmt) {
@@ -93,7 +97,7 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
         if (returnStmt.value != null) when (currentFunctionType) {
             INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer.")
-            FunctionType.NONE -> error(returnStmt.keyword, "Can't return from top-level code.")
+            SCRIPT -> error(returnStmt.keyword, "Can't return from top-level code.")
             else -> returnStmt.value.accept(this)
         }
     }
@@ -133,18 +137,18 @@ class Checker : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
     }
 
     override fun visitSuperExpr(superExpr: SuperExpr) {
-        if (currentClassType == ClassType.NONE) {
-            error(superExpr.keyword, "Can't use 'super' outside of a class.")
+        if (currentClassType == NONE) {
+            error(superExpr.name, "Can't use 'super' outside of a class.")
         } else if (currentClassType != SUBCLASS) {
-            error(superExpr.keyword, "Can't use 'super' in a class with no superclass.")
+            error(superExpr.name, "Can't use 'super' in a class with no superclass.")
         }
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr) {
-        if (currentClassType == ClassType.NONE) {
-            error(thisExpr.keyword, "Can't use 'this' outside of a class.")
+        if (currentClassType == NONE) {
+            error(thisExpr.name, "Can't use 'this' outside of a class.")
         } else if (currentFunctionType == FunctionType.CLASS) {
-            error(thisExpr.keyword, "Can't use 'this' in a static method.")
+            error(thisExpr.name, "Can't use 'this' in a static method.")
         }
     }
 }
@@ -156,12 +160,13 @@ enum class ClassType {
 }
 
 enum class FunctionType {
-    NONE,
+    SCRIPT,
     METHOD,
     FUNCTION,
     INITIALIZER,
     CLASS,
-    GETTER;
+    GETTER,
+    NATIVE;
 
     override fun toString(): String {
         return super.toString().lowercase(Locale.getDefault())

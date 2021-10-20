@@ -8,17 +8,22 @@ plugins {
 }
 
 group = "eu.jameshamilton"
-version = "1.0"
+version = "2.0"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation("com.guardsquare:proguard-core:8.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.3")
+    compileOnly("org.jetbrains:annotations:22.0.0")
+
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.5.21")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.1")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.1")
-    testImplementation("io.kotest:kotest-property-jvm:4.6.1")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.3")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.3")
+    testImplementation("io.kotest:kotest-property-jvm:4.6.3")
+    testImplementation("io.kotest:kotest-framework-datatest:4.6.3")
     testImplementation("io.mockk:mockk:1.12.0")
 }
 
@@ -26,7 +31,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 

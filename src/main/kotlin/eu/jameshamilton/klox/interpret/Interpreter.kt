@@ -1,9 +1,36 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.interpret
 
-import eu.jameshamilton.klox.FunctionType.*
-import eu.jameshamilton.klox.TokenType.*
-import eu.jameshamilton.klox.Expr.Visitor as ExprVisitor
-import eu.jameshamilton.klox.Stmt.Visitor as StmtVisitor
+import eu.jameshamilton.klox.parse.AssignExpr
+import eu.jameshamilton.klox.parse.BinaryExpr
+import eu.jameshamilton.klox.parse.BlockStmt
+import eu.jameshamilton.klox.parse.BreakStmt
+import eu.jameshamilton.klox.parse.CallExpr
+import eu.jameshamilton.klox.parse.ClassStmt
+import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.Expr
+import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionStmt
+import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.GetExpr
+import eu.jameshamilton.klox.parse.GroupingExpr
+import eu.jameshamilton.klox.parse.IfStmt
+import eu.jameshamilton.klox.parse.LiteralExpr
+import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.PrintStmt
+import eu.jameshamilton.klox.parse.ReturnStmt
+import eu.jameshamilton.klox.parse.SetExpr
+import eu.jameshamilton.klox.parse.Stmt
+import eu.jameshamilton.klox.parse.SuperExpr
+import eu.jameshamilton.klox.parse.ThisExpr
+import eu.jameshamilton.klox.parse.Token
+import eu.jameshamilton.klox.parse.TokenType.*
+import eu.jameshamilton.klox.parse.UnaryExpr
+import eu.jameshamilton.klox.parse.VarStmt
+import eu.jameshamilton.klox.parse.VariableExpr
+import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.runtimeError
+import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
+import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
@@ -234,7 +261,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     override fun visitVarStmt(varStmt: VarStmt) {
         environment.define(
             varStmt.name.lexeme,
-            if (varStmt.initializer != null) evaluate(varStmt.initializer) else null
+            if (varStmt.initializer != null) evaluate(varStmt.initializer as Expr) else null
         )
     }
 
@@ -297,7 +324,7 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr): Any? =
-        lookupVariable(thisExpr.keyword, thisExpr)
+        lookupVariable(thisExpr.name, thisExpr)
 
     private fun lookupVariable(name: Token, expr: Expr): Any? {
         val distance = locals[expr]

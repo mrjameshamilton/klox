@@ -1,11 +1,43 @@
-package eu.jameshamilton.klox
+package eu.jameshamilton.klox.interpret
 
+import eu.jameshamilton.klox.parse.ASTVisitor
+import eu.jameshamilton.klox.parse.AssignExpr
+import eu.jameshamilton.klox.parse.BinaryExpr
+import eu.jameshamilton.klox.parse.BlockStmt
+import eu.jameshamilton.klox.parse.BreakStmt
+import eu.jameshamilton.klox.parse.CallExpr
+import eu.jameshamilton.klox.parse.ClassStmt
+import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.Expr
+import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionStmt
+import eu.jameshamilton.klox.parse.GetExpr
+import eu.jameshamilton.klox.parse.GroupingExpr
+import eu.jameshamilton.klox.parse.IfStmt
+import eu.jameshamilton.klox.parse.LiteralExpr
+import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.PrintStmt
+import eu.jameshamilton.klox.parse.Program
+import eu.jameshamilton.klox.parse.ReturnStmt
+import eu.jameshamilton.klox.parse.SetExpr
+import eu.jameshamilton.klox.parse.Stmt
+import eu.jameshamilton.klox.parse.SuperExpr
+import eu.jameshamilton.klox.parse.ThisExpr
+import eu.jameshamilton.klox.parse.Token
+import eu.jameshamilton.klox.parse.UnaryExpr
+import eu.jameshamilton.klox.parse.VarStmt
+import eu.jameshamilton.klox.parse.VariableExpr
+import eu.jameshamilton.klox.parse.WhileStmt
 import java.util.Stack
 
-class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
+class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
     private val scopes = Stack<MutableMap<String, Boolean>>()
 
-    fun resolve(stmts: List<Stmt>) {
+    override fun visitProgram(program: Program) {
+        resolve(program.stmts)
+    }
+
+    private fun resolve(stmts: List<Stmt>) {
         stmts.forEach { it.accept(this) }
     }
 
@@ -25,11 +57,11 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
         if (scopes.empty()) return
 
         if (scopes.peek().size > 254) {
-            error(name, "Too many local variables in function.")
+            eu.jameshamilton.klox.error(name, "Too many local variables in function.")
         }
 
         if (scopes.peek()[name.lexeme] != null) {
-            error(name, "Already a variable with this name in this scope.")
+            eu.jameshamilton.klox.error(name, "Already a variable with this name in this scope.")
         }
 
         scopes.peek()[name.lexeme] = false
@@ -53,8 +85,8 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     private fun resolveFunction(functionStmt: FunctionStmt) {
         beginScope()
         functionStmt.params.forEach {
-            declare(it)
-            define(it)
+            declare(it.name)
+            define(it.name)
         }
         resolve(functionStmt.body)
         endScope()
@@ -117,7 +149,7 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
             scopes.peek().containsKey(variableExpr.name.lexeme) &&
             scopes.peek()[variableExpr.name.lexeme] == false
         ) {
-            error(variableExpr.name, "Can't read local variable in its own initializer.")
+            eu.jameshamilton.klox.error(variableExpr.name, "Can't read local variable in its own initializer.")
         }
 
         resolveLocal(variableExpr, variableExpr.name)
@@ -179,10 +211,10 @@ class Resolver(private val interpreter: Interpreter) : Stmt.Visitor<Unit>, Expr.
     }
 
     override fun visitSuperExpr(superExpr: SuperExpr) {
-        resolveLocal(superExpr, superExpr.keyword)
+        resolveLocal(superExpr, superExpr.name)
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr) {
-        resolveLocal(thisExpr, thisExpr.keyword)
+        resolveLocal(thisExpr, thisExpr.name)
     }
 }
