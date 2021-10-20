@@ -11,3 +11,4 @@ class Breakfast {
 var breakfast = Breakfast();
 breakfast.cook(); // expect: Eggs a-fryin'!
 breakfast.serve("James"); // expect: Enjoy your breakfast, James.
+breakfast.serve("Dave"); // expect: Enjoy your breakfast, Dave.
