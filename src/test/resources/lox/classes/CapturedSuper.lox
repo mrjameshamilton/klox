@@ -1,0 +1,20 @@
+class Foo {
+    bar() {
+        print "Foo";
+    }
+}
+
+class Bar < Foo {
+    bar() {
+        fun x() {
+            fun foobar() {
+                super.bar();
+            }
+            return foobar;
+        }
+        super.bar(); // expect: Foo
+        return x();
+    }
+}
+
+Bar().bar()(); // expect: Foo
