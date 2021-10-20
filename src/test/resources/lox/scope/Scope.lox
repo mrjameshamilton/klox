@@ -7,7 +7,12 @@ var a = "global";
     showA();
     var a = "block";
     showA();
+    fun showA2() {
+        print a;
+    }
+    showA2();
 }
 
 // expect: global
 // expect: global
+// expect: block
