@@ -1,0 +1,14 @@
+class Foo {
+    bar() {
+        fun x() {
+            fun foobar() {
+                print this;
+            }
+            return foobar;
+        }
+        print this; // expect: Foo instance
+        return x();
+    }
+}
+
+Foo().bar()(); // expect: Foo instance
