@@ -1,0 +1,12 @@
+fun foo(a, b) {
+    fun innerfoo() {
+        print a; // expect: foo
+    }
+    {
+        var a = b;
+        innerfoo();
+        print a; // expect: bar
+    }
+}
+
+foo("foo", "bar");
