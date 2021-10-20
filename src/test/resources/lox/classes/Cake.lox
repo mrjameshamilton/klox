@@ -1,3 +1,5 @@
+var adjective = "horrible";
+
 class Cake {
     taste() {
         var adjective = "delicious";
@@ -8,3 +10,10 @@ class Cake {
 var cake = Cake();
 cake.flavour = "Belgian chocolate";
 cake.taste(); // expect: The Belgian chocolate cake is delicious!
+
+cake.flavour = "lemon";
+cake.taste(); // expect: The lemon cake is delicious!
+
+var cake2 = Cake();
+cake2.flavour = "caramel";
+cake2.taste(); // expect: The caramel cake is delicious!
