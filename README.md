@@ -152,3 +152,8 @@ fun foo() {
     print "bar";
 }
 ```
+
+### Built-in functions
+
+* `clock` returns the current time in milliseconds.
+* `strlen(string)` returns the length of `string`.

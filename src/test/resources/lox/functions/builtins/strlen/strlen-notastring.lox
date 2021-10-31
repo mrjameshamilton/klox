@@ -1,0 +1,1 @@
+print strlen(1); // expect runtime error: strlen 'string' parameter should be a string.

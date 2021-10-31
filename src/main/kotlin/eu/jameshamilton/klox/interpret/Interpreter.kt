@@ -44,6 +44,20 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 override fun toString(): String = "<native fn>"
             }
         )
+        define(
+            "strlen",
+            object : LoxCallable {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    if (arguments.first() is String) {
+                        return (arguments.first() as String).length.toDouble()
+                    } else {
+                        throw RuntimeError(Token(FUN, "strlen"), "strlen 'string' parameter should be a string.")
+                    }
+                }
+
+                override fun arity(): Int = 1
+            }
+        )
     }
 
     private val locals = mutableMapOf<Expr, Int>()

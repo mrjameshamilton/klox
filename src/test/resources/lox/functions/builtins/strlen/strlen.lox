@@ -1,0 +1,2 @@
+print strlen("foo"); // expect: 3
+print strlen("hello"); // expect: 5

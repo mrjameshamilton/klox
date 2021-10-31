@@ -1277,6 +1277,14 @@ class Compiler : Program.Visitor<ClassPool> {
             box("java/lang/Double")
             areturn()
         },
+        NativeFunctionStmt(Token(IDENTIFIER, "strlen"), listOf(Parameter(Token(IDENTIFIER, "str")))) {
+            aload_1()
+            checktype("java/lang/String", "strlen 'string' parameter should be a string.")
+            invokevirtual("java/lang/String", "length", "()I")
+            i2d()
+            box("java/lang/Double")
+            areturn()
+        },
     )
 
     private class NativeFunctionStmt(override val name: Token, override val params: List<Parameter>, val code: Composer.() -> Composer) :
