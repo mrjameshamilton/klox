@@ -213,6 +213,52 @@ fun Composer.throw_(type: String, message: Composer.() -> Composer): Composer {
 // Custom Klox instructions
 
 /**
+ * Checks the type of the object at the top of the stack and throws an exception,
+ * with the specified message, if it doesn't match.
+ *
+ * Takes into account that klox represents all numbers as java/lang/Double;
+ * checking for java/lang/Integer will check that the double is an actual integer.
+ */
+fun Composer.checktype(expectedType: String, errorMessage: String): Composer =
+    checktype(expectedType) { ldc(errorMessage) }
+
+/**
+ * Checks the type of the object at the top of the stack and throws an exception,
+ * with the specified message built by the composer, if it doesn't match.
+ *
+ * Takes into account that klox represents all numbers as java/lang/Double;
+ * checking for java/lang/Integer will check that the double is an actual integer.
+ */
+fun Composer.checktype(expectedType: String, errorMessageComposer: Composer.() -> Composer): Composer {
+    val (notInstance, end) = labels(2)
+    dup()
+    if (expectedType == "java/lang/Integer") {
+        // All numbers are represented as Double,
+        // so check that the number is an integer.
+        instanceof_("java/lang/Double")
+        ifeq(notInstance)
+        dup()
+        unbox("java/lang/Double")
+        dconst_1()
+        drem()
+        dconst_0()
+        dcmpg()
+        ifeq(end)
+    } else {
+        instanceof_(expectedType)
+        ifne(end)
+    }
+
+    label(notInstance)
+    pop()
+    throw_("java/lang/RuntimeException", errorMessageComposer)
+
+    label(end)
+    checkcast(if (expectedType == "java/lang/Integer") "java/lang/Double" else expectedType)
+    return this
+}
+
+/**
  * Klox truthiness instruction.
  */
 fun Composer.iftruthy(label: Composer.Label): Composer {
