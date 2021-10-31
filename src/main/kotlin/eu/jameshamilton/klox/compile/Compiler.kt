@@ -29,6 +29,7 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.Parameter
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
 import eu.jameshamilton.klox.parse.ReturnStmt
@@ -44,6 +45,7 @@ import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.FUN
 import eu.jameshamilton.klox.parse.TokenType.GREATER
 import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import eu.jameshamilton.klox.parse.TokenType.LESS
 import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.MINUS
@@ -1267,6 +1269,23 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
                 .programClass
         )
+    }
+
+    private val builtIns = listOf(
+        NativeFunctionStmt(Token(IDENTIFIER, "clock"), emptyList()) {
+            invokestatic("java/lang/System", "currentTimeMillis", "()J")
+            l2d()
+            pushDouble(1000.0)
+            ddiv()
+            box("java/lang/Double")
+            areturn()
+        },
+    )
+
+    private class NativeFunctionStmt(override val name: Token, override val params: List<Parameter>, val code: Composer.() -> Composer) :
+        FunctionStmt(name, NATIVE, params, emptyList()) {
+
+        override fun toString(): String = "<native fn>"
     }
 
     companion object {
