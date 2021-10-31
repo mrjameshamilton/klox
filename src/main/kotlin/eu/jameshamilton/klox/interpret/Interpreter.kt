@@ -48,14 +48,38 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             "strlen",
             object : LoxCallable {
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    if (arguments.first() is String) {
-                        return (arguments.first() as String).length.toDouble()
-                    } else {
-                        throw RuntimeError(Token(FUN, "strlen"), "strlen 'string' parameter should be a string.")
-                    }
+                    return stringify(arguments.first()).length.toDouble()
                 }
 
                 override fun arity(): Int = 1
+            }
+        )
+        define(
+            "substr",
+            object : LoxCallable {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+                    val (str, start, end) = arguments
+
+                    if (str !is String) {
+                        throw RuntimeError(Token(FUN, "substr"), "substr 'string' parameter should be a string.")
+                    }
+
+                    if ((start !is Double) || start.mod(1.0) != 0.0) {
+                        throw RuntimeError(Token(FUN, "substr"), "substr 'start' parameter should be an integer.")
+                    }
+
+                    if ((end !is Double) || end.mod(1.0) != 0.0) {
+                        throw RuntimeError(Token(FUN, "substr"), "substr 'end' parameter should be an integer.")
+                    }
+
+                    try {
+                        return str.substring(start.toInt(), end.toInt())
+                    } catch (e: StringIndexOutOfBoundsException) {
+                        throw RuntimeError(Token(FUN, "substr"), "String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}.")
+                    }
+                }
+
+                override fun arity(): Int = 3
             }
         )
     }

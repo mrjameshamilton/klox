@@ -1,0 +1,2 @@
+var str = "foo";
+print substr(str, "0", 1);   // expect runtime error: substr 'start' parameter should be an integer.

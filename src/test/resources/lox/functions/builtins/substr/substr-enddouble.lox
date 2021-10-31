@@ -1,0 +1,2 @@
+var str = "foo";
+print substr(str, 0, 1.5);   // expect runtime error: substr 'end' parameter should be an integer.

@@ -1,0 +1,11 @@
+var str = "hello";
+var length = strlen(str);
+for (var i = 0; i < length; i = i + 1) {
+    print substr(str, i, i + 1);
+}
+
+// expect: h
+// expect: e
+// expect: l
+// expect: l
+// expect: o

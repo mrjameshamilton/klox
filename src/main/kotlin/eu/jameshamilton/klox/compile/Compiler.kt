@@ -1279,12 +1279,41 @@ class Compiler : Program.Visitor<ClassPool> {
         },
         NativeFunctionStmt(Token(IDENTIFIER, "strlen"), listOf(Parameter(Token(IDENTIFIER, "str")))) {
             aload_1()
-            checktype("java/lang/String", "strlen 'string' parameter should be a string.")
+            stringify()
+            checkcast("java/lang/String")
             invokevirtual("java/lang/String", "length", "()I")
             i2d()
             box("java/lang/Double")
             areturn()
         },
+        NativeFunctionStmt(Token(IDENTIFIER, "substr"), listOf(Parameter(Token(IDENTIFIER, "str")), Parameter(Token(IDENTIFIER, "start")), Parameter(Token(IDENTIFIER, "end")))) {
+            aload_1()
+            checktype("java/lang/String", "substr 'string' parameter should be a string.")
+            aload_2()
+            checktype("java/lang/Integer", "substr 'start' parameter should be an integer.")
+            unbox("java/lang/Integer")
+            aload_3()
+            checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
+            unbox("java/lang/Integer")
+            val (start, end) = try_ {
+                invokevirtual("java/lang/String", "substring", "(II)Ljava/lang/String;")
+            }
+            catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
+                pop()
+                throw_("java/lang/RuntimeException") {
+                    concat(
+                        { ldc("String index out of bounds for '") },
+                        { aload_1() },
+                        { ldc("': begin ") },
+                        { aload_2().stringify() },
+                        { ldc(", end ") },
+                        { aload_3().stringify() },
+                        { ldc(".") }
+                    )
+                }
+            }
+            areturn()
+        }
     )
 
     private class NativeFunctionStmt(override val name: Token, override val params: List<Parameter>, val code: Composer.() -> Composer) :

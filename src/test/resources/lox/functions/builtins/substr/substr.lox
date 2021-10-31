@@ -1,0 +1,4 @@
+var str = "foo";
+print substr(str, 0, 1);           // expect: f
+print substr(str, 0, strlen(str)); // expect: foo
+print substr(str, 1, 2);           // expect: o

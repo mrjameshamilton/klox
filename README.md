@@ -157,3 +157,4 @@ fun foo() {
 
 * `clock` returns the current time in milliseconds.
 * `strlen(string)` returns the length of `string`.
+* `substr(string, start, end)` returns the substring of `string` between `start` (inclusive) and `end` (exclusive).
