@@ -171,18 +171,16 @@ class Compiler : Program.Visitor<ClassPool> {
             val (clazz, method) = create(functionStmt)
             composer = Composer(clazz)
             with(composer) {
+                beginCodeFragment(65_535)
+                if (functionStmt.params.isNotEmpty()) {
+                    aload_1()
+                    unpackarray(functionStmt.params.size) { i ->
+                        declare(functionStmt, functionStmt.params[i])
+                    }
+                }
                 if (functionStmt is NativeFunctionStmt) {
                     functionStmt.code(this)
                 } else {
-                    beginCodeFragment(65_535)
-
-                    if (functionStmt.params.isNotEmpty()) {
-                        aload_1()
-                        unpackarray(functionStmt.params.size) { i ->
-                            declare(functionStmt, functionStmt.params[i])
-                        }
-                    }
-
                     for (captured in functionStmt.captured) {
                         aload_0()
                         ldc(captured.javaName)
@@ -202,9 +200,8 @@ class Compiler : Program.Visitor<ClassPool> {
                         aconst_null()
                         areturn()
                     }
-
-                    endCodeFragment()
                 }
+                endCodeFragment()
 
                 try {
                     addCodeAttribute(clazz, method)
