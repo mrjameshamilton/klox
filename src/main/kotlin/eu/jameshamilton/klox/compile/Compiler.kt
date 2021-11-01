@@ -24,6 +24,7 @@ import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.FunctionType.CLASS
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
@@ -38,21 +39,7 @@ import eu.jameshamilton.klox.parse.Stmt
 import eu.jameshamilton.klox.parse.SuperExpr
 import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
-import eu.jameshamilton.klox.parse.TokenType.AND
-import eu.jameshamilton.klox.parse.TokenType.BANG
-import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.FUN
-import eu.jameshamilton.klox.parse.TokenType.GREATER
-import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
-import eu.jameshamilton.klox.parse.TokenType.LESS
-import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.MINUS
-import eu.jameshamilton.klox.parse.TokenType.OR
-import eu.jameshamilton.klox.parse.TokenType.PLUS
-import eu.jameshamilton.klox.parse.TokenType.SLASH
-import eu.jameshamilton.klox.parse.TokenType.STAR
+import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
@@ -415,6 +402,42 @@ class Compiler : Program.Visitor<ClassPool> {
                     ixor()
                 }
                 EQUAL_EQUAL -> equalequal()
+                IS -> {
+                    binaryExpr.left.accept(this@FunctionCompiler)
+                    binaryExpr.right.accept(this@FunctionCompiler)
+                    composer.helper("Main", "is", stackInputSize = 2, stackResultSize = 1) {
+                        val (isInstance, notInstance, loopStart) = labels(4)
+                        aload_0()
+                        instanceof_(KLOX_INSTANCE)
+                        ifeq(notInstance)
+
+                        aload_0()
+                        checkcast(KLOX_INSTANCE)
+                        invokevirtual(KLOX_INSTANCE, "getKlass", "()L$KLOX_CLASS;")
+                        astore_0()
+
+                        label(loopStart)
+                        aload_0()
+                        ifnull(notInstance)
+
+                        aload_0()
+                        aload_1()
+                        ifacmpeq(isInstance)
+
+                        aload_0()
+                        invokeinterface(KLOX_CLASS, "getSuperClass", "()L$KLOX_CLASS;")
+                        astore_0()
+                        goto_(loopStart)
+
+                        label(isInstance)
+                        TRUE()
+                        areturn()
+
+                        label(notInstance)
+                        FALSE()
+                        areturn()
+                    }
+                }
                 else -> {}
             }
         }

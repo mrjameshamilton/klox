@@ -150,7 +150,8 @@ class Scanner(private val source: String) {
             "var" to VAR,
             "while" to WHILE,
             "break" to BREAK,
-            "continue" to CONTINUE
+            "continue" to CONTINUE,
+            "is" to IS
         )
     }
 }

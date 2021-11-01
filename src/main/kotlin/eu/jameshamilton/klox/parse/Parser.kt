@@ -254,8 +254,18 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun comparison(): Expr {
-        var expr = term()
+        var expr = instance()
         while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+            val op = previous()
+            val right = instance()
+            expr = BinaryExpr(expr, op, right)
+        }
+        return expr
+    }
+
+    private fun instance(): Expr {
+        var expr = term()
+        while (match(IS)) {
             val op = previous()
             val right = term()
             expr = BinaryExpr(expr, op, right)

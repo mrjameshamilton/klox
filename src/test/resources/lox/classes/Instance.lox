@@ -1,0 +1,25 @@
+class SuperSuper { }
+class Super < SuperSuper { }
+class Foo < Super { }
+class Bar < Super { }
+
+var foo = Foo();
+
+print foo is Foo; // expect: true
+print foo is Super; // expect: true
+print foo is SuperSuper; // expect: true
+print !(foo is Foo); // expect: false
+print foo is nil; // expect: false
+
+var supr = Super();
+
+print supr is Foo; // expect: false
+print supr is Super; // expect: true
+print supr is SuperSuper; // expect: true
+print supr is 1; // expect: false
+
+var bar = Bar();
+
+print bar is Bar; // expect: true
+print bar is Foo; // expect: false
+print bar is Super; // expect: true

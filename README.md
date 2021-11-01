@@ -153,6 +153,20 @@ fun foo() {
 }
 ```
 
+* `is` instance check
+
+```c
+class Super { }
+class Foo < Super { }
+class Bar { }
+
+var foo = Foo();
+
+print foo is Foo; // true
+print foo is Super; // true
+print foo is Bar; // false
+```
+
 ### Built-in functions
 
 * `clock` returns the current time in milliseconds.

@@ -146,6 +146,18 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 right is Double && left is String -> "$left${stringify(right)}"
                 else -> throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
             }
+            IS -> return when {
+                left !is LoxInstance -> false
+                right !is LoxClass -> false
+                else -> {
+                    var klass = left.klass as LoxClass?
+                    while (klass != null) {
+                        if (klass == right) return true
+                        else klass = klass.superClass
+                    }
+                    return false
+                }
+            }
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }
