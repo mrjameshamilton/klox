@@ -167,8 +167,28 @@ print foo is Super; // true
 print foo is Bar; // false
 ```
 
-### Built-in functions
+## Built-in classes
 
-* `clock` returns the current time in milliseconds.
-* `strlen(string)` returns the length of `string`.
-* `substr(string, start, end)` returns the substring of `string` between `start` (inclusive) and `end` (exclusive).
+* `Error(message)` a class representing an error state. It can be combined with the `is` instance check to check
+if a function had an error e.g.
+
+```c
+fun foo(a, b) {
+    if (b == 0) return Error("Cannot divide by zero");
+    else return a / b;
+}
+
+var result = foo(1, 0);
+
+if (result is Error)
+   print result.message;
+else
+   print result;
+```
+
+## Built-in functions
+
+* `clock: number` returns the current time in milliseconds.
+* `strlen(string): number` returns the length of `string`.
+* `substr(string, start, end): string | Error`
+returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
