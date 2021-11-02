@@ -41,11 +41,9 @@ import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.UnaryExpr
-import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
-import eu.jameshamilton.klox.parse.errorClass
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.ABSTRACT
 import proguard.classfile.AccessConstants.FINAL
@@ -71,13 +69,15 @@ import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
 class Compiler : Program.Visitor<ClassPool> {
 
+    private lateinit var mainFunction: FunctionStmt
+
     fun compile(program: Program): ClassPool {
         initialize(programClassPool)
         return program.accept(this)
     }
 
     override fun visitProgram(program: Program): ClassPool {
-        val mainFunction = FunctionStmt(
+        mainFunction = FunctionStmt(
             Token(FUN, "Main"),
             SCRIPT,
             params = emptyList(),
@@ -1303,6 +1303,7 @@ class Compiler : Program.Visitor<ClassPool> {
      * Leaves an instance on the stack.
      */
     private fun Composer.error(func: FunctionStmt, messageComposer: Composer.() -> Composer): Composer {
+        val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" }
         messageComposer(this)
         aload(func.slot(errorClass)).unbox(errorClass)
         checkcast(KLOX_CALLABLE)
@@ -1333,7 +1334,7 @@ class Compiler : Program.Visitor<ClassPool> {
         NativeFunctionStmt(
             Token(IDENTIFIER, "substr"),
             params = listOf(Parameter("str"), Parameter("start"), Parameter("end")),
-            capture = listOf(errorClass),
+            capture = listOf("Error"),
         ) { func ->
             aload_1()
             stringify()
@@ -1373,11 +1374,11 @@ class Compiler : Program.Visitor<ClassPool> {
     private class NativeFunctionStmt(
         override val name: Token,
         override val params: List<Parameter> = emptyList(),
-        val capture: List<VarDef> = emptyList(),
+        val capture: List<String> = emptyList(),
         val code: Composer.(FunctionStmt) -> Composer
-    ) : FunctionStmt(name, NATIVE, params, capture.map { ExprStmt(VariableExpr(it.name)) }) {
+    ) : FunctionStmt(name, NATIVE, params, capture.map { ExprStmt(VariableExpr(Token(IDENTIFIER, it))) }) {
 
-        constructor(name: String, params: List<Parameter> = emptyList(), capture: List<VarDef> = emptyList(), code: Composer.(FunctionStmt) -> Composer) :
+        constructor(name: String, params: List<Parameter> = emptyList(), capture: List<String> = emptyList(), code: Composer.(FunctionStmt) -> Composer) :
             this(
                 Token(IDENTIFIER, name),
                 params,
