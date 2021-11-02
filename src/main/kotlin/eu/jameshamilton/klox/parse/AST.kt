@@ -252,7 +252,7 @@ class ContinueStmt : Stmt {
     }
 }
 
-open class FunctionStmt(override val name: Token, val kind: FunctionType, open val params: List<Parameter>, val body: List<Stmt>) :
+open class FunctionStmt(override val name: Token, open val kind: FunctionType, open val params: List<Parameter>, val body: List<Stmt>) :
     Stmt,
     VarDef {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =

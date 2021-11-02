@@ -41,6 +41,7 @@ import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.UnaryExpr
+import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
@@ -175,7 +176,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
 
                 if (functionStmt is NativeFunctionStmt) {
-                    functionStmt.code(this)
+                    functionStmt.code(this, functionStmt)
                 } else {
                     functionStmt.body.forEach {
                         it.accept(this@FunctionCompiler)
@@ -1341,8 +1342,20 @@ class Compiler : Program.Visitor<ClassPool> {
         }
     )
 
-    private class NativeFunctionStmt(override val name: Token, override val params: List<Parameter>, val code: Composer.() -> Composer) :
-        FunctionStmt(name, NATIVE, params, emptyList()) {
+    private class NativeFunctionStmt(
+        override val name: Token,
+        override val params: List<Parameter> = emptyList(),
+        val capture: List<VarDef> = emptyList(),
+        val code: Composer.(FunctionStmt) -> Composer
+    ) : FunctionStmt(name, NATIVE, params, capture.map { ExprStmt(VariableExpr(it.name)) }) {
+
+        constructor(name: String, params: List<Parameter> = emptyList(), capture: List<VarDef> = emptyList(), code: Composer.(FunctionStmt) -> Composer) :
+            this(
+                Token(IDENTIFIER, name),
+                params,
+                capture,
+                code
+            )
 
         override fun toString(): String = "<native fn>"
     }
