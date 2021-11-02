@@ -1294,8 +1294,64 @@ class Compiler : Program.Visitor<ClassPool> {
         )
     }
 
-    private val builtIns = listOf(
-        NativeFunctionStmt(Token(IDENTIFIER, "clock"), emptyList()) {
+    /**
+     * KLox `Error` class which indicates an error occurred.
+     *
+     * Can be used with `is` for error checking e.g.
+     *
+     * fun foo(a, b) {
+     *     if (b == 0) return Error("Cannot divide by zero");
+     *     else return a / b;
+     * }
+     *
+     * var result = foo(1, 0);
+     *
+     * if (result is Error)
+     *    print result.message;
+     * else
+     *    print result;
+     */
+    private val errorClass =
+        ClassStmt(
+            Token(IDENTIFIER, "Error"), null,
+            listOf(
+                FunctionStmt(
+                    Token(IDENTIFIER, "init"),
+                    kind = INITIALIZER,
+                    params = listOf(Parameter(Token(IDENTIFIER, "message"))),
+                    body = listOf(
+                        ExprStmt(
+                            SetExpr(
+                                ThisExpr(Token(IDENTIFIER, "this")),
+                                Token(IDENTIFIER, "message"),
+                                VariableExpr(Token(IDENTIFIER, "message"))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+    /**
+     * Creates a Error instance with the specified message.
+     *
+     * Requires that the function has captured `Error`.
+     *
+     * Leaves an instance on the stack.
+     */
+    private fun Composer.error(func: FunctionStmt, messageComposer: Composer.() -> Composer): Composer {
+        messageComposer(this)
+        aload(func.slot(errorClass)).unbox(errorClass)
+        checkcast(KLOX_CALLABLE)
+        swap()
+        packarray(1)
+        invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+        return this
+    }
+
+    private val builtIns = listOf<Stmt>(
+        errorClass,
+        NativeFunctionStmt("clock") {
             invokestatic("java/lang/System", "currentTimeMillis", "()J")
             l2d()
             pushDouble(1000.0)
