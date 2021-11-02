@@ -13,7 +13,7 @@ class Parser(private val tokens: List<Token>) {
         while (!isAtEnd()) {
             declaration()?.let { statements.add(it) }
         }
-        return Program(listOf(errorClass) + statements)
+        return Program(statements)
     }
 
     private fun declaration(): Stmt? {

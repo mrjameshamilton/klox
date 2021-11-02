@@ -1,0 +1,22 @@
+/**
+ * KLox `Error` class which indicates an error occurred.
+ *
+ * Can be used with `is` for error checking e.g.
+ *
+ * fun foo(a, b) {
+ *     if (b == 0) return Error("Cannot divide by zero");
+ *     else return a / b;
+ * }
+ *
+ * var result = foo(1, 0);
+ *
+ * if (result is Error)
+ *    print result.message;
+ * else
+ *    print result;
+ */
+class Error {
+    init(message) {
+        this.message = message;
+    }
+}
