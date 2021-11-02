@@ -270,6 +270,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             val text = value.toString()
             if (text.endsWith(".0")) text.substring(0, text.length - 2) else text
         }
+        is LoxInstance -> {
+            try {
+                val toString = value.get(Token(IDENTIFIER, "toString"))
+                if (toString is LoxFunction) toString.call(this, emptyList()) as String
+                else value.toString()
+            } catch (e: Exception) {
+                value.toString()
+            }
+        }
         else -> value.toString()
     }
 

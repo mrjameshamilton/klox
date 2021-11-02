@@ -19,4 +19,8 @@ class Error {
     init(message) {
         this.message = message;
     }
+
+    toString() {
+        return this.message;
+    }
 }

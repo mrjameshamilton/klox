@@ -6,7 +6,7 @@ print substr(str, 1, 2);           // expect: o
 var result = substr("test", 1, 10);
 
 if (result is Error) {
-    print "Problem: " + result.message; // expect: Problem: String index out of bounds for 'test': begin 1, end 10.
+    print "Problem: " + result; // expect: Problem: String index out of bounds for 'test': begin 1, end 10.
 } else {
     print result;
 }
