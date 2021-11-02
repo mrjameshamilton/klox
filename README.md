@@ -167,6 +167,22 @@ print foo is Super; // true
 print foo is Bar; // false
 ```
 
+* `toString` method
+
+```c
+class Greeter {
+    init(name) {
+        this.name = name;
+    }
+    
+    toString() {
+        return "Hello " + this.name;
+    }
+}
+
+print Greeter("James"); // Hello James
+```
+
 ## Built-in classes
 
 * `Error(message)` a class representing an error state. It can be combined with the `is` instance check to check
