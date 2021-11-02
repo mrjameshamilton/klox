@@ -139,12 +139,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
             LESS_EQUAL -> (left as Double) <= (right as Double)
             BANG_EQUAL -> !isEqual(left, right)
             EQUAL_EQUAL -> isEqual(left, right)
-            PLUS -> return when {
-                left is Double && right is Double -> left + right
-                left is String && right is String -> "$left$right"
-                left is Double && right is String -> "${stringify(left)}$right"
-                right is Double && left is String -> "$left${stringify(right)}"
-                else -> throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
+            PLUS -> {
+                if ((left !is Double && left !is String && left !is LoxInstance) ||
+                    (right !is Double && right !is String && right !is LoxInstance)
+                ) {
+                    throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
+                }
+
+                return if (left is Double && right is Double) left + right
+                else return "${stringify(left)}${stringify(right)}"
             }
             IS -> return when {
                 left !is LoxInstance -> false
