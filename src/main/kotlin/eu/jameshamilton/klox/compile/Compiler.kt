@@ -1321,7 +1321,7 @@ class Compiler : Program.Visitor<ClassPool> {
             box("java/lang/Double")
             areturn()
         },
-        NativeFunctionStmt(Token(IDENTIFIER, "strlen"), listOf(Parameter(Token(IDENTIFIER, "str")))) {
+        NativeFunctionStmt("strlen", listOf(Parameter("str"))) {
             aload_1()
             stringify()
             checkcast("java/lang/String")
@@ -1330,21 +1330,26 @@ class Compiler : Program.Visitor<ClassPool> {
             box("java/lang/Double")
             areturn()
         },
-        NativeFunctionStmt(Token(IDENTIFIER, "substr"), listOf(Parameter(Token(IDENTIFIER, "str")), Parameter(Token(IDENTIFIER, "start")), Parameter(Token(IDENTIFIER, "end")))) {
+        NativeFunctionStmt(
+            Token(IDENTIFIER, "substr"),
+            params = listOf(Parameter("str"), Parameter("start"), Parameter("end")),
+            capture = listOf(errorClass),
+        ) { func ->
             aload_1()
-            checktype("java/lang/String", "substr 'string' parameter should be a string.")
-            aload_2()
-            checktype("java/lang/Integer", "substr 'start' parameter should be an integer.")
-            unbox("java/lang/Integer")
-            aload_3()
-            checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
-            unbox("java/lang/Integer")
+            stringify()
+            checkcast("java/lang/String")
             val (start, end) = try_ {
+                aload_2()
+                checktype("java/lang/Integer", "substr 'start' parameter should be an integer.")
+                unbox("java/lang/Integer")
+                aload_3()
+                checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
+                unbox("java/lang/Integer")
                 invokevirtual("java/lang/String", "substring", "(II)Ljava/lang/String;")
             }
             catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
                 pop()
-                throw_("java/lang/RuntimeException") {
+                error(func) {
                     concat(
                         { ldc("String index out of bounds for '") },
                         { aload_1() },
@@ -1356,8 +1361,13 @@ class Compiler : Program.Visitor<ClassPool> {
                     )
                 }
             }
+            catchAll(start, end) {
+                error(func) {
+                    invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                }
+            }
             areturn()
-        }
+        },
     )
 
     private class NativeFunctionStmt(

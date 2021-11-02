@@ -1,2 +1,2 @@
 var str = "foo";
-print substr(str, 0.5, 1);   // expect runtime error: substr 'start' parameter should be an integer.
+print substr(str, 0.5, 1).message;   // expect: substr 'start' parameter should be an integer.

@@ -34,6 +34,10 @@ import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
 class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
+    private val errorClass: LoxClass by lazy {
+        environment.get(Token(IDENTIFIER, "Error")) as LoxClass
+    }
+
     private val globals = Environment().apply {
         define(
             "clock",
@@ -60,22 +64,18 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
                     val (str, start, end) = arguments
 
-                    if (str !is String) {
-                        throw RuntimeError(Token(FUN, "substr"), "substr 'string' parameter should be a string.")
-                    }
-
                     if ((start !is Double) || start.mod(1.0) != 0.0) {
-                        throw RuntimeError(Token(FUN, "substr"), "substr 'start' parameter should be an integer.")
+                        return errorClass.call(this@Interpreter, listOf("substr 'start' parameter should be an integer."))
                     }
 
                     if ((end !is Double) || end.mod(1.0) != 0.0) {
-                        throw RuntimeError(Token(FUN, "substr"), "substr 'end' parameter should be an integer.")
+                        return errorClass.call(this@Interpreter, listOf("substr 'end' parameter should be an integer."))
                     }
 
-                    try {
-                        return str.substring(start.toInt(), end.toInt())
+                    return try {
+                        stringify(str).substring(start.toInt(), end.toInt())
                     } catch (e: StringIndexOutOfBoundsException) {
-                        throw RuntimeError(Token(FUN, "substr"), "String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}.")
+                        errorClass.call(this@Interpreter, listOf("String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}."))
                     }
                 }
 
