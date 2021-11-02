@@ -1,6 +1,7 @@
 package eu.jameshamilton.klox.compile
 
 import proguard.classfile.AccessConstants.PUBLIC
+import proguard.classfile.Clazz
 import proguard.classfile.Method
 import proguard.classfile.ProgramClass
 import proguard.classfile.VersionConstants.CLASS_VERSION_1_6
@@ -29,6 +30,12 @@ fun ClassBuilder.addMethod(u2accessFlags: Int, name: String, descriptor: String,
             // counting the size, it doesn't matter about adding labels.
             return this
         }
+
+        // Avoid out of bounds exceptions for exception labels.
+        override fun catch_(startLabel: Label, endLabel: Label, catchType: String, referencedClass: Clazz?): Composer = this
+        override fun catch_(startLabel: Label, endLabel: Label, handlerLabel: Label, catchType: String, referencedClass: Clazz?): Composer = this
+        override fun catchAll(startLabel: Label, endLabel: Label): Composer = this
+        override fun catchAll(startLabel: Label, endLabel: Label, handlerLabel: Label): Composer = this
     })
 
     return addMethod(u2accessFlags, name, descriptor, countingComposer.codeLength) {
