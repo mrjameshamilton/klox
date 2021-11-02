@@ -159,22 +159,24 @@ class Compiler : Program.Visitor<ClassPool> {
             composer = Composer(clazz)
             with(composer) {
                 beginCodeFragment(65_535)
+
                 if (functionStmt.params.isNotEmpty()) {
                     aload_1()
                     unpackarray(functionStmt.params.size) { i ->
                         declare(functionStmt, functionStmt.params[i])
                     }
                 }
+
+                for (captured in functionStmt.captured) {
+                    aload_0()
+                    ldc(captured.javaName)
+                    invokevirtual(targetClass.name, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;")
+                    astore(functionStmt.slot(captured))
+                }
+
                 if (functionStmt is NativeFunctionStmt) {
                     functionStmt.code(this)
                 } else {
-                    for (captured in functionStmt.captured) {
-                        aload_0()
-                        ldc(captured.javaName)
-                        invokevirtual(targetClass.name, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;")
-                        astore(functionStmt.slot(captured))
-                    }
-
                     functionStmt.body.forEach {
                         it.accept(this@FunctionCompiler)
                     }
