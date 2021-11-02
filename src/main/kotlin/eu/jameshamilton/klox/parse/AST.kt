@@ -1,5 +1,7 @@
 package eu.jameshamilton.klox.parse
 
+import eu.jameshamilton.klox.parse.TokenType.*
+
 interface ASTVisitor<R> : Program.Visitor<R>, Expr.Visitor<R>, Stmt.Visitor<R>
 
 class Program(val stmts: List<Stmt>) {
@@ -294,5 +296,7 @@ interface VarAccess {
 }
 
 class Parameter(override val name: Token) : VarDef {
+    constructor(name: String) : this(Token(IDENTIFIER, name))
+
     override fun toString(): String = "<param ${name.lexeme}>"
 }
