@@ -45,6 +45,7 @@ import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.parse.errorClass
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.ABSTRACT
 import proguard.classfile.AccessConstants.FINAL
@@ -1295,44 +1296,6 @@ class Compiler : Program.Visitor<ClassPool> {
     }
 
     /**
-     * KLox `Error` class which indicates an error occurred.
-     *
-     * Can be used with `is` for error checking e.g.
-     *
-     * fun foo(a, b) {
-     *     if (b == 0) return Error("Cannot divide by zero");
-     *     else return a / b;
-     * }
-     *
-     * var result = foo(1, 0);
-     *
-     * if (result is Error)
-     *    print result.message;
-     * else
-     *    print result;
-     */
-    private val errorClass =
-        ClassStmt(
-            Token(IDENTIFIER, "Error"), null,
-            listOf(
-                FunctionStmt(
-                    Token(IDENTIFIER, "init"),
-                    kind = INITIALIZER,
-                    params = listOf(Parameter(Token(IDENTIFIER, "message"))),
-                    body = listOf(
-                        ExprStmt(
-                            SetExpr(
-                                ThisExpr(Token(IDENTIFIER, "this")),
-                                Token(IDENTIFIER, "message"),
-                                VariableExpr(Token(IDENTIFIER, "message"))
-                            )
-                        )
-                    )
-                )
-            )
-        )
-
-    /**
      * Creates a Error instance with the specified message.
      *
      * Requires that the function has captured `Error`.
@@ -1350,7 +1313,6 @@ class Compiler : Program.Visitor<ClassPool> {
     }
 
     private val builtIns = listOf<Stmt>(
-        errorClass,
         NativeFunctionStmt("clock") {
             invokestatic("java/lang/System", "currentTimeMillis", "()J")
             l2d()
