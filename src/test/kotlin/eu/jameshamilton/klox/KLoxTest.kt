@@ -50,11 +50,11 @@ class KLoxTest : FunSpec({
             file.path.endsWith(".lox")
         ) {
             val name = file.path.removePrefix(dir.path + "/").substringBefore(".lox")
-/*            test("Interpreter: $name") {
+            test("Interpreter: $name") {
                 execute(file) { interpret(file) }
                 // withClue("hadError") { hadError shouldBe expectError }
                 // withClue("hadRuntimeError") { hadRuntimeError shouldBe expectRuntimeError }
-            }*/
+            }
             test("Compiler: $name") {
                 execute(file) { compile(file)?.let { run(it) } }
             }
