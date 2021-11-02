@@ -183,9 +183,9 @@ class Greeter {
 print Greeter("James"); // Hello James
 ```
 
-## Built-in classes
+## Error handling
 
-* `Error(message)` a class representing an error state. It can be combined with the `is` instance check to check
+* `Error` a class representing an error state. It can be combined with the `is` instance check to check
 if a function had an error e.g.
 
 ```c
