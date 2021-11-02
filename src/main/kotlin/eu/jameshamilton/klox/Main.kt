@@ -89,7 +89,8 @@ fun parse(code: String): Program? {
     hadError = false
     hadRuntimeError = false
 
-    val scanner = Scanner(code)
+    val stdlib = object {}.javaClass.getResource("/klox/stdlib.lox").readText()
+    val scanner = Scanner(stdlib + System.lineSeparator() + code)
     val tokens = scanner.scanTokens()
     val parser = Parser(tokens)
     val program = parser.parse()
