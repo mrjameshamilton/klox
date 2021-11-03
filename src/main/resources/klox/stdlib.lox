@@ -24,3 +24,9 @@ class Error {
         return this.message;
     }
 }
+
+class Math {
+    class PI {
+        return 3.14159265358979323846;
+    }
+}

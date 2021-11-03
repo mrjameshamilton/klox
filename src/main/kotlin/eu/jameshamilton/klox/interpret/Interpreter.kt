@@ -195,11 +195,10 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitGetExpr(getExpr: GetExpr): Any? = when (val obj = evaluate(getExpr.obj)) {
-        is LoxInstance -> {
-            val value = obj.get(getExpr.name)
+        is LoxInstance, is LoxClass -> {
+            val value = if (obj is LoxInstance) obj.get(getExpr.name) else (obj as LoxClass).findMethod(getExpr.name.lexeme)
             if (value is LoxFunction && value.declaration.kind == GETTER) value.call(this) else value
         }
-        is LoxClass -> obj.findMethod(getExpr.name.lexeme)
         else -> throw RuntimeError(getExpr.name, "Only instances have properties.")
     }
 

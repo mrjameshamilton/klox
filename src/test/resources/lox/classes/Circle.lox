@@ -4,9 +4,10 @@ class Circle {
     }
 
     area {
-        return 3.14159265359 * this.radius * this.radius;
+        return Math.PI * this.radius * this.radius;
     }
 }
 
 var circle = Circle(4);
-print circle.area; // expect: 50.26548245744
+print circle.area; // expect: 50.26548245743669
+

@@ -638,14 +638,6 @@ class Compiler : Program.Visitor<ClassPool> {
             ifne(maybeGetter)
             goto_(end)
 
-            label(maybeGetter)
-            dup()
-            invokeinterface(KLOX_CALLABLE, "arity", "()I")
-            iconst_m1()
-            ificmpne(end)
-            invokedynamic(0, "invoke", "(L$KLOX_CALLABLE;)Ljava/lang/Object;")
-            goto_(end)
-
             label(notInstance)
             dup()
             instanceof_(KLOX_CLASS)
@@ -653,6 +645,14 @@ class Compiler : Program.Visitor<ClassPool> {
             checkcast(KLOX_CLASS)
             ldc(getExpr.name.lexeme)
             invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
+            // fall-through to maybeGetter
+
+            label(maybeGetter)
+            dup()
+            invokeinterface(KLOX_CALLABLE, "arity", "()I")
+            iconst_m1()
+            ificmpne(end)
+            invokedynamic(0, "invoke", "(L$KLOX_CALLABLE;)Ljava/lang/Object;")
             goto_(end)
 
             label(notInstanceAndNotClass)

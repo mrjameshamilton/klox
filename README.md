@@ -116,16 +116,6 @@ for (var i = 0; i < 10; i = i + 1) {
     }
 }
 ```
-* static class methods
-```c
-class Math {
-    class square(n) {
-        return n * n;
-    }
-}
-
-print Math.square(3); // prints 9
-```
 * property getters
 ```c
 class Circle {
@@ -140,6 +130,26 @@ class Circle {
 
 var circle = Circle(4);
 print circle.area; // approx 50.266
+```
+* static class methods
+```c
+class Math {
+    class square(n) {
+        return n * n;
+    }
+}
+
+print Math.square(3); // prints 9
+```
+* static class property getters
+```c
+class Math {
+    class PI {
+        return 3.14159265358979323846;
+    }
+}
+
+print Math.PI; // approx. 50.265
 ```
 * multi-line comments (nestable)
 ```c
