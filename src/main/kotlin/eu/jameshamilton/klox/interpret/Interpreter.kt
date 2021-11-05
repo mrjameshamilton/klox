@@ -29,6 +29,7 @@ import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.runtimeError
+import kotlin.math.sqrt
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
@@ -38,34 +39,29 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
         environment.get(Token(IDENTIFIER, "Error")) as LoxClass
     }
 
-    private val globals = Environment().apply {
-        define(
-            "clock",
-            object : LoxCallable {
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any =
-                    System.currentTimeMillis() / 1000.0
-
-                override fun toString(): String = "<native fn>"
-            }
-        )
-        define(
-            "strlen",
-            object : LoxCallable {
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
-                    return stringify(arguments.first()).length.toDouble()
+    private fun findNative(classStmt: ClassStmt? = null, functionStmt: FunctionStmt): ((List<Any?>) -> Any?)? {
+        when (classStmt?.name?.lexeme) {
+            "Math" -> when (functionStmt.name.lexeme) {
+                "sqrt" -> return fun (args): Any {
+                    return if (args.first() is Number) {
+                        sqrt(args.first() as Double)
+                    } else errorClass.call(
+                        this@Interpreter,
+                        listOf("sqrt `n` parameter should be a number")
+                    )
                 }
-
-                override fun arity(): Int = 1
             }
-        )
-        define(
-            "substr",
-            object : LoxCallable {
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any {
+            else -> when (functionStmt.name.lexeme) {
+                "clock" -> return { System.currentTimeMillis() / 1000.0 }
+                "strlen" -> return { args -> stringify(args.first()).length.toDouble() }
+                "substr" -> return fun (arguments): Any {
                     val (str, start, end) = arguments
 
                     if ((start !is Double) || start.mod(1.0) != 0.0) {
-                        return errorClass.call(this@Interpreter, listOf("substr 'start' parameter should be an integer."))
+                        return errorClass.call(
+                            this@Interpreter,
+                            listOf("substr 'start' parameter should be an integer.")
+                        )
                     }
 
                     if ((end !is Double) || end.mod(1.0) != 0.0) {
@@ -75,14 +71,21 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                     return try {
                         stringify(str).substring(start.toInt(), end.toInt())
                     } catch (e: StringIndexOutOfBoundsException) {
-                        errorClass.call(this@Interpreter, listOf("String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}."))
+                        errorClass.call(
+                            this@Interpreter,
+                            listOf(
+                                "String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}."
+                            )
+                        )
                     }
                 }
-
-                override fun arity(): Int = 3
             }
-        )
+        }
+
+        return null
     }
+
+    private val globals = Environment()
 
     private val locals = mutableMapOf<Expr, Int>()
 
@@ -200,9 +203,9 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                 obj.get(getExpr.name)
             } else if (obj is LoxClass) {
                 val method = obj.findMethod(getExpr.name.lexeme)
-                if (method != null && !method.declaration.isStatic)
+                if (method != null && !method.declaration.isStatic) {
                     throw RuntimeError(getExpr.name, "'${method.declaration.name.lexeme}' is not a static class method.")
-                else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
+                } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
             } else null
 
             if (value is LoxFunction && value.declaration.kind == GETTER) value.call(this) else value
@@ -222,7 +225,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        val function = LoxFunction(functionStmt, environment)
+        val native = findNative(functionStmt = functionStmt)
+
+        val function = if (native == null) {
+            LoxFunction(functionStmt, environment)
+        } else {
+            object : LoxFunction(functionStmt, environment) {
+                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = native(arguments)
+            }
+        }
         environment.define(functionStmt.name.lexeme, function)
     }
 
@@ -367,7 +378,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
-            methods[it.name.lexeme] = LoxFunction(it, environment)
+            val native = findNative(classStmt, functionStmt = it)
+
+            methods[it.name.lexeme] = if (native == null) {
+                LoxFunction(it, environment)
+            } else {
+                object : LoxFunction(it, environment) {
+                    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = native(arguments)
+                }
+            }
         }
 
         val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)

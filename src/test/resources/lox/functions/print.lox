@@ -1,0 +1,5 @@
+fun foo() {}
+print foo; // expect: <fn foo>
+
+// original Lox compiler prints <native fn> for all native functions
+print clock; // expect: <fn clock>

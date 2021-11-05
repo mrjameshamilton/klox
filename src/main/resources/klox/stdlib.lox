@@ -29,4 +29,20 @@ class Math {
     class PI {
         return 3.14159265358979323846;
     }
+
+    class sqrt(x) {
+        return Error("Native implementation for 'sqrt' not provided.");
+    }
+}
+
+fun clock() {
+    return Error("Native implementation for 'clock' not provided.");
+}
+
+fun strlen(str) {
+    return Error("Native implementation for 'strlen' not provided.");
+}
+
+fun substr(str, start, end) {
+    return Error("Native implementation for 'substr' not provided.");
 }

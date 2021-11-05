@@ -235,6 +235,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         classStmt.methods.forEach {
             functionDepths[it] = scopes.size
             classNames[it] = "${classStmt.name.lexeme}\$${it.name.lexeme}"
+            classes[it] = classStmt
             resolveFunction(it)
         }
 
@@ -306,6 +307,10 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             slots[varDef] = nextSlot
             return this.slot(varDef)
         }
+
+        private val classes = WeakHashMap<FunctionStmt, ClassStmt>()
+        val FunctionStmt.classStmt: ClassStmt?
+            get() = classes.getOrDefault(this, null)
 
         private val javaFieldNames = WeakHashMap<VarDef, String>()
         val VarDef.javaName: String

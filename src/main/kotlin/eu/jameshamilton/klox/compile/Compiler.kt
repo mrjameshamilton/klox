@@ -29,7 +29,6 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
-import eu.jameshamilton.klox.parse.Parameter
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
 import eu.jameshamilton.klox.parse.ReturnStmt
@@ -80,7 +79,7 @@ class Compiler : Program.Visitor<ClassPool> {
             Token(FUN, "Main"),
             SCRIPT,
             params = emptyList(),
-            body = builtIns + program.stmts
+            body = program.stmts
         )
 
         mainFunction.accept(Resolver())
@@ -175,8 +174,9 @@ class Compiler : Program.Visitor<ClassPool> {
                     astore(functionStmt.slot(captured))
                 }
 
-                if (functionStmt is NativeFunctionStmt) {
-                    functionStmt.code(this, functionStmt)
+                val native = findNative(mainFunction, functionStmt)
+                if (native != null) {
+                    native(this)
                 } else {
                     functionStmt.body.forEach {
                         it.accept(this@FunctionCompiler)
@@ -669,7 +669,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 invokeinterface(KLOX_FUNCTION, "getName", "()Ljava/lang/String;")
                 astore_1()
                 concat(
-                    { ldc("'")},
+                    { ldc("'") },
                     { aload_1() },
                     { ldc("' is not a static class method.") }
                 )
@@ -679,7 +679,7 @@ class Compiler : Program.Visitor<ClassPool> {
             pop()
             throw_("java/lang/RuntimeException") {
                 concat(
-                    { ldc("Method '")},
+                    { ldc("Method '") },
                     { ldc(getExpr.name.lexeme) },
                     { ldc("' not found.") }
                 )
@@ -995,11 +995,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
-                    if (functionStmt.kind == NATIVE) {
-                        ldc("<native fn>")
-                    } else {
-                        ldc("<fn ${functionStmt.name.lexeme}>")
-                    }
+                    ldc("<fn ${functionStmt.name.lexeme}>")
                     areturn()
                 }
                 .apply {
@@ -1331,100 +1327,6 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
                 .programClass
         )
-    }
-
-    /**
-     * Creates a Error instance with the specified message.
-     *
-     * Requires that the function has captured `Error`.
-     *
-     * Leaves an instance on the stack.
-     */
-    private fun Composer.error(func: FunctionStmt, messageComposer: Composer.() -> Composer): Composer {
-        val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" }
-        messageComposer(this)
-        aload(func.slot(errorClass)).unbox(errorClass)
-        checkcast(KLOX_CALLABLE)
-        swap()
-        packarray(1)
-        invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
-        return this
-    }
-
-    private val builtIns = listOf<Stmt>(
-        NativeFunctionStmt("clock") {
-            invokestatic("java/lang/System", "currentTimeMillis", "()J")
-            l2d()
-            pushDouble(1000.0)
-            ddiv()
-            box("java/lang/Double")
-            areturn()
-        },
-        NativeFunctionStmt("strlen", listOf(Parameter("str"))) {
-            aload_1()
-            stringify()
-            checkcast("java/lang/String")
-            invokevirtual("java/lang/String", "length", "()I")
-            i2d()
-            box("java/lang/Double")
-            areturn()
-        },
-        NativeFunctionStmt(
-            Token(IDENTIFIER, "substr"),
-            params = listOf(Parameter("str"), Parameter("start"), Parameter("end")),
-            capture = listOf("Error"),
-        ) { func ->
-            aload_1()
-            stringify()
-            checkcast("java/lang/String")
-            val (start, end) = try_ {
-                aload_2()
-                checktype("java/lang/Integer", "substr 'start' parameter should be an integer.")
-                unbox("java/lang/Integer")
-                aload_3()
-                checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
-                unbox("java/lang/Integer")
-                invokevirtual("java/lang/String", "substring", "(II)Ljava/lang/String;")
-            }
-            catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
-                pop()
-                error(func) {
-                    concat(
-                        { ldc("String index out of bounds for '") },
-                        { aload_1() },
-                        { ldc("': begin ") },
-                        { aload_2().stringify() },
-                        { ldc(", end ") },
-                        { aload_3().stringify() },
-                        { ldc(".") }
-                    )
-                }
-            }
-            catchAll(start, end) {
-                error(func) {
-                    invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
-                }
-            }
-            areturn()
-        },
-    )
-
-    private class NativeFunctionStmt(
-        override val name: Token,
-        override val params: List<Parameter> = emptyList(),
-        val capture: List<String> = emptyList(),
-        val code: Composer.(FunctionStmt) -> Composer
-    ) : FunctionStmt(name, NATIVE, params, capture.map { ExprStmt(VariableExpr(Token(IDENTIFIER, it))) }) {
-
-        constructor(name: String, params: List<Parameter> = emptyList(), capture: List<String> = emptyList(), code: Composer.(FunctionStmt) -> Composer) :
-            this(
-                Token(IDENTIFIER, name),
-                params,
-                capture,
-                code
-            )
-
-        override fun toString(): String = "<native fn>"
     }
 
     companion object {
