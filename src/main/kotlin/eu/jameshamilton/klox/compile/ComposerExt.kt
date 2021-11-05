@@ -202,9 +202,10 @@ fun Composer.catchAll(start: Label, end: Label, composer: Composer.() -> Compose
 fun Composer.throw_(type: String, message: String): Composer = throw_(type) { ldc(message) }
 
 fun Composer.throw_(type: String, message: Composer.() -> Composer): Composer {
-    new_(type)
-    dup()
     message()
+    new_(type)
+    dup_x1()
+    swap()
     invokespecial(type, "<init>", "(Ljava/lang/String;)V")
     athrow()
     return this
