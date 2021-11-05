@@ -193,7 +193,27 @@ class Greeter {
 print Greeter("James"); // Hello James
 ```
 
-## Error handling
+
+## Klox standard library
+
+Klox comes with a set of [standard library](src/main/resources/klox/stdlib.lox) functions and classes.
+
+### Lox built-in
+
+* `clock(): number` returns the current time in milliseconds.
+
+### Strings
+
+* `strlen(string): number` returns the length of `string`.
+* `substr(string, start, end): string | Error`
+returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
+
+### Math
+
+* `Math.PI` 3.14159265358979323846
+* `Math.sqrt(number): number`
+
+### Error handling
 
 `Error` a class representing an error state. It can be combined with the `is` instance check to check
 if a function had an error e.g.
@@ -211,22 +231,3 @@ if (result is Error)
 else
    print result;
 ```
-
-## Klox standard library
-
-Klox comes with a set of standard library functions and classes.
-
-### Lox built-in
-
-* `clock(): number` returns the current time in milliseconds.
-
-### Strings
-
-* `strlen(string): number` returns the length of `string`.
-* `substr(string, start, end): string | Error`
-returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
-
-### Math
-
-* `Math.PI` 3.14159265358979323846
-* `Math.sqrt(number): number`
