@@ -210,7 +210,7 @@ returns the substring of `string` between `start` (inclusive) and `end` (exclusi
 
 ### Math
 
-* `Math.PI` 3.14159265358979323846
+* `Math.PI` 3.141592653589793
 * `Math.sqrt(number): number`
 
 ### Error handling
