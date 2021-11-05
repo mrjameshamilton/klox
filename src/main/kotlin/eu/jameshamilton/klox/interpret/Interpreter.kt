@@ -196,7 +196,15 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     override fun visitGetExpr(getExpr: GetExpr): Any? = when (val obj = evaluate(getExpr.obj)) {
         is LoxInstance, is LoxClass -> {
-            val value = if (obj is LoxInstance) obj.get(getExpr.name) else (obj as LoxClass).findMethod(getExpr.name.lexeme)
+            val value = if (obj is LoxInstance) {
+                obj.get(getExpr.name)
+            } else if (obj is LoxClass) {
+                val method = obj.findMethod(getExpr.name.lexeme)
+                if (method != null && !method.declaration.isStatic)
+                    throw RuntimeError(getExpr.name, "'${method.declaration.name.lexeme}' is not a static class method.")
+                else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
+            } else null
+
             if (value is LoxFunction && value.declaration.kind == GETTER) value.call(this) else value
         }
         else -> throw RuntimeError(getExpr.name, "Only instances have properties.")

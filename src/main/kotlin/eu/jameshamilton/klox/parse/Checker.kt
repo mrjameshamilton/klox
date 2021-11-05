@@ -11,7 +11,7 @@ import java.util.Locale
 
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
-    private var currentFunctionType = SCRIPT
+    private var currentFunction: FunctionStmt? = null
     private var currentClassType = NONE
 
     override fun visitProgram(program: Program) {
@@ -95,9 +95,9 @@ class Checker : ASTVisitor<Unit> {
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
-        if (returnStmt.value != null) when (currentFunctionType) {
+        if (returnStmt.value != null) when (currentFunction?.kind) {
             INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer.")
-            SCRIPT -> error(returnStmt.keyword, "Can't return from top-level code.")
+            null /* SCRIPT */ -> error(returnStmt.keyword, "Can't return from top-level code.")
             else -> returnStmt.value.accept(this)
         }
     }
@@ -121,10 +121,10 @@ class Checker : ASTVisitor<Unit> {
     }
 
     private fun resolveFunction(functionStmt: FunctionStmt) {
-        val enclosingFunctionType = currentFunctionType
-        currentFunctionType = functionStmt.kind
+        val enclosingFunction = currentFunction
+        currentFunction = functionStmt
         functionStmt.body.forEach { it.accept(this) }
-        currentFunctionType = enclosingFunctionType
+        currentFunction = enclosingFunction
     }
 
     override fun visitGetExpr(getExpr: GetExpr) {
@@ -147,7 +147,7 @@ class Checker : ASTVisitor<Unit> {
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == NONE) {
             error(thisExpr.name, "Can't use 'this' outside of a class.")
-        } else if (currentFunctionType == FunctionType.CLASS) {
+        } else if (currentFunction?.isStatic == true) {
             error(thisExpr.name, "Can't use 'this' in a static method.")
         }
     }
@@ -164,7 +164,6 @@ enum class FunctionType {
     METHOD,
     FUNCTION,
     INITIALIZER,
-    CLASS,
     GETTER,
     NATIVE;
 

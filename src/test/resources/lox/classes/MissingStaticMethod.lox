@@ -1,0 +1,5 @@
+class Foo {
+
+}
+
+print Foo.test(); // expect runtime error: Method 'test' not found.

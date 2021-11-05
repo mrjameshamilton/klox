@@ -55,7 +55,6 @@ class Parser(private val tokens: List<Token>) {
         val parameters = mutableListOf<Parameter>()
 
         var kind = when {
-            isClassMethod -> FunctionType.CLASS
             originalKind == METHOD && name.lexeme == "init" -> INITIALIZER
             else -> originalKind
         }
@@ -76,7 +75,7 @@ class Parser(private val tokens: List<Token>) {
         }
 
         consume(LEFT_BRACE, "Expect '{' before $kind body.")
-        return FunctionStmt(name, kind, parameters, body = block())
+        return FunctionStmt(name, kind, isClassMethod, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {

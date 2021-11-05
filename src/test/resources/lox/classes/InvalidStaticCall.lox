@@ -1,0 +1,7 @@
+class Foo {
+    foo() {
+        return 1;
+    }
+}
+
+print Foo.foo(); // expect runtime error: 'foo' is not a static class method.

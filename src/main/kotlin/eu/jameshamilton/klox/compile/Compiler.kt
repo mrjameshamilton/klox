@@ -24,7 +24,6 @@ import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.FunctionType.*
-import eu.jameshamilton.klox.parse.FunctionType.CLASS
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
@@ -558,7 +557,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
             if (functionStmt.captured.isNotEmpty()) dup()
 
-            if (functionStmt.kind != INITIALIZER && functionStmt.kind != METHOD && functionStmt.kind != GETTER && functionStmt.kind != CLASS) {
+            if (functionStmt.kind != INITIALIZER && functionStmt.kind != METHOD && functionStmt.kind != GETTER && !functionStmt.isStatic) {
                 // Don't need to store, it should remain on the stack so that it can be added to the class
                 declare(this@FunctionCompiler.functionStmt, functionStmt)
             }
@@ -625,7 +624,9 @@ class Compiler : Program.Visitor<ClassPool> {
         }
 
         override fun visitGetExpr(getExpr: GetExpr): Unit = with(composer) {
-            val (notInstance, notInstanceAndNotClass, maybeGetter, end) = labels(4)
+            val (notInstance, notInstanceAndNotClass, notStatic, maybeGetter, end) = labels(5)
+            val (notFound) = labels(1)
+
             getExpr.obj.accept(this@FunctionCompiler)
             dup()
             instanceof_(KLOX_INSTANCE)
@@ -645,6 +646,11 @@ class Compiler : Program.Visitor<ClassPool> {
             checkcast(KLOX_CLASS)
             ldc(getExpr.name.lexeme)
             invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
+            dup()
+            ifnull(notFound)
+            dup()
+            invokeinterface(KLOX_FUNCTION, "isStatic", "()Z")
+            ifeq(notStatic)
             // fall-through to maybeGetter
 
             label(maybeGetter)
@@ -657,6 +663,27 @@ class Compiler : Program.Visitor<ClassPool> {
 
             label(notInstanceAndNotClass)
             throw_("java/lang/RuntimeException", "Only instances have properties.")
+
+            label(notStatic)
+            throw_("java/lang/RuntimeException") {
+                invokeinterface(KLOX_FUNCTION, "getName", "()Ljava/lang/String;")
+                astore_1()
+                concat(
+                    { ldc("'")},
+                    { aload_1() },
+                    { ldc("' is not a static class method.") }
+                )
+            }
+
+            label(notFound)
+            pop()
+            throw_("java/lang/RuntimeException") {
+                concat(
+                    { ldc("Method '")},
+                    { ldc(getExpr.name.lexeme) },
+                    { ldc("' not found.") }
+                )
+            }
 
             label(end)
         }
@@ -916,6 +943,10 @@ class Compiler : Program.Visitor<ClassPool> {
                         throw_("java/lang/UnsupportedOperationException", "${functionStmt.name.lexeme} cannot be bound.")
                     }
                 }
+                .addMethod(PUBLIC, "isStatic", "()Z") {
+                    iconst(if (functionStmt.isStatic) 1 else 0)
+                    ireturn()
+                }
                 .addMethod(PUBLIC, "getEnclosing", "()L$KLOX_CALLABLE;") {
                     aload_0()
                     getfield(targetClass.name, "__enclosing", "L$KLOX_CALLABLE;")
@@ -1025,6 +1056,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 .addMethod(PUBLIC or ABSTRACT, "bind", "(L$KLOX_INSTANCE;)L$KLOX_FUNCTION;")
                 .addMethod(PUBLIC or ABSTRACT, "getReceiver", "()L$KLOX_INSTANCE;")
                 .addMethod(PUBLIC or ABSTRACT, "getOwner", "()L$KLOX_CLASS;")
+                .addMethod(PUBLIC or ABSTRACT, "isStatic", "()Z")
                 .programClass
         )
 
