@@ -29,6 +29,8 @@ import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.runtimeError
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.sqrt
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
@@ -39,16 +41,24 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
         environment.get(Token(IDENTIFIER, "Error")) as LoxClass
     }
 
+    @ExperimentalContracts
+    private fun isKloxInteger(index: Any?): Boolean {
+        contract {
+            returns (true) implies (index is Double)
+        }
+        return index is Double && index.mod(1.0) == 0.0
+    }
+
+    @OptIn(ExperimentalContracts::class)
     private fun findNative(classStmt: ClassStmt? = null, functionStmt: FunctionStmt): ((List<Any?>) -> Any?)? {
+        fun error(message: String) = errorClass.call(this@Interpreter, listOf(message))
+
         when (classStmt?.name?.lexeme) {
             "Math" -> when (functionStmt.name.lexeme) {
                 "sqrt" -> return fun (args): Any {
                     return if (args.first() is Number) {
                         sqrt(args.first() as Double)
-                    } else errorClass.call(
-                        this@Interpreter,
-                        listOf("sqrt `n` parameter should be a number")
-                    )
+                    } else error("sqrt `n` parameter should be a number")
                 }
             }
             "System" -> when (functionStmt.name.lexeme) {
@@ -56,9 +66,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                 "arg" -> return fun (arguments): Any? {
                     val index = arguments.first()
 
-                    if ((index !is Double) || index.mod(1.0) != 0.0) {
-                        return errorClass.call(this@Interpreter, listOf("arg 'index' parameter should be an integer."))
-                    }
+                    if (!isKloxInteger(index)) return error("arg 'index' parameter should be an integer.")
 
                     return try {
                         args[index.toInt()]
@@ -72,26 +80,13 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                 "substr" -> return fun (arguments): Any {
                     val (str, start, end) = arguments
 
-                    if ((start !is Double) || start.mod(1.0) != 0.0) {
-                        return errorClass.call(
-                            this@Interpreter,
-                            listOf("substr 'start' parameter should be an integer.")
-                        )
-                    }
-
-                    if ((end !is Double) || end.mod(1.0) != 0.0) {
-                        return errorClass.call(this@Interpreter, listOf("substr 'end' parameter should be an integer."))
-                    }
+                    if (!isKloxInteger(start)) return error("substr 'start' parameter should be an integer.")
+                    if (!isKloxInteger(end)) return error("substr 'end' parameter should be an integer.")
 
                     return try {
                         stringify(str).substring(start.toInt(), end.toInt())
                     } catch (e: StringIndexOutOfBoundsException) {
-                        errorClass.call(
-                            this@Interpreter,
-                            listOf(
-                                "String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}."
-                            )
-                        )
+                        error("String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}.")
                     }
                 }
             }
