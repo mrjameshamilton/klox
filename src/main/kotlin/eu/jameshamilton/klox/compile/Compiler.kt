@@ -209,10 +209,8 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitExprStmt(exprStmt: ExprStmt): Unit = with(composer) {
             exprStmt.expression.accept(this@FunctionCompiler)
-            when (val size = exprStmt.expression.accept(StackSizeComputer())) {
-                1 -> pop()
-                else -> for (i in 0 until size) pop()
-            }
+            // Anything left on the stack by the expression should be discarded because statements don't produce values.
+            for (i in 0 until exprStmt.expression.accept(StackSizeComputer())) pop()
         }
 
         override fun visitPrintStmt(printStmt: PrintStmt): Unit = with(composer) {
