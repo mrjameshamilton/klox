@@ -15,6 +15,8 @@ class Program(val stmts: List<Stmt>) {
     interface Visitor<R> {
         fun visitProgram(program: Program): R
     }
+
+    operator fun plus(other: Program) = Program(stmts + other.stmts)
 }
 
 interface Expr {

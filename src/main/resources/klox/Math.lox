@@ -1,0 +1,9 @@
+class Math {
+    class PI {
+        return 3.14159265358979323846;
+    }
+
+    class sqrt(x) {
+        return Error("Native implementation for 'sqrt' not provided.");
+    }
+}
