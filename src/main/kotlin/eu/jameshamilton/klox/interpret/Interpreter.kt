@@ -52,6 +52,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                 }
             }
             "System" -> when (functionStmt.name.lexeme) {
+                "clock" -> return { System.currentTimeMillis() / 1000.0 }
                 "arg" -> return fun (arguments): Any? {
                     val index = arguments.first()
 
@@ -66,8 +67,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                     }
                 }
             }
-            else -> when (functionStmt.name.lexeme) {
-                "clock" -> return { System.currentTimeMillis() / 1000.0 }
+            "String" -> when (functionStmt.name.lexeme) {
                 "strlen" -> return { args -> stringify(args.first()).length.toDouble() }
                 "substr" -> return fun (arguments): Any {
                     val (str, start, end) = arguments

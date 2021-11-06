@@ -35,16 +35,15 @@ class Math {
     }
 }
 
-fun clock() {
-    return Error("Native implementation for 'clock' not provided.");
-}
+class String {
 
-fun strlen(str) {
-    return Error("Native implementation for 'strlen' not provided.");
-}
+    class strlen(str) {
+        return Error("Native implementation for 'strlen' not provided.");
+    }
 
-fun substr(str, start, end) {
-    return Error("Native implementation for 'substr' not provided.");
+    class substr(str, start, end) {
+        return Error("Native implementation for 'substr' not provided.");
+    }
 }
 
 class System {
@@ -55,4 +54,15 @@ class System {
     class arg(index) {
         return Error("Native implementation for 'arg' not provided.");
     }
+
+    class clock() {
+        return Error("Native implementation for 'clock' not provided.");
+    }
 }
+
+// Alias clock function for compatibility with lox.
+var clock = System.clock;
+
+// Aliases for common top-level string functions.
+var strlen = String.strlen;
+var substr = String.substr;

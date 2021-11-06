@@ -32,6 +32,14 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
             }
         }
         "System" -> when (functionStmt.name.lexeme) {
+            "clock" -> return {
+                invokestatic("java/lang/System", "currentTimeMillis", "()J")
+                l2d()
+                pushDouble(1000.0)
+                ddiv()
+                box("java/lang/Double")
+                areturn()
+            }
             "arg" -> return {
                 val (tryStart, tryEnd) = try_ {
                     getstatic("Main", "args", "[Ljava/lang/String;")
@@ -52,15 +60,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
-        else -> when (functionStmt.name.lexeme) {
-            "clock" -> return {
-                invokestatic("java/lang/System", "currentTimeMillis", "()J")
-                l2d()
-                pushDouble(1000.0)
-                ddiv()
-                box("java/lang/Double")
-                areturn()
-            }
+        "String" -> when (functionStmt.name.lexeme) {
             "strlen" -> return {
                 aload_1()
                 stringify()
