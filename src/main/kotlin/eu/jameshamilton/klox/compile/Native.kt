@@ -59,6 +59,14 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 }
                 areturn()
             }
+            "exit" -> return {
+                aload_1()
+                checktype("java/lang/Integer", "arg 'index' parameter should be an integer.")
+                unbox("java/lang/Integer")
+                invokestatic("java/lang/System", "exit", "(I)V")
+                aconst_null()
+                areturn()
+            }
         }
         "String" -> when (functionStmt.name.lexeme) {
             "strlen" -> return {

@@ -10,6 +10,10 @@ class System {
     class clock() {
         return Error("Native implementation for 'clock' not provided.");
     }
+
+    class exit(code) {
+        return Error("Native implementation for 'exit' not provided.");
+    }
 }
 
 // Alias clock function for compatibility with lox.

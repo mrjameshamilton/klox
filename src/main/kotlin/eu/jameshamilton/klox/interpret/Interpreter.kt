@@ -32,6 +32,7 @@ import eu.jameshamilton.klox.runtimeError
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.sqrt
+import kotlin.system.exitProcess
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
@@ -73,6 +74,13 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                     } catch (e: ArrayIndexOutOfBoundsException) {
                         null
                     }
+                }
+                "exit" -> return fun (arguments): Any {
+                    val code = arguments.first()
+
+                    if (!isKloxInteger(code)) return error("exit 'code' parameter should be an integer.")
+
+                    exitProcess(code.toInt())
                 }
             }
             "String" -> when (functionStmt.name.lexeme) {
