@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
 import eu.jameshamilton.klox.compile.Resolver.Companion.classStmt
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
@@ -14,10 +15,10 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" }
         messageComposer(this)
         aload(func.slot(errorClass)).unbox(errorClass)
-        checkcast(Compiler.KLOX_CALLABLE)
+        checkcast(KLOX_CALLABLE)
         swap()
         packarray(1)
-        invokeinterface(Compiler.KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+        invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
         return this
     }
 
