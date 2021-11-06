@@ -60,9 +60,8 @@ class LoxClass(val name: String, val superClass: LoxClass? = null, private val m
 
 class LoxInstance(val klass: LoxClass, private val fields: MutableMap<String, Any?> = HashMap()) {
 
-    fun get(name: Token): Any {
-        val field = fields[name.lexeme]
-        if (field != null) return field
+    fun get(name: Token): Any? {
+        if (fields.containsKey(name.lexeme)) return fields[name.lexeme]
 
         val method = klass.findMethod(name.lexeme)
         if (method != null) return method.bind(this)

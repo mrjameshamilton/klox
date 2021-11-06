@@ -1138,13 +1138,18 @@ class Compiler : Program.Visitor<ClassPool> {
                     areturn()
                 }
                 .addMethod(PUBLIC, "get", "(Ljava/lang/String;)Ljava/lang/Object;") {
-                    val (bind, end) = labels(2)
+                    val (bind, checkMethod, end) = labels(3)
                     aload_0()
                     getfield(targetClass.name, "fields", "Ljava/util/Map;")
+                    dup()
+                    aload_1()
+                    invokeinterface("java/util/Map", "containsKey", "(Ljava/lang/Object;)Z")
+                    ifeq(checkMethod)
                     aload_1()
                     invokeinterface("java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;")
-                    dup()
-                    ifnonnull(end)
+                    goto_(end)
+
+                    label(checkMethod)
                     pop()
                     aload_0()
                     getfield(targetClass.name, "klass", "L$KLOX_CLASS;")

@@ -1,0 +1,7 @@
+class Foo {
+    init() {
+        this.bar = nil;
+    }
+}
+
+print Foo().bar; // expect: nil
