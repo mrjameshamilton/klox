@@ -45,7 +45,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
     @ExperimentalContracts
     private fun isKloxInteger(index: Any?): Boolean {
         contract {
-            returns (true) implies (index is Double)
+            returns(true) implies (index is Double)
         }
         return index is Double && index.mod(1.0) == 0.0
     }

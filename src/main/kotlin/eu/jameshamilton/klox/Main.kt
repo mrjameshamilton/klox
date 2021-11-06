@@ -98,7 +98,7 @@ fun parse(code: String): Program? {
         .filter { it.name.endsWith(".lox") }
         .map { Scanner(it.readText()).scanTokens() }
         .map { Parser(it).parse() }
-        .reduce { stdlib, lib ->  stdlib + lib }
+        .reduce { stdlib, lib -> stdlib + lib }
 
     val scanner = Scanner(code)
     val tokens = scanner.scanTokens()
