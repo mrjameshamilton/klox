@@ -15,6 +15,7 @@ import eu.jameshamilton.klox.parse.TokenType.EOF
 import eu.jameshamilton.klox.util.ClassPoolClassLoader
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import kotlinx.cli.multiple
 import kotlinx.cli.optional
 import proguard.classfile.ClassPool
 import proguard.classfile.ProgramClass
@@ -32,6 +33,7 @@ val outJar by parser.option(ArgType.String, shortName = "o", description = "outp
 val useInterpreter by parser.option(ArgType.Boolean, shortName = "i", description = "use interpreter instead of JVM compiler when executing")
 val debug by parser.option(ArgType.Boolean, description = "enable debugging")
 val dumpClasses by parser.option(ArgType.Boolean, shortName = "d", description = "dump textual representation of classes (instead of executing)")
+val args by parser.option(ArgType.String, shortName = "arg", description = "additional arguments to pass to the klox program").multiple()
 
 var hadError: Boolean = false
 var hadRuntimeError: Boolean = false
@@ -66,7 +68,7 @@ fun main(args: Array<String>) {
 }
 
 fun runPrompt() {
-    val interpreter = Interpreter()
+    val interpreter = Interpreter(args.toTypedArray())
     while (true) {
         print("> ")
         val program = parse(readLine() ?: break)
@@ -109,7 +111,7 @@ fun parse(code: String): Program? {
 fun interpret(file: File) {
     val code = file.readText()
     val program = parse(code)
-    val interpreter = Interpreter()
+    val interpreter = Interpreter(args.toTypedArray())
     val resolver = Resolver(interpreter)
     program?.let {
         it.accept(resolver)
@@ -157,7 +159,7 @@ fun run(programClassPool: ClassPool) {
             .loadClass("Main")
             .declaredMethods
             .single { it.name == "main" }
-            .invoke(null, emptyArray<String>())
+            .invoke(null, args.toTypedArray())
     }
 }
 

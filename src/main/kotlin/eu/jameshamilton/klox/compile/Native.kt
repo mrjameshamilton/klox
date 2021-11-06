@@ -31,6 +31,27 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
+        "System" -> when (functionStmt.name.lexeme) {
+            "arg" -> return {
+                val (tryStart, tryEnd) = try_ {
+                    getstatic("Main", "args", "[Ljava/lang/String;")
+                    aload_1()
+                    checktype("java/lang/Integer", "arg 'index' parameter should be an integer.")
+                    unbox("java/lang/Integer")
+                    aaload()
+                }
+                catch_(tryStart, tryEnd, "java/lang/ArrayIndexOutOfBoundsException") {
+                    pop()
+                    aconst_null()
+                }
+                catchAll(tryStart, tryEnd) {
+                    error(functionStmt) {
+                        invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                    }
+                }
+                areturn()
+            }
+        }
         else -> when (functionStmt.name.lexeme) {
             "clock" -> return {
                 invokestatic("java/lang/System", "currentTimeMillis", "()J")

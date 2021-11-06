@@ -1,0 +1,2 @@
+print System.arg(0); // expect: nil
+print System.arg(1); // expect: nil

@@ -33,7 +33,7 @@ import kotlin.math.sqrt
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
-class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
+class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
     private val errorClass: LoxClass by lazy {
         environment.get(Token(IDENTIFIER, "Error")) as LoxClass
@@ -49,6 +49,21 @@ class Interpreter : ExprVisitor<Any?>, StmtVisitor<Unit> {
                         this@Interpreter,
                         listOf("sqrt `n` parameter should be a number")
                     )
+                }
+            }
+            "System" -> when (functionStmt.name.lexeme) {
+                "arg" -> return fun (arguments): Any? {
+                    val index = arguments.first()
+
+                    if ((index !is Double) || index.mod(1.0) != 0.0) {
+                        return errorClass.call(this@Interpreter, listOf("arg 'index' parameter should be an integer."))
+                    }
+
+                    return try {
+                        args[index.toInt()]
+                    } catch (e: ArrayIndexOutOfBoundsException) {
+                        null
+                    }
                 }
             }
             else -> when (functionStmt.name.lexeme) {

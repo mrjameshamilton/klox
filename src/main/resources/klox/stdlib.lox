@@ -46,3 +46,13 @@ fun strlen(str) {
 fun substr(str, start, end) {
     return Error("Native implementation for 'substr' not provided.");
 }
+
+class System {
+
+    /**
+    * Returns the command-line argument for the given index.
+    */
+    class arg(index) {
+        return Error("Native implementation for 'arg' not provided.");
+    }
+}

@@ -88,34 +88,39 @@ class Compiler : Program.Visitor<ClassPool> {
 
         val (mainClass, _) = FunctionCompiler().compile(mainFunction)
 
-        ClassBuilder(mainClass).addMethod(PUBLIC or STATIC, "main", "([Ljava/lang/String;)V") {
-            val (tryStart, tryEnd) = try_ {
-                new_(targetClass.name)
-                dup()
-                aconst_null()
-                invokespecial(targetClass.name, "<init>", "(L$KLOX_CALLABLE;)V")
+        ClassBuilder(mainClass)
+            .addField(PUBLIC or STATIC, "args", "[Ljava/lang/String;")
+            .addMethod(PUBLIC or STATIC, "main", "([Ljava/lang/String;)V") {
                 aload_0()
-                invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
-                pop()
-                return_()
+                putstatic(targetClass.name, "args", "[Ljava/lang/String;")
+
+                val (tryStart, tryEnd) = try_ {
+                    new_(targetClass.name)
+                    dup()
+                    aconst_null()
+                    invokespecial(targetClass.name, "<init>", "(L$KLOX_CALLABLE;)V")
+                    aconst_null()
+                    invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+                    pop()
+                    return_()
+                }
+                catch_(tryStart, tryEnd, "java/lang/StackOverflowError") {
+                    pop()
+                    getstatic("java/lang/System", "err", "Ljava/io/PrintStream;")
+                    ldc("Stack overflow.")
+                    invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
+                    return_()
+                }
+                catchAll(tryStart, tryEnd) {
+                    if (debug == true) dup()
+                    getstatic("java/lang/System", "err", "Ljava/io/PrintStream;")
+                    swap()
+                    invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                    invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
+                    if (debug == true) invokevirtual("java/lang/Throwable", "printStackTrace", "()V")
+                    return_()
+                }
             }
-            catch_(tryStart, tryEnd, "java/lang/StackOverflowError") {
-                pop()
-                getstatic("java/lang/System", "err", "Ljava/io/PrintStream;")
-                ldc("Stack overflow.")
-                invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
-                return_()
-            }
-            catchAll(tryStart, tryEnd) {
-                if (debug == true) dup()
-                getstatic("java/lang/System", "err", "Ljava/io/PrintStream;")
-                swap()
-                invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
-                invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
-                if (debug == true) invokevirtual("java/lang/Throwable", "printStackTrace", "()V")
-                return_()
-            }
-        }
 
         return preverify(programClassPool)
     }
