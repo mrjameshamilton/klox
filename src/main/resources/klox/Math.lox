@@ -4,6 +4,6 @@ class Math {
     }
 
     class sqrt(x) {
-        return Error("Native implementation for 'sqrt' not provided.");
+        System.fail(Error("Native implementation for 'sqrt' not provided."));
     }
 }

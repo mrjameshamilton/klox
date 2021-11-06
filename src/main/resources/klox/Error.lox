@@ -18,6 +18,7 @@
 class Error {
     init(message) {
         this.message = message;
+        this.code = nil;
     }
 
     toString() {

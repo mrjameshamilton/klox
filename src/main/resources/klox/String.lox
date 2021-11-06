@@ -1,11 +1,11 @@
 class String {
 
     class strlen(str) {
-        return Error("Native implementation for 'strlen' not provided.");
+        System.fail(Error("Native implementation for 'strlen' not provided."));
     }
 
     class substr(str, start, end) {
-        return Error("Native implementation for 'substr' not provided.");
+        System.fail(Error("Native implementation for 'substr' not provided."));
     }
 }
 
