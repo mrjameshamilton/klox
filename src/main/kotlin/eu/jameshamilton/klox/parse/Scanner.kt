@@ -2,6 +2,7 @@ package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.error
 import eu.jameshamilton.klox.parse.TokenType.*
+import org.apache.commons.text.StringEscapeUtils.*
 
 class Scanner(private val source: String) {
 
@@ -97,7 +98,7 @@ class Scanner(private val source: String) {
 
         advance()
 
-        addToken(STRING, source.substring(start + 1, current - 1))
+        addToken(STRING, unescapeJava(source.substring(start + 1, current - 1)))
     }
 
     private fun peek(): Char = if (isAtEnd()) 0.toChar() else source[current]
