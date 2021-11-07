@@ -13,6 +13,7 @@ import eu.jameshamilton.klox.parse.Scanner
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.EOF
 import eu.jameshamilton.klox.util.ClassPoolClassLoader
+import eu.jameshamilton.klox.util.readFiles
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.multiple
@@ -25,6 +26,8 @@ import proguard.classfile.editor.AttributesEditor
 import proguard.classfile.editor.ConstantPoolEditor
 import proguard.classfile.visitor.ClassPrinter
 import java.io.File
+import java.io.InputStreamReader
+import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 val parser = ArgParser("klox")
@@ -91,13 +94,18 @@ fun parse(code: String): Program? {
     hadError = false
     hadRuntimeError = false
 
-    val resource = object {}.javaClass.getResource("/klox")
-    val dir = File(resource.file)
-    val stdlib = dir
-        .walk()
-        .filter { it.name.endsWith(".lox") }
-        .map { Scanner(it.readText()).scanTokens() }
+    val stdlib = readFiles("/klox/")
+        .filter { it.fileName.name.endsWith(".lox") }
+        .sortedBy { it.fileName.name != "System.lox" } // ensure that System.lox is loaded first
+        .map {
+            val inputStream = InputStreamReader(it.toUri().toURL().openStream())
+            val text = inputStream.readText()
+            inputStream.close()
+            text
+        }
+        .map { Scanner(it).scanTokens() }
         .map { Parser(it).parse() }
+        .toList()
         .reduce { stdlib, lib -> stdlib + lib }
 
     val scanner = Scanner(code)
