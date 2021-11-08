@@ -1181,6 +1181,21 @@ class Compiler : Program.Visitor<ClassPool> {
                     pop()
                     return_()
                 }
+                .addMethod(PUBLIC, "hasField", "(Ljava/lang/String;)Z") {
+                    aload_0()
+                    getfield(targetClass.name, "fields", "Ljava/util/Map;")
+                    aload_1()
+                    invokeinterface("java/util/Map", "containsKey", "(Ljava/lang/Object;)Z")
+                    ireturn()
+                }
+                .addMethod(PUBLIC, "removeField", "(Ljava/lang/String;)V") {
+                    aload_0()
+                    getfield(targetClass.name, "fields", "Ljava/util/Map;")
+                    aload_1()
+                    invokeinterface("java/util/Map", "remove", "(Ljava/lang/Object;)Ljava/lang/Object;")
+                    pop()
+                    return_()
+                }
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
                     val (default) = labels(1)
                     val (tryStart, tryEnd) = try_ {
