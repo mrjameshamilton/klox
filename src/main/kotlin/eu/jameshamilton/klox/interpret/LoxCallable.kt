@@ -1,7 +1,8 @@
 package eu.jameshamilton.klox.interpret
 
+import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
-import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
 import eu.jameshamilton.klox.parse.Token
 
 interface LoxCallable {
@@ -9,7 +10,8 @@ interface LoxCallable {
     fun call(interpreter: Interpreter, arguments: List<Any?> = emptyList()): Any?
 }
 
-open class LoxFunction(val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
+// TODO put classStmt field in FunctionStmt?
+open class LoxFunction(val classStmt: ClassStmt? = null, val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
 
     override fun arity(): Int = declaration.params.size
 
@@ -18,10 +20,17 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
         if (declaration.params.isNotEmpty()) for (i in 0 until declaration.params.size) {
             environment.define(declaration.params[i].name.lexeme, arguments[i])
         }
-        try {
-            interpreter.executeBlock(declaration.body, environment)
-        } catch (e: Interpreter.Return) {
-            return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else e.value
+
+        val native = findNative(interpreter, classStmt, declaration)
+
+        if (native != null) {
+            return native(environment, arguments)
+        } else {
+            try {
+                interpreter.executeBlock(declaration.body, environment)
+            } catch (e: Interpreter.Return) {
+                return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else e.value
+            }
         }
 
         return if (declaration.kind == INITIALIZER) closure.getAt(0, "this"); else null
@@ -30,7 +39,7 @@ open class LoxFunction(val declaration: FunctionStmt, private val closure: Envir
     fun bind(instance: LoxInstance): LoxFunction {
         val environment = Environment(closure)
         environment.define("this", instance)
-        return LoxFunction(declaration, environment)
+        return LoxFunction(classStmt, declaration, environment)
     }
 
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"
@@ -71,6 +80,10 @@ class LoxInstance(val klass: LoxClass, private val fields: MutableMap<String, An
 
     fun set(name: Token, value: Any?) {
         fields[name.lexeme] = value
+    }
+
+    fun remove(name: Token) {
+        if (fields.containsKey(name.lexeme)) fields.remove(name.lexeme)
     }
 
     override fun toString(): String = "${klass.name} instance"

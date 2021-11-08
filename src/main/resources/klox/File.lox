@@ -1,0 +1,28 @@
+class File {
+    init(path) {
+        this.path = path;
+    }
+
+    toString() {
+        return this.path;
+    }
+
+    readText() {
+        var inputStream = FileInputStream(file);
+        var c;
+        var str = "";
+        while (c = inputStream.readChar()) {
+            if (c is Error) {
+                inputStream.close();
+                return c;
+            }
+            str = str + c;
+        }
+        inputStream.close();
+        return str;
+    }
+
+    writeText(text) {
+        System.fail(Error("Native implementation for 'writeText' not provided"));
+    }
+}

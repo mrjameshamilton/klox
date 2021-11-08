@@ -1,0 +1,10 @@
+var path = "src/test/resources/data/text.txt";
+if (System.arg(0) != nil) path = System.arg(0);
+var file = File(path);
+print file.readText();
+
+// expect: line 1
+// expect: line 2
+// expect: line 3
+// expect: line 4
+// expect: line 5

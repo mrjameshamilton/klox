@@ -1,0 +1,26 @@
+var file = File("src/test/resources/data/text.txt");
+
+print file; // expect: src/test/resources/data/text.txt
+
+var inputStream = FileInputStream(file);
+var c;
+var str = "";
+while (c = inputStream.readChar()) {
+    if (c is Error) {
+        print c.message;
+        break;
+    }
+
+    if (c == "\n") {
+        print str;
+        str = "";
+    } else {
+        str = str + c;
+    }
+}
+inputStream.close();
+
+// expect: line 1
+// expect: line 2
+// expect: line 3
+// expect: line 4

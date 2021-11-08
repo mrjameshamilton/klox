@@ -1,10 +1,16 @@
 package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
 import eu.jameshamilton.klox.compile.Resolver.Companion.classStmt
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.parse.FunctionStmt
+import proguard.classfile.AccessConstants.PRIVATE
+import proguard.classfile.ProgramClass
+import proguard.classfile.ProgramMethod
+import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
 fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Composer.() -> Unit)? {
@@ -67,6 +73,107 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 invokestatic("java/lang/System", "exit", "(I)V")
                 aconst_null()
                 areturn()
+            }
+        }
+        "FileInputStream" -> {
+            val INPUT_STREAM = "\$is"
+
+            fun Composer.getkloxfield(name: String, expectedType: String): Composer {
+                ldc(name)
+                invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
+                checkcast(expectedType)
+                return this
+            }
+
+            fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
+                targetClass.findMethod("_read", "()I") as ProgramMethod?
+                    ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "()I") {
+                        val (read) = labels(1)
+
+                        aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                        dup()
+                        ldc(INPUT_STREAM)
+                        invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
+                        ifne(read)
+                        dup() // dup the receiver for use at label read
+
+                        // create the underlying Java InputStream
+                        ldc(INPUT_STREAM)
+                        new_("java/io/FileInputStream")
+                        dup()
+                        aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                        getkloxfield("file", KLOX_INSTANCE)
+                        getkloxfield("path", "java/lang/String")
+                        invokespecial("java/io/FileInputStream", "<init>", "(Ljava/lang/String;)V")
+                        // and store it in the instance as a field
+                        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
+
+                        label(read)
+                        getkloxfield(INPUT_STREAM, "java/io/InputStream")
+                        invokevirtual("java/io/InputStream", "read", "()I")
+                        ireturn()
+                    }
+
+            when (functionStmt.name.lexeme) {
+                "readInt" -> return {
+                    val (tryStart, tryEnd) = try_ {
+                        aload_0()
+                        invokevirtual(targetClass, createReadMethod(targetClass))
+                        i2d()
+                        box("java/lang/Double")
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        error(functionStmt) {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
+                }
+                "readChar" -> return {
+                    val (tryStart, tryEnd) = try_ {
+                        val (nil) = labels(1)
+                        aload_0()
+                        invokevirtual(targetClass, createReadMethod(targetClass))
+                        dup()
+                        iflt(nil)
+                        i2c()
+                        box("java/lang/Character")
+                        invokevirtual("java/lang/Character", "toString", "()Ljava/lang/String;")
+                        areturn()
+
+                        label(nil)
+                        pop()
+                        aconst_null()
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        error(functionStmt) {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
+                }
+                "close" -> return {
+                    val (close, end) = labels(2)
+
+                    aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                    dup()
+                    ldc(INPUT_STREAM)
+                    invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
+                    ifne(close)
+                    pop()
+                    goto_(end)
+
+                    label(close)
+                    dup()
+                    getkloxfield(INPUT_STREAM, "java/io/InputStream")
+                    invokevirtual("java/io/InputStream", "close", "()V")
+                    ldc(INPUT_STREAM)
+                    invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
+
+                    label(end)
+                    aconst_null()
+                    areturn()
+                }
             }
         }
         "String" -> when (functionStmt.name.lexeme) {

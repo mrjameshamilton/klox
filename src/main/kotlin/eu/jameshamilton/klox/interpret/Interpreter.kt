@@ -10,7 +10,7 @@ import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
-import eu.jameshamilton.klox.parse.FunctionType.*
+import eu.jameshamilton.klox.parse.FunctionType.GETTER
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
@@ -23,87 +23,32 @@ import eu.jameshamilton.klox.parse.Stmt
 import eu.jameshamilton.klox.parse.SuperExpr
 import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
-import eu.jameshamilton.klox.parse.TokenType.*
+import eu.jameshamilton.klox.parse.TokenType.AND
+import eu.jameshamilton.klox.parse.TokenType.BANG
+import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.GREATER
+import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
+import eu.jameshamilton.klox.parse.TokenType.IS
+import eu.jameshamilton.klox.parse.TokenType.LESS
+import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.MINUS
+import eu.jameshamilton.klox.parse.TokenType.OR
+import eu.jameshamilton.klox.parse.TokenType.PLUS
+import eu.jameshamilton.klox.parse.TokenType.SLASH
+import eu.jameshamilton.klox.parse.TokenType.STAR
 import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.runtimeError
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
-import kotlin.math.sqrt
-import kotlin.system.exitProcess
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
-class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, StmtVisitor<Unit> {
+class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, StmtVisitor<Unit> {
 
-    private val errorClass: LoxClass by lazy {
-        environment.get(Token(IDENTIFIER, "Error")) as LoxClass
-    }
-
-    @ExperimentalContracts
-    private fun isKloxInteger(index: Any?): Boolean {
-        contract {
-            returns(true) implies (index is Double)
-        }
-        return index is Double && index.mod(1.0) == 0.0
-    }
-
-    @OptIn(ExperimentalContracts::class)
-    private fun findNative(classStmt: ClassStmt? = null, functionStmt: FunctionStmt): ((List<Any?>) -> Any?)? {
-        fun error(message: String) = errorClass.call(this@Interpreter, listOf(message))
-
-        when (classStmt?.name?.lexeme) {
-            "Math" -> when (functionStmt.name.lexeme) {
-                "sqrt" -> return fun (args): Any {
-                    return if (args.first() is Number) {
-                        sqrt(args.first() as Double)
-                    } else error("sqrt `n` parameter should be a number")
-                }
-            }
-            "System" -> when (functionStmt.name.lexeme) {
-                "clock" -> return { System.currentTimeMillis() / 1000.0 }
-                "arg" -> return fun (arguments): Any? {
-                    val index = arguments.first()
-
-                    if (!isKloxInteger(index)) return error("arg 'index' parameter should be an integer.")
-
-                    return try {
-                        args[index.toInt()]
-                    } catch (e: ArrayIndexOutOfBoundsException) {
-                        null
-                    }
-                }
-                "exit" -> return fun (arguments): Any {
-                    val code = arguments.first()
-
-                    if (!isKloxInteger(code)) return error("exit 'code' parameter should be an integer.")
-
-                    exitProcess(code.toInt())
-                }
-            }
-            "String" -> when (functionStmt.name.lexeme) {
-                "strlen" -> return { args -> stringify(args.first()).length.toDouble() }
-                "substr" -> return fun (arguments): Any {
-                    val (str, start, end) = arguments
-
-                    if (!isKloxInteger(start)) return error("substr 'start' parameter should be an integer.")
-                    if (!isKloxInteger(end)) return error("substr 'end' parameter should be an integer.")
-
-                    return try {
-                        stringify(str).substring(start.toInt(), end.toInt())
-                    } catch (e: StringIndexOutOfBoundsException) {
-                        error("String index out of bounds for '$str': begin ${stringify(start)}, end ${stringify(end)}.")
-                    }
-                }
-            }
-        }
-
-        return null
-    }
-
-    private val globals = Environment()
+    val globals = Environment()
 
     private val locals = mutableMapOf<Expr, Int>()
 
@@ -168,7 +113,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
                 }
 
                 return if (left is Double && right is Double) left + right
-                else return "${stringify(left)}${stringify(right)}"
+                else return "${stringify(this, left)}${stringify(this, right)}"
             }
             IS -> return when {
                 left !is LoxInstance -> false
@@ -243,16 +188,10 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        val native = findNative(functionStmt = functionStmt)
-
-        val function = if (native == null) {
-            LoxFunction(functionStmt, environment)
-        } else {
-            object : LoxFunction(functionStmt, environment) {
-                override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = native(arguments)
-            }
-        }
-        environment.define(functionStmt.name.lexeme, function)
+        environment.define(
+            functionStmt.name.lexeme,
+            LoxFunction(classStmt = null, functionStmt, environment)
+        )
     }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr): Any? =
@@ -300,24 +239,6 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
             else -> a?.equals(b) ?: false
         }
 
-    private fun stringify(value: Any?): String = when (value) {
-        null -> "nil"
-        is Double -> {
-            val text = value.toString()
-            if (text.endsWith(".0")) text.substring(0, text.length - 2) else text
-        }
-        is LoxInstance -> {
-            try {
-                val toString = value.get(Token(IDENTIFIER, "toString"))
-                if (toString is LoxFunction) toString.call(this, emptyList()) as String
-                else value.toString()
-            } catch (e: Exception) {
-                value.toString()
-            }
-        }
-        else -> value.toString()
-    }
-
     override fun visitExprStmt(exprStmt: ExprStmt) {
         evaluate(exprStmt.expression)
     }
@@ -331,7 +252,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
     }
 
     override fun visitPrintStmt(printStmt: PrintStmt) {
-        println(stringify(evaluate(printStmt.expression)))
+        println(stringify(this, evaluate(printStmt.expression)))
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
@@ -396,15 +317,7 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
-            val native = findNative(classStmt, functionStmt = it)
-
-            methods[it.name.lexeme] = if (native == null) {
-                LoxFunction(it, environment)
-            } else {
-                object : LoxFunction(it, environment) {
-                    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = native(arguments)
-                }
-            }
+            methods[it.name.lexeme] = LoxFunction(classStmt, it, environment)
         }
 
         val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)
@@ -440,6 +353,27 @@ class Interpreter(private val args: Array<String> = emptyArray()) : ExprVisitor<
     private class Break : RuntimeException()
     private class Continue : RuntimeException()
     class Return(val value: Any?) : RuntimeException()
+
+    companion object {
+
+        fun stringify(interpreter: Interpreter, value: Any?): String = when (value) {
+            null -> "nil"
+            is Double -> {
+                val text = value.toString()
+                if (text.endsWith(".0")) text.substring(0, text.length - 2) else text
+            }
+            is LoxInstance -> {
+                try {
+                    val toString = value.get(Token(IDENTIFIER, "toString"))
+                    if (toString is LoxFunction) toString.call(interpreter, emptyList()) as String
+                    else value.toString()
+                } catch (e: Exception) {
+                    value.toString()
+                }
+            }
+            else -> value.toString()
+        }
+    }
 }
 
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)

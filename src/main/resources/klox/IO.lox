@@ -1,0 +1,49 @@
+class InputStream {
+    init() {
+        System.fail(Error("InputStream cannot be instantiated."));
+    }
+
+    readInt() {
+        System.fail(Error("Abstract method 'readInt'"));
+    }
+
+    readChar() {
+        System.fail(Error("Abstract method 'readChar'"));
+    }
+
+    close() {
+        System.fail(Error("Abstract method 'close"));
+    }
+}
+
+class FileInputStream < InputStream {
+    init(file) {
+        this.file = file;
+    }
+
+    readInt() {
+        System.fail(Error("Native implementation for 'readInt' not provided"));
+    }
+
+    readChar() {
+        System.fail(Error("Native implementation for 'readChar' not provided"));
+    }
+
+    close() {
+        System.fail(Error("Native implementation for 'close' not provided"));
+    }
+}
+
+class OutputStream {
+    init(file) {
+        this.file = file;
+    }
+
+    write() {
+        System.fail(Error("Native implementation for 'write' not provided"));
+    }
+
+    close() {
+        System.fail(Error("Native implementation for 'close' not provided"));
+    }
+}
