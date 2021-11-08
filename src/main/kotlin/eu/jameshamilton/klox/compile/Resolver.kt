@@ -282,8 +282,10 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             get() = captures.getOrPut(this) { HashSet() }
 
         private fun FunctionStmt.capture(varDef: VarDef) {
-            assign(varDef)
-            captured.add(varDef)
+            if (!captured.contains(varDef)) {
+                assign(varDef)
+                captured.add(varDef)
+            }
         }
 
         private val definedIns = WeakHashMap<VarDef, FunctionStmt>()

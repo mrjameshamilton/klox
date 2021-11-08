@@ -1,0 +1,8 @@
+var a = 0;
+fun bar() { }
+fun foo() {
+    a = a + 1; // a will be captured twice, ensure that we don't use multiple slots for the same variable
+    bar();
+}
+foo();
+print a; // expect: 1
