@@ -81,7 +81,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
-        "File" -> when(functionStmt.name.lexeme) {
+        "File" -> when (functionStmt.name.lexeme) {
             "delete" -> return {
                 val (handler) = labels(1)
                 new_("java/io/File")
@@ -111,7 +111,6 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         }
         "FileInputStream" -> {
             val INPUT_STREAM = "\$is"
-
 
             fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_read", "()I") as ProgramMethod?
