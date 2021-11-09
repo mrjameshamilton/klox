@@ -1,7 +1,7 @@
 class String {
 
-    class strlen(str) {
-        System.fail(Error("Native implementation for 'strlen' not provided."));
+    class length(str) {
+        System.fail(Error("Native implementation for 'length' not provided."));
     }
 
     class substr(str, start, end) {
@@ -14,5 +14,5 @@ class String {
 }
 
 // Aliases for common top-level string functions.
-var strlen = String.strlen;
+var strlen = String.length;
 var substr = String.substr;

@@ -103,7 +103,7 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
             }
         }
         "String" -> when (functionStmt.name.lexeme) {
-            "strlen" -> return fun (_, args): Double { return stringify(interpreter, args.first()).length.toDouble() }
+            "length" -> return fun (_, args): Double { return stringify(interpreter, args.first()).length.toDouble() }
             "substr" -> return fun (_, args): Any {
                 val (str, start, end) = args
 

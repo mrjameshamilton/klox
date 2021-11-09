@@ -211,7 +211,7 @@ For compatibility with `lox` the built-in, top-level `clock()` returns the curre
 
 ### Strings
 
-* `String.strlen(string): number` returns the length of `string`.
+* `String.length(string): number` returns the length of `string`.
 * `String.substr(string, start, end): string | Error`
 returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
 

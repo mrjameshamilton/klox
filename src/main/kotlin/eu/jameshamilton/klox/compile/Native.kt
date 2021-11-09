@@ -205,7 +205,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
             }
         }
         "String" -> when (functionStmt.name.lexeme) {
-            "strlen" -> return {
+            "length" -> return {
                 aload_1()
                 stringify()
                 checkcast("java/lang/String")
