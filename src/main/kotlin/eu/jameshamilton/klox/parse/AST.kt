@@ -254,9 +254,15 @@ class ContinueStmt : Stmt {
     }
 }
 
-open class FunctionStmt(override val name: Token, open val kind: FunctionType, val isStatic: Boolean = false, open val params: List<Parameter>, val body: List<Stmt>) :
-    Stmt,
-    VarDef {
+open class FunctionStmt(
+    override val name: Token,
+    open val kind: FunctionType,
+    val classStmt: ClassStmt? = null,
+    val isStatic: Boolean = false,
+    open val params: List<Parameter> = emptyList(),
+    val body: List<Stmt> = emptyList()
+) : Stmt, VarDef {
+
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)
 

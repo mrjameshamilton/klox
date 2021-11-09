@@ -1,6 +1,5 @@
 package eu.jameshamilton.klox.interpret
 
-import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
 import eu.jameshamilton.klox.parse.Token
@@ -10,8 +9,7 @@ interface LoxCallable {
     fun call(interpreter: Interpreter, arguments: List<Any?> = emptyList()): Any?
 }
 
-// TODO put classStmt field in FunctionStmt?
-open class LoxFunction(val classStmt: ClassStmt? = null, val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
+open class LoxFunction(val declaration: FunctionStmt, private val closure: Environment) : LoxCallable {
 
     override fun arity(): Int = declaration.params.size
 
@@ -21,7 +19,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val declaration: Functi
             environment.define(declaration.params[i].name.lexeme, arguments[i])
         }
 
-        val native = findNative(interpreter, classStmt, declaration)
+        val native = findNative(interpreter, declaration)
 
         if (native != null) {
             return native(environment, arguments)
@@ -39,7 +37,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val declaration: Functi
     fun bind(instance: LoxInstance): LoxFunction {
         val environment = Environment(closure)
         environment.define("this", instance)
-        return LoxFunction(classStmt, declaration, environment)
+        return LoxFunction(declaration, environment)
     }
 
     override fun toString(): String = "<fn ${declaration.name.lexeme}>"

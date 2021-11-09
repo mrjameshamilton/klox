@@ -19,7 +19,7 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Stmt? {
         try {
             if (match(CLASS)) return classDeclaration()
-            if (match(FUN)) return function(FUNCTION)
+            if (match(FUN)) return function(classStmt = null, FUNCTION)
             if (match(VAR)) return varDeclaration()
             return statement()
         } catch (error: ParseError) {
@@ -38,18 +38,19 @@ class Parser(private val tokens: List<Token>) {
         consume(LEFT_BRACE, "Expect '{' before class body.")
 
         val methods = mutableListOf<FunctionStmt>()
+        val classStmt = ClassStmt(name, superClass, methods)
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function(METHOD))
+            methods.add(function(classStmt, METHOD))
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.")
 
-        return ClassStmt(name, superClass, methods)
+        return classStmt
     }
 
-    private fun function(originalKind: FunctionType): FunctionStmt {
-        val isClassMethod = check(CLASS)
-        if (isClassMethod) consume(CLASS, "")
+    private fun function(classStmt: ClassStmt?, originalKind: FunctionType): FunctionStmt {
+        val isStatic = check(CLASS)
+        if (isStatic) consume(CLASS, "")
 
         val name = consume(IDENTIFIER, "Expect $originalKind name.")
         val parameters = mutableListOf<Parameter>()
@@ -75,7 +76,7 @@ class Parser(private val tokens: List<Token>) {
         }
 
         consume(LEFT_BRACE, "Expect '{' before $kind body.")
-        return FunctionStmt(name, kind, isClassMethod, parameters, body = block())
+        return FunctionStmt(name, kind, classStmt, isStatic, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {

@@ -1,7 +1,6 @@
 package eu.jameshamilton.klox.interpret
 
 import eu.jameshamilton.klox.interpret.Interpreter.Companion.stringify
-import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
@@ -21,14 +20,14 @@ private fun isKloxInteger(index: Any?): Boolean {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun findNative(interpreter: Interpreter, classStmt: ClassStmt? = null, functionStmt: FunctionStmt): ((Environment, List<Any?>) -> Any?)? {
+fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environment, List<Any?>) -> Any?)? {
     val errorClass: LoxClass by lazy {
         interpreter.globals.get(Token(IDENTIFIER, "Error")) as LoxClass
     }
 
     fun error(message: String) = errorClass.call(interpreter, listOf(message))
 
-    when (classStmt?.name?.lexeme) {
+    when (functionStmt.classStmt?.name?.lexeme) {
         "Math" -> when (functionStmt.name.lexeme) {
             "sqrt" -> return fun (_, args): Any {
                 return if (args.first() is Number) {

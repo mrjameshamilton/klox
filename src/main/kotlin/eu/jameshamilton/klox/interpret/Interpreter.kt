@@ -190,7 +190,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         environment.define(
             functionStmt.name.lexeme,
-            LoxFunction(classStmt = null, functionStmt, environment)
+            LoxFunction(functionStmt, environment)
         )
     }
 
@@ -317,7 +317,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
-            methods[it.name.lexeme] = LoxFunction(classStmt, it, environment)
+            methods[it.name.lexeme] = LoxFunction(it, environment)
         }
 
         val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)

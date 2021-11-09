@@ -3,7 +3,6 @@ package eu.jameshamilton.klox.compile
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
-import eu.jameshamilton.klox.compile.Resolver.Companion.classStmt
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.parse.FunctionStmt
