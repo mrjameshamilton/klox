@@ -29,11 +29,9 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
 
     when (functionStmt.classStmt?.name?.lexeme) {
         "Math" -> when (functionStmt.name.lexeme) {
-            "sqrt" -> return fun (_, args): Any {
-                return if (args.first() is Number) {
-                    sqrt(args.first() as Double)
-                } else error("sqrt `n` parameter should be a number")
-            }
+            "sqrt" -> return fun (_, args): Any =
+                if (args.first() is Number) sqrt(args.first() as Double)
+                else error("sqrt `n` parameter should be a number")
         }
         "System" -> when (functionStmt.name.lexeme) {
             "clock" -> return fun (_, _) { System.currentTimeMillis() / 1000.0 }
