@@ -7,6 +7,10 @@ class String {
     class substr(str, start, end) {
         System.fail(Error("Native implementation for 'substr' not provided."));
     }
+
+    class charAt(str, index) {
+        return String.substr(str, index, index + 1);
+    }
 }
 
 // Aliases for common top-level string functions.
