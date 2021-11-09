@@ -1,7 +1,7 @@
 var file = System.arg(0);
 
 if (file == nil) {
-    System.fail(Error("usage: wc FILE"));
+    System.fail("usage: wc FILE");
 } else {
     file = File(file);
 }
