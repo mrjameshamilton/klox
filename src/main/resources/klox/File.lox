@@ -8,7 +8,7 @@ class File {
     }
 
     readText() {
-        var inputStream = FileInputStream(file);
+        var inputStream = FileInputStream(this);
         var c;
         var str = "";
         while (c = inputStream.readChar()) {
