@@ -232,11 +232,11 @@ Input/output is handled by sub-classes of `InputStream` / `OutputStream`.
 class FileInputStream < InputStream {
     init(file);
     /**
-    * Returns the next integer from the stream or -1 if the end of the stream is reached.
+    * Returns the next byte from the stream or -1 if the end of the stream is reached.
     *
     * Returns an `Error` if there is an error.
     */
-    readInt();
+    readByte();
 
     /**
     * Returns the next character from the stream or nil if the end of the stream is reached.

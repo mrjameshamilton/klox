@@ -114,7 +114,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     }
 
             when (functionStmt.name.lexeme) {
-                "readInt" -> return {
+                "readByte" -> return {
                     val (tryStart, tryEnd) = try_ {
                         aload_0()
                         invokevirtual(targetClass, createReadMethod(targetClass))

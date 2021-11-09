@@ -3,8 +3,8 @@ class InputStream {
         System.fail(Error("InputStream cannot be instantiated."));
     }
 
-    readInt() {
-        System.fail(Error("Abstract method 'readInt'"));
+    readByte() {
+        System.fail(Error("Abstract method 'read'"));
     }
 
     readChar() {
@@ -21,8 +21,8 @@ class FileInputStream < InputStream {
         this.file = file;
     }
 
-    readInt() {
-        System.fail(Error("Native implementation for 'readInt' not provided"));
+    readByte() {
+        System.fail(Error("Native implementation for 'read' not provided"));
     }
 
     readChar() {

@@ -78,10 +78,10 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                         error(e.message ?: "Unknown error reading character")
                     }
                 }
-                "readInt" -> return fun(env, _): Any = try {
+                "readByte" -> return fun(env, _): Any = try {
                     read(env)
                 } catch (e: Exception) {
-                    error(e.message ?: "Unknown error reading integer")
+                    error(e.message ?: "Unknown error reading byte")
                 }
                 "close" -> return fun(env, _) {
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
