@@ -1,5 +1,5 @@
 var file = System.arg(0);
-
+// var start = clock();
 if (file == nil) {
     System.fail("usage: wc FILE");
 } else {
@@ -63,3 +63,4 @@ while (nextWord(inputStream)) {}
 inputStream.close();
 
 print lines + " " + words + " " + chars + " " + file;
+// print clock() - start;
