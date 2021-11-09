@@ -70,15 +70,16 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
         "FileInputStream" -> {
             fun read(env: Environment): Int {
                 val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
-                val inputStream: InputStream = try {
+                val inputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$is"))) {
                     loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
-                } catch (ex: Exception) {
+                } else {
                     val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
                     val path = file.get(Token(IDENTIFIER, "path")) as String
                     val inputStream = FileInputStream(path)
                     loxInstance.set(Token(IDENTIFIER, "\$is"), inputStream)
                     inputStream
                 }
+
                 return inputStream.read()
             }
             when (functionStmt.name.lexeme) {
