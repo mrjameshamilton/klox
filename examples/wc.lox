@@ -46,7 +46,7 @@ fun nextWord(inputStream) {
         count(false);
     }
 
-    // count the next non-word characters
+    // count until the next non-word character
     while (c = inputStream.readChar()) {
         if (c is Error) System.fail(c);
 

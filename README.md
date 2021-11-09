@@ -27,6 +27,7 @@ Options:
     --useInterpreter, -i -> use interpreter instead of JVM compiler when executing
     --debug -> enable debugging 
     --dumpClasses, -d -> dump textual representation of classes (instead of executing) 
+    --args, -arg -> additional arguments to pass to the klox program { String }
     --help, -h -> Usage info 
 ```
 
@@ -196,17 +197,60 @@ print Greeter("James"); // Hello James
 
 ## Klox standard library
 
-Klox comes with a set of [standard library](src/main/resources/klox/stdlib.lox) functions and classes.
+Klox comes with a set of [standard library](src/main/resources/klox/) functions and classes.
 
 ### Lox built-in
 
-* `clock(): number` returns the current time in milliseconds.
+For compatibility with `lox` the built-in, top-level `clock()` returns the current time in milliseconds.
+
+### System
+
+* `System.arg(number): string | nil` returns the nth argument passed to the program or nil if the argument is out of range.
+* `System.exit(code)` exits the program with the given exit code.
+* `System.fail(message)` exits the program with a non-zero exit code and the given message.
 
 ### Strings
 
-* `strlen(string): number` returns the length of `string`.
-* `substr(string, start, end): string | Error`
+* `String.strlen(string): number` returns the length of `string`.
+* `String.substr(string, start, end): string | Error`
 returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
+
+### Files
+
+```c
+class File {
+    init(path);
+    readText();
+}
+```
+
+### Input/Output
+
+Input/output is handled by sub-classes of `InputStream` / `OutputStream`.
+
+```c
+class FileInputStream < InputStream {
+    init(file);
+    /**
+    * Returns the next integer from the stream or -1 if the end of the stream is reached.
+    *
+    * Returns an `Error` if there is an error.
+    */
+    readInt();
+
+    /**
+    * Returns the next character from the stream or nil if the end of the stream is reached.
+    *
+    * Returns an `Error` if there is an error.
+    */
+    readChar();
+
+    /**
+    * Closes the stream
+    */
+    close();
+}
+```
 
 ### Math
 
