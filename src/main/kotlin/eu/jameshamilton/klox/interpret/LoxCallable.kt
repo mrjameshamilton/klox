@@ -84,5 +84,7 @@ class LoxInstance(val klass: LoxClass, private val fields: MutableMap<String, An
         if (fields.containsKey(name.lexeme)) fields.remove(name.lexeme)
     }
 
+    fun hasField(name: Token): Boolean = fields.containsKey(name.lexeme)
+
     override fun toString(): String = "${klass.name} instance"
 }

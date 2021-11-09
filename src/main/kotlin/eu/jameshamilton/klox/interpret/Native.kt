@@ -82,12 +82,11 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 return inputStream.read()
             }
             when (functionStmt.name.lexeme) {
-                "readChar" -> return fun(env, _): Any? = with(read(env)) {
-                    return try {
-                        if (this == -1) null else this.toChar().toString()
-                    } catch (e: Exception) {
-                        error(e.message ?: "Unknown error reading character")
-                    }
+                "readChar" -> return fun(env, _): Any? = try {
+                    val i = read(env)
+                    if (i == -1) null else i.toChar().toString()
+                } catch (e: Exception) {
+                    error(e.message ?: "Unknown error reading character")
                 }
                 "readByte" -> return fun(env, _): Any = try {
                     read(env)
@@ -96,9 +95,11 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 }
                 "close" -> return fun(env, _) {
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
-                    val inputStream: InputStream = loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
-                    inputStream.close()
-                    loxInstance.remove(Token(IDENTIFIER, "\$is"))
+                    if (loxInstance.hasField(Token(IDENTIFIER, "\$is"))) {
+                        val inputStream: InputStream = loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
+                        inputStream.close()
+                        loxInstance.remove(Token(IDENTIFIER, "\$is"))
+                    }
                 }
             }
         }
