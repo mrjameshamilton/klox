@@ -4,7 +4,7 @@ class InputStream {
     }
 
     readByte() {
-        System.fail(Error("Abstract method 'read'"));
+        System.fail(Error("Abstract method 'readByte'"));
     }
 
     readChar() {
@@ -22,7 +22,7 @@ class FileInputStream < InputStream {
     }
 
     readByte() {
-        System.fail(Error("Native implementation for 'read' not provided"));
+        System.fail(Error("Native implementation for 'readByte' not provided"));
     }
 
     readChar() {
