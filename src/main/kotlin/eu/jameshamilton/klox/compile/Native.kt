@@ -27,6 +27,13 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         return this
     }
 
+    fun Composer.getkloxfield(name: String, expectedType: String): Composer {
+        ldc(name)
+        invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
+        checkcast(expectedType)
+        return this
+    }
+
     when (functionStmt.classStmt?.name?.lexeme) {
         "Math" -> when (functionStmt.name.lexeme) {
             "sqrt" -> return {
@@ -74,15 +81,37 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
+        "File" -> when(functionStmt.name.lexeme) {
+            "delete" -> return {
+                val (handler) = labels(1)
+                new_("java/io/File")
+                dup()
+                aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                getkloxfield("path", "java/lang/String")
+                invokespecial("java/io/File", "<init>", "(Ljava/lang/String;)V")
+                val (tryStart, tryEnd) = try_ {
+                    invokevirtual("java/io/File", "delete", "()Z")
+                    ifeq(handler)
+                    TRUE()
+                    areturn()
+
+                    label(handler)
+                    error(functionStmt) {
+                        ldc("Unknown error deleting file")
+                    }
+                    areturn()
+                }
+                catchAll(tryStart, tryEnd) {
+                    error(functionStmt) {
+                        invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                    }
+                }
+                areturn()
+            }
+        }
         "FileInputStream" -> {
             val INPUT_STREAM = "\$is"
 
-            fun Composer.getkloxfield(name: String, expectedType: String): Composer {
-                ldc(name)
-                invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
-                checkcast(expectedType)
-                return this
-            }
 
             fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_read", "()I") as ProgramMethod?

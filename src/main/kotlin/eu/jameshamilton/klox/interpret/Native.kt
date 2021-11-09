@@ -4,6 +4,7 @@ import eu.jameshamilton.klox.interpret.Interpreter.Companion.stringify
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
+import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import kotlin.contracts.ExperimentalContracts
@@ -52,6 +53,18 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 if (!isKloxInteger(code)) return error("exit 'code' parameter should be an integer.")
 
                 exitProcess(code.toInt())
+            }
+        }
+        "File" -> {
+            when (functionStmt.name.lexeme) {
+                "delete" -> return fun(env, _): Any = try {
+                    val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
+                    val path = file.get(Token(IDENTIFIER, "path")) as String
+                    if (!File(path).delete()) true
+                    else error("Unknown error deleting file")
+                } catch (e: Exception) {
+                    error(e.message ?: "Unknown error deleting file")
+                }
             }
         }
         "FileInputStream" -> {
