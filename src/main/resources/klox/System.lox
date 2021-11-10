@@ -53,3 +53,23 @@ class System {
 
 // Alias clock function for compatibility with lox.
 var clock = System.clock;
+
+// TODO: ordering of class definitions is important, figure out a better way to do this that doesn't rely on the order.
+class String {
+
+    class length(str) {
+        System.fail(Error("Native implementation for 'length' not provided."));
+    }
+
+    class substr(str, start, end) {
+        System.fail(Error("Native implementation for 'substr' not provided."));
+    }
+
+    class charAt(str, index) {
+        return String.substr(str, index, index + 1);
+    }
+}
+
+// Aliases for common top-level string functions.
+var strlen = String.length;
+var substr = String.substr;
