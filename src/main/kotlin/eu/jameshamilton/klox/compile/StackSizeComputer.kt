@@ -85,12 +85,12 @@ class StackSizeComputer : ExprVisitor<Int>, StmtVisitor<Int> {
     )
 
     override fun visitThisExpr(thisExpr: ThisExpr): Int = compute(
-        consumes = 1,
+        consumes = 0,
         produces = 1
     )
 
     override fun visitSuperExpr(superExpr: SuperExpr): Int = compute(
-        consumes = 1,
+        consumes = 0,
         produces = 1
     )
 
