@@ -27,6 +27,19 @@ class File {
     }
 
     writeText(text) {
-        System.fail(Error("Native implementation for 'writeText' not provided"));
+        var outputStream = FileOutputStream(this);
+        var length = String.length(text);
+
+        for (var i = 0; i < length; i = i + 1) {
+            var c = String.charAt(text, i);
+            if (c is Error) {
+                outputStream.close();
+                return c;
+            }
+            outputStream.writeChar(c);
+        }
+        outputStream.close();
+
+        return true;
     }
 }

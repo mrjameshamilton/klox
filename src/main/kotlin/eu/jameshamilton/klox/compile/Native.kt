@@ -27,10 +27,82 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         return this
     }
 
+    fun Composer.error(func: FunctionStmt, message: String): Composer =
+        error(func) { ldc(message) }
+
+    fun Composer.loadkloxinstance(): Composer {
+        aload_0()
+        invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+        return this
+    }
+
     fun Composer.getkloxfield(name: String, expectedType: String): Composer {
         ldc(name)
         invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
         checkcast(expectedType)
+        return this
+    }
+
+    fun Composer.removekloxfield(name: String): Composer {
+        ldc(name)
+        invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
+        return this
+    }
+
+    fun Composer.haskloxfield(name: String): Composer {
+        ldc(name)
+        invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
+        return this
+    }
+
+    fun Composer.withkloxfield(name: String, expectedType: String, composer: Composer.() -> Composer): Composer {
+        val (hasField, end) = labels(2)
+
+        loadkloxinstance()
+        dup()
+        haskloxfield(name)
+        ifne(hasField)
+        dup()
+        dup()
+        ldc(name)
+        swap()
+        composer(this)
+        dup_x2()
+        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
+        goto_(end)
+
+        label(hasField)
+        loadkloxinstance()
+        getkloxfield(name, expectedType)
+
+        label(end)
+        return this
+    }
+
+    fun Composer.closestream(name: String, type: String): Composer {
+        val (close, end) = labels(2)
+        val (tryStart, endTry) = try_ {
+            loadkloxinstance()
+            dup()
+            haskloxfield(name)
+            ifne(close)
+            pop()
+            goto_(end)
+
+            label(close)
+            dup()
+            getkloxfield(name, type)
+            invokevirtual(type, "close", "()V")
+
+            removekloxfield(name)
+            label(end)
+            TRUE()
+        }
+        catchAll(tryStart, endTry) {
+            error(functionStmt) {
+                invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+            }
+        }
         return this
     }
 
@@ -86,7 +158,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 val (handler) = labels(1)
                 new_("java/io/File")
                 dup()
-                aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                loadkloxinstance()
                 getkloxfield("path", "java/lang/String")
                 invokespecial("java/io/File", "<init>", "(Ljava/lang/String;)V")
                 val (tryStart, tryEnd) = try_ {
@@ -96,9 +168,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     areturn()
 
                     label(handler)
-                    error(functionStmt) {
-                        ldc("Unknown error deleting file")
-                    }
+                    error(functionStmt, "Unknown error deleting file")
                     areturn()
                 }
                 catchAll(tryStart, tryEnd) {
@@ -115,28 +185,15 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
             fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_read", "()I") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "()I") {
-                        val (read) = labels(1)
+                        withkloxfield(INPUT_STREAM, "java/io/FileInputStream") {
+                            getkloxfield("file", KLOX_INSTANCE)
+                            getkloxfield("path", "java/lang/String")
+                            new_("java/io/FileInputStream")
+                            dup_x1()
+                            swap()
+                            invokespecial("java/io/FileInputStream", "<init>", "(Ljava/lang/String;)V")
+                        }
 
-                        aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
-                        dup()
-                        ldc(INPUT_STREAM)
-                        invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
-                        ifne(read)
-                        dup() // dup the receiver for use at label read
-
-                        // create the underlying Java InputStream
-                        ldc(INPUT_STREAM)
-                        new_("java/io/FileInputStream")
-                        dup()
-                        aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
-                        getkloxfield("file", KLOX_INSTANCE)
-                        getkloxfield("path", "java/lang/String")
-                        invokespecial("java/io/FileInputStream", "<init>", "(Ljava/lang/String;)V")
-                        // and store it in the instance as a field
-                        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
-
-                        label(read)
-                        getkloxfield(INPUT_STREAM, "java/io/InputStream")
                         invokevirtual("java/io/InputStream", "read", "()I")
                         ireturn()
                     }
@@ -180,25 +237,89 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     areturn()
                 }
                 "close" -> return {
-                    val (close, end) = labels(2)
+                    closestream(INPUT_STREAM, "java/io/InputStream")
+                    areturn()
+                }
+            }
+        }
+        "FileOutputStream" -> {
+            val OUTPUT_STREAM = "\$os"
 
-                    aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
-                    dup()
-                    ldc(INPUT_STREAM)
-                    invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
-                    ifne(close)
+            fun write(targetClass: ProgramClass): ProgramMethod =
+                targetClass.findMethod("_write", "(I)V") as ProgramMethod?
+                    ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_write", "(I)V") {
+                        withkloxfield(OUTPUT_STREAM, "java/io/FileOutputStream") {
+                            getkloxfield("file", KLOX_INSTANCE)
+                            getkloxfield("path", "java/lang/String")
+                            new_("java/io/FileOutputStream")
+                            dup_x1()
+                            swap()
+                            invokespecial("java/io/FileOutputStream", "<init>", "(Ljava/lang/String;)V")
+                        }
+
+                        iload_1()
+                        invokevirtual("java/io/OutputStream", "write", "(I)V")
+                        return_()
+                    }
+
+            when (functionStmt.name.lexeme) {
+                "writeByte" -> return {
+                    val (error) = labels(1)
+                    val (tryStart, tryEnd) = try_ {
+                        aload_0()
+                        aload_1()
+                        checktype("java/lang/Integer", "Byte should be an integer between 0 and 255.")
+                        unbox("java/lang/Double")
+                        d2i()
+                        dup()
+                        iflt(error)
+                        dup()
+                        iconst(255)
+                        ificmpgt(error)
+                        invokevirtual(targetClass, write(targetClass))
+                        TRUE()
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        error(functionStmt) {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
+
+                    label(error)
                     pop()
-                    goto_(end)
+                    error(functionStmt, "Byte should be an integer between 0 and 255.")
+                    areturn()
+                }
+                "writeChar" -> return {
+                    val (error) = labels(1)
+                    val (tryStart, tryEnd) = try_ {
+                        aload_0()
+                        aload_1()
+                        checktype("java/lang/String", "Parameter should be a single character.")
+                        dup()
+                        invokevirtual("java/lang/String", "length", "()I")
+                        iconst_1()
+                        ificmpne(error)
+                        iconst_0()
+                        invokevirtual("java/lang/String", "charAt", "(I)C")
+                        invokevirtual(targetClass, write(targetClass))
+                        TRUE()
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        error(functionStmt) {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
 
-                    label(close)
-                    dup()
-                    getkloxfield(INPUT_STREAM, "java/io/InputStream")
-                    invokevirtual("java/io/InputStream", "close", "()V")
-                    ldc(INPUT_STREAM)
-                    invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
-
-                    label(end)
-                    aconst_null()
+                    label(error)
+                    pop()
+                    error(functionStmt, "Parameter should be a single character.")
+                    areturn()
+                }
+                "close" -> return {
+                    closestream(OUTPUT_STREAM, "java/io/OutputStream")
                     areturn()
                 }
             }

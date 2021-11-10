@@ -1,0 +1,13 @@
+var file = File("build/tmp.txt");
+
+file.delete();
+
+print file; // expect: build/tmp.txt
+
+var outputStream = FileOutputStream(file);
+
+print outputStream.writeByte(-1); // expect: Byte should be an integer between 0 and 255.
+
+outputStream.close();
+
+file.delete();

@@ -6,7 +6,9 @@ import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.sqrt
@@ -94,13 +96,64 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 } catch (e: Exception) {
                     error(e.message ?: "Unknown error reading byte")
                 }
-                "close" -> return fun(env, _) {
+                "close" -> return fun(env, _): Any = try {
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
                     if (loxInstance.hasField(Token(IDENTIFIER, "\$is"))) {
                         val inputStream: InputStream = loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
                         inputStream.close()
                         loxInstance.remove(Token(IDENTIFIER, "\$is"))
                     }
+                    true
+                } catch (e: Exception) {
+                    error(e.message ?: "Unknown error closing file")
+                }
+            }
+        }
+        "FileOutputStream" -> {
+            fun write(env: Environment, value: Any): Any {
+                val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
+                val outputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$os"))) {
+                    loxInstance.get(Token(IDENTIFIER, "\$os")) as OutputStream
+                } else {
+                    val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
+                    val path = file.get(Token(IDENTIFIER, "path")) as String
+                    val outputStream = FileOutputStream(path)
+                    loxInstance.set(Token(IDENTIFIER, "\$os"), outputStream)
+                    outputStream
+                }
+
+                when (value) {
+                    is Number -> outputStream.write(value.toInt())
+                    is Char -> outputStream.write(value.code)
+                    else -> return error("Parameter should be a number or character")
+                }
+
+                return true
+            }
+            when (functionStmt.name.lexeme) {
+                "writeByte" -> return fun (env, args): Any {
+                    if (!isKloxInteger(args.first())) return error("Byte should be an integer between 0 and 255.")
+                    val i = args.first() as Double
+                    if (i > 255 || i < 0) return error("Byte should be an integer between 0 and 255.")
+                    return write(env, i)
+                }
+                "writeChar" -> return fun (env, args): Any {
+                    if (args.first() !is String) return error("Parameter should be a single character.")
+
+                    val str = args.first() as String
+                    if (str.length > 1) return error("Parameter should be a single character.")
+                    return write(env, str.first())
+                }
+                "close" -> return fun (env, _): Any = try {
+                    val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
+                    if (loxInstance.hasField(Token(IDENTIFIER, "\$os"))) {
+                        val outputStream = loxInstance.get(Token(IDENTIFIER, "\$os")) as OutputStream
+                        outputStream.close()
+                        loxInstance.remove(Token(IDENTIFIER, "\$os"))
+                    }
+                    true
+                } catch (e: Exception) {
+                    error(e.message ?: "Unknown error closing file")
                 }
             }
         }

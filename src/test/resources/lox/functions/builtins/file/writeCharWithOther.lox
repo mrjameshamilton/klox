@@ -1,0 +1,12 @@
+var file = File("build/tmp.txt");
+
+file.delete();
+
+var outputStream = FileOutputStream(file);
+
+print outputStream.writeChar(nil); // expect: Parameter should be a single character.
+print outputStream.writeChar(Error("error")); // expect: Parameter should be a single character.
+
+outputStream.close();
+
+file.delete();

@@ -1,0 +1,17 @@
+var file = File("build/tmp.txt");
+
+file.delete();
+
+print file; // expect: build/tmp.txt
+
+var outputStream = FileOutputStream(file);
+
+print outputStream.writeByte(65); // expect: true
+print outputStream.writeByte(66); // expect: true
+print outputStream.writeByte(67); // expect: true
+
+print outputStream.close(); // expect: true
+
+print file.readText(); // expect: ABC
+
+file.delete();

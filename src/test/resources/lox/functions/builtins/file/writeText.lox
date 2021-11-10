@@ -1,0 +1,7 @@
+var path = "build/tmp.txt";
+if (System.arg(0) != nil) path = System.arg(0);
+var file = File(path);
+file.delete();
+print file.writeText("Hello World"); // expect: true
+print file.readText(); // expect: Hello World
+file.delete();

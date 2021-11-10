@@ -35,15 +35,38 @@ class FileInputStream < InputStream {
 }
 
 class OutputStream {
+    init() {
+        System.fail("InputStream cannot be instantiated.");
+    }
+
+    writeChar(c) {
+        System.fail("Abstract method 'writeChar'");
+    }
+
+    writeByte(i) {
+        System.fail("Abstract method 'writeInt'");
+    }
+
+    close() {
+        System.fail("Abstract method 'close");
+    }
+}
+
+class FileOutputStream < OutputStream {
     init(file) {
         this.file = file;
     }
 
-    write() {
-        System.fail(Error("Native implementation for 'write' not provided"));
+    writeChar(c) {
+        System.fail(Error("Native implementation for 'writeChar' not provided"));
+    }
+
+    writeByte(i) {
+        System.fail(Error("Native implementation for 'writeInt' not provided"));
     }
 
     close() {
         System.fail(Error("Native implementation for 'close' not provided"));
     }
 }
+
