@@ -247,12 +247,39 @@ class FileInputStream < InputStream {
     readChar();
 
     /**
-    * Closes the stream
+    * Closes the stream.
+    *
+    * Returns true or an `Error` if there is an error.
     */
     close();
 }
 ```
 
+```c
+class FileOutputStream < InputStream {
+    init(file);
+    /**
+    * Writes a byte to the outputstream.
+    *
+    * Returns true or an `Error` if there is an error.
+    */
+    writeByte(b);
+
+    /**
+    * Writes a character to the outputstream.
+    *
+    * Returns true or an `Error` if there is an error.
+    */
+    readChar();
+
+    /**
+    * Closes the stream.
+    *
+    * Returns true or an `Error` if there is an error.
+    */
+    close();
+}
+```
 ### Math
 
 * `Math.PI` 3.141592653589793
