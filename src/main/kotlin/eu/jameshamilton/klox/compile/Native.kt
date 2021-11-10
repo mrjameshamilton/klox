@@ -43,6 +43,13 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         return this
     }
 
+    fun Composer.setkloxfield(name: String): Composer {
+        ldc(name)
+        swap()
+        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
+        return this
+    }
+
     fun Composer.removekloxfield(name: String): Composer {
         ldc(name)
         invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
@@ -55,24 +62,19 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         return this
     }
 
-    fun Composer.withkloxfield(name: String, expectedType: String, composer: Composer.() -> Composer): Composer {
+    fun Composer.withkloxfield(name: String, expectedType: String, newValueComposer: Composer.() -> Composer): Composer {
         val (hasField, end) = labels(2)
 
         loadkloxinstance()
         dup()
         haskloxfield(name)
         ifne(hasField)
-        dup()
-        dup()
-        ldc(name)
-        swap()
-        composer(this)
-        dup_x2()
-        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
+        newValueComposer(this)
+        dup_x1()
+        setkloxfield(name)
         goto_(end)
 
         label(hasField)
-        loadkloxinstance()
         getkloxfield(name, expectedType)
 
         label(end)
@@ -186,6 +188,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 targetClass.findMethod("_read", "()I") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "()I") {
                         withkloxfield(INPUT_STREAM, "java/io/FileInputStream") {
+                            loadkloxinstance()
                             getkloxfield("file", KLOX_INSTANCE)
                             getkloxfield("path", "java/lang/String")
                             new_("java/io/FileInputStream")
@@ -249,12 +252,14 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 targetClass.findMethod("_write", "(I)V") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_write", "(I)V") {
                         withkloxfield(OUTPUT_STREAM, "java/io/FileOutputStream") {
+                            loadkloxinstance()
                             getkloxfield("file", KLOX_INSTANCE)
                             getkloxfield("path", "java/lang/String")
                             new_("java/io/FileOutputStream")
                             dup_x1()
                             swap()
                             invokespecial("java/io/FileOutputStream", "<init>", "(Ljava/lang/String;)V")
+                            // leave the file output stream on the stack
                         }
 
                         iload_1()
