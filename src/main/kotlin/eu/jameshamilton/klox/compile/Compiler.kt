@@ -22,6 +22,7 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.Access
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.FunctionType.*
 import eu.jameshamilton.klox.parse.GetExpr
@@ -76,6 +77,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
     override fun visitProgram(program: Program): ClassPool {
         mainFunction = FunctionStmt(
+            Access.empty(),
             Token(FUN, "Main"),
             SCRIPT,
             params = emptyList(),
@@ -558,7 +560,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
             if (functionStmt.captured.isNotEmpty()) dup()
 
-            if (functionStmt.kind != INITIALIZER && functionStmt.kind != METHOD && functionStmt.kind != GETTER && !functionStmt.isStatic) {
+            if (functionStmt.kind != INITIALIZER && functionStmt.kind != METHOD && functionStmt.kind != GETTER && !functionStmt.accessFlags.contains(Access.STATIC)) {
                 // Don't need to store, it should remain on the stack so that it can be added to the class
                 declare(this@FunctionCompiler.functionStmt, functionStmt)
             }
@@ -946,7 +948,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     }
                 }
                 .addMethod(PUBLIC, "isStatic", "()Z") {
-                    iconst(if (functionStmt.isStatic) 1 else 0)
+                    iconst(if (functionStmt.accessFlags.contains(Access.STATIC)) 1 else 0)
                     ireturn()
                 }
                 .addMethod(PUBLIC, "getEnclosing", "()L$KLOX_CALLABLE;") {

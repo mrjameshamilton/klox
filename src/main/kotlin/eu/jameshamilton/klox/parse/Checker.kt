@@ -3,6 +3,7 @@ package eu.jameshamilton.klox.parse
 import eu.jameshamilton.klox.error
 import eu.jameshamilton.klox.parse.ClassType.NONE
 import eu.jameshamilton.klox.parse.ClassType.SUBCLASS
+import eu.jameshamilton.klox.parse.Access.*
 import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
@@ -150,7 +151,7 @@ class Checker : ASTVisitor<Unit> {
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == NONE) {
             error(thisExpr.name, "Can't use 'this' outside of a class.")
-        } else if (currentFunction?.isStatic == true) {
+        } else if (currentFunction?.accessFlags?.contains(STATIC) == true) {
             error(thisExpr.name, "Can't use 'this' in a static method.")
         }
     }

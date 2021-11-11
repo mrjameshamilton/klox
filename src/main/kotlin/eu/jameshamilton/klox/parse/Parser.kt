@@ -3,6 +3,7 @@ package eu.jameshamilton.klox.parse
 import eu.jameshamilton.klox.parse.FunctionType.*
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.TokenType.CLASS
+import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
 class Parser(private val tokens: List<Token>) {
@@ -78,7 +79,9 @@ class Parser(private val tokens: List<Token>) {
         }
 
         consume(LEFT_BRACE, "Expect '{' before $kind body.")
-        return FunctionStmt(name, kind, classStmt, isStatic, parameters, body = block())
+        val flags = Access.empty()
+        if (isStatic) flags.add(Access.STATIC)
+        return FunctionStmt(flags, name, kind, classStmt, parameters, body = block())
     }
 
     private fun varDeclaration(): Stmt {

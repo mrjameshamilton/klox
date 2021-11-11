@@ -1,6 +1,8 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.parse.TokenType.*
+import java.util.EnumSet
+import java.util.EnumSet.*
 
 interface ASTVisitor<R> : Program.Visitor<R>, Expr.Visitor<R>, Stmt.Visitor<R>
 
@@ -254,11 +256,19 @@ class ContinueStmt : Stmt {
     }
 }
 
+enum class Access {
+    STATIC;
+
+    companion object {
+        fun empty(): EnumSet<Access> = noneOf(Access::class.java)
+    }
+}
+
 open class FunctionStmt(
+    val accessFlags: EnumSet<Access>,
     override val name: Token,
     open val kind: FunctionType,
     val classStmt: ClassStmt? = null,
-    val isStatic: Boolean = false,
     open val params: List<Parameter> = emptyList(),
     val body: List<Stmt> = emptyList()
 ) : Stmt, VarDef {

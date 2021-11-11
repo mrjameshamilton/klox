@@ -9,6 +9,7 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.Access.*
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.FunctionType.GETTER
 import eu.jameshamilton.klox.parse.GetExpr
@@ -166,7 +167,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 obj.get(getExpr.name)
             } else if (obj is LoxClass) {
                 val method = obj.findMethod(getExpr.name.lexeme)
-                if (method != null && !method.declaration.isStatic) {
+                if (method != null && !method.declaration.accessFlags.contains(STATIC)) {
                     throw RuntimeError(getExpr.name, "'${method.declaration.name.lexeme}' is not a static class method.")
                 } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
             } else null
