@@ -54,6 +54,9 @@ class OutputStream {
 
 class FileOutputStream < OutputStream {
     init(file) {
+        if (!(file is File)) {
+            System.fail(Error("Argument 'file' is not a File"));
+        }
         this.file = file;
     }
 
