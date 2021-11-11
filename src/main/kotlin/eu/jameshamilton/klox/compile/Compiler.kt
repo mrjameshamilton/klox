@@ -663,6 +663,7 @@ class Compiler : Program.Visitor<ClassPool> {
             goto_(end)
 
             label(notInstanceAndNotClass)
+            pop()
             throw_("java/lang/RuntimeException", "Only instances have properties.")
 
             label(notStatic)
