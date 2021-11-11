@@ -1,0 +1,9 @@
+// Unlike lox, klox classes all extend Object.
+
+class Base {
+  foo() {
+    super.doesNotExist; // expect runtime error: Undefined property 'doesNotExist'.
+  }
+}
+
+Base().foo();

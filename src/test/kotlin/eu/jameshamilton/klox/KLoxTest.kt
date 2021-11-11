@@ -41,6 +41,10 @@ class KLoxTest : FunSpec({
             !file.path.contains("field/get_on_class.lox") && // klox implements static methods
             !file.path.contains("super/extra_arguments.lox") && // TODO: need to check stdout / stderr separately
 
+            // klox classes have Object as super class
+            !file.path.contains("super/no_superclass_call.lox") &&
+            !file.path.contains("super/no_superclass_bind.lox") &&
+
             !file.path.contains("function/print.lox") && // Lox native functions all print as <native fn>
 
             // not relevant for klox?

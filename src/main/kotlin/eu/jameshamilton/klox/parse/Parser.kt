@@ -33,7 +33,9 @@ class Parser(private val tokens: List<Token>) {
         val superClass = if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.")
             VariableExpr(previous())
-        } else null
+        } else if (name.lexeme != "Object") {
+            VariableExpr(Token(IDENTIFIER, "Object", previous().line))
+        } else null // Only Object has no superclass
 
         consume(LEFT_BRACE, "Expect '{' before class body.")
 

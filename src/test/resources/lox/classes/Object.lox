@@ -1,0 +1,8 @@
+// Unlike lox, klox objects extend from Object by default.
+
+class Foo { }
+class Bar < Foo { }
+
+print Foo() is Object; // expect: true
+print Bar() is Object; // expect: true
+

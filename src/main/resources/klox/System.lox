@@ -1,3 +1,10 @@
+class Object {
+
+    // TODO implement toString() in klox
+    //      this requires first methods to introspect the instance's class to get the name of the class
+    //      because the default toString() should return "$className instance"
+}
+
 /**
  * KLox `Error` class which indicates an error occurred.
  *

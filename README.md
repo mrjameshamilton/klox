@@ -203,6 +203,10 @@ Klox comes with a set of [standard library](src/main/resources/klox/) functions 
 
 For compatibility with `lox` the built-in, top-level `clock()` returns the current time in milliseconds.
 
+### Object
+
+Unlike lox, all klox classes extend from the root `Object`. `Object` is the only class with no super class.
+
 ### System
 
 * `System.arg(number): string | nil` returns the nth argument passed to the program or nil if the argument is out of range.

@@ -104,7 +104,11 @@ class Checker : ASTVisitor<Unit> {
     override fun visitClassStmt(classStmt: ClassStmt) {
         val enclosingClass = currentClassType
         currentClassType = ClassType.CLASS
-        if (classStmt.superClass != null) {
+        if (classStmt.superClass == null) {
+            if (classStmt.name.lexeme != "Object") {
+                error(classStmt.name, "Only Object has no super class.")
+            }
+        } else {
             currentClassType = SUBCLASS
             if (classStmt.name.lexeme == classStmt.superClass.name.lexeme) {
                 error(
