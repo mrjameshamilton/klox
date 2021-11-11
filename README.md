@@ -260,7 +260,7 @@ class FileInputStream < InputStream {
 ```
 
 ```c
-class FileOutputStream < InputStream {
+class FileOutputStream < OutputStream {
     init(file);
     /**
     * Writes a byte to the outputstream.
@@ -274,7 +274,7 @@ class FileOutputStream < InputStream {
     *
     * Returns true or an `Error` if there is an error.
     */
-    readChar();
+    writeChar(c);
 
     /**
     * Closes the stream.
