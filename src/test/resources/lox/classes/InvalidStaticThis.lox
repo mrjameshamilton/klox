@@ -1,0 +1,7 @@
+class Foo {
+    class bar() {
+        this.foo = 1;
+    }
+}
+
+print Foo.bar(); // expect runtime error: Can't use 'this' in a static method.
