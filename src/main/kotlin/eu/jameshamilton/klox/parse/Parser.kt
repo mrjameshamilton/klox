@@ -3,7 +3,6 @@ package eu.jameshamilton.klox.parse
 import eu.jameshamilton.klox.parse.FunctionType.*
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.TokenType.CLASS
-import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
 class Parser(private val tokens: List<Token>) {

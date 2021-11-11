@@ -1,9 +1,9 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.error
+import eu.jameshamilton.klox.parse.Access.*
 import eu.jameshamilton.klox.parse.ClassType.NONE
 import eu.jameshamilton.klox.parse.ClassType.SUBCLASS
-import eu.jameshamilton.klox.parse.Access.*
 import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
