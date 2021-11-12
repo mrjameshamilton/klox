@@ -352,10 +352,10 @@ fun Composer.stringify(): Composer = helper("Main", "stringify", stackInputSize 
 fun Composer.declare(functionStmt: FunctionStmt, varDef: VarDef): Composer {
     if (varDef.isCaptured) when {
         varDef.isGlobalLateInit -> {
-            // Variable was not yet initialized, so set the initial value.
+            // Variable was not yet initialized, so set the initial value. A CapturedVar
+            // with a null value is put in the field in the function's constructor.
             aload_0()
-            ldc(varDef.javaName)
-            invokevirtual(targetClass.name, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;")
+            getfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
             dup_x1()
             swap()
             invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
@@ -365,9 +365,7 @@ fun Composer.declare(functionStmt: FunctionStmt, varDef: VarDef): Composer {
             dup()
             aload_0()
             swap()
-            ldc(varDef.javaName)
-            swap()
-            invokevirtual(targetClass.name, "capture", "(Ljava/lang/String;L$KLOX_CAPTURED_VAR;)V")
+            putfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
         }
     }
 

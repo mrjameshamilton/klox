@@ -174,8 +174,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
                 for (captured in functionStmt.captured) {
                     aload_0()
-                    ldc(captured.javaName)
-                    invokevirtual(targetClass.name, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;")
+                    getfield(targetClass.name, captured.javaName, "L$KLOX_CAPTURED_VAR;")
                     astore(functionStmt.slot(captured))
                 }
 
@@ -575,10 +574,8 @@ class Compiler : Program.Visitor<ClassPool> {
                         }
                         checkcast(varDef.definedIn.javaClassName)
                     }
-                    ldc(varDef.javaName)
-                    dup_x1()
-                    invokevirtual(varDef.definedIn.javaClassName, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;")
-                    invokevirtual(functionStmt.javaClassName, "capture", "(Ljava/lang/String;L$KLOX_CAPTURED_VAR;)V")
+                    getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                    putfield(functionStmt.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
                 }
                 pop()
             }
@@ -900,28 +897,26 @@ class Compiler : Program.Visitor<ClassPool> {
             )
                 .addInterface(KLOX_FUNCTION)
                 .addField(PRIVATE or FINAL, "__enclosing", "L$KLOX_CALLABLE;")
-                .addField(PRIVATE or FINAL, "__captured", "Ljava/util/Map;")
                 .addField(PRIVATE or FINAL, "__owner", "L$KLOX_CLASS;")
+                .apply {
+                    for (captured in functionStmt.captured + functionStmt.variables.filter { it.isCaptured }) {
+                        addField(PUBLIC, captured.javaName, "L$KLOX_CAPTURED_VAR;")
+                    }
+                }
                 .addMethod(PUBLIC, "<init>", "(L$KLOX_CALLABLE;)V") {
                     aload_0()
                     dup()
                     invokespecial("java/lang/Object", "<init>", "()V")
                     aload_1()
                     putfield(targetClass.name, "__enclosing", "L$KLOX_CALLABLE;")
-                    aload_0()
-                    new_("java/util/HashMap")
-                    dup()
-                    invokespecial("java/util/HashMap", "<init>", "()V")
-                    putfield(targetClass.name, "__captured", "Ljava/util/Map;")
                     val globalLateInitVariables = functionStmt.variables.filter { it.isGlobalLateInit }
                     // Create null captured values for global lateinit variables
                     for ((i, variable) in globalLateInitVariables.withIndex()) {
                         if (i == 0) aload_0()
                         dup()
-                        ldc(variable.javaName)
                         aconst_null()
                         box(variable)
-                        invokevirtual(targetClass.name, "capture", "(Ljava/lang/String;L$KLOX_CAPTURED_VAR;)V")
+                        putfield(targetClass.name, variable.javaName, "L$KLOX_CAPTURED_VAR;")
                         if (i == globalLateInitVariables.size - 1) pop()
                     }
                     return_()
@@ -956,20 +951,6 @@ class Compiler : Program.Visitor<ClassPool> {
                     getfield(targetClass.name, "__enclosing", "L$KLOX_CALLABLE;")
                     areturn()
                 }
-                .addMethod(PUBLIC, "capture", "(Ljava/lang/String;L$KLOX_CAPTURED_VAR;)V") {
-                    aload_0()
-                    getfield(targetClass.name, "__captured", "Ljava/util/Map;")
-                    aload_1()
-                    aload_2()
-                    invokeinterface("java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
-                    pop()
-                    return_()
-                }
-                .addMethod(PUBLIC, "getCaptured", "()Ljava/util/Map;") {
-                    aload_0()
-                    getfield(targetClass.name, "__captured", "Ljava/util/Map;")
-                    areturn()
-                }
                 .addMethod(PUBLIC, "getOwner", "()L$KLOX_CLASS;") {
                     aload_0().getfield(targetClass.name, "__owner", "L$KLOX_CLASS;")
                     areturn()
@@ -979,14 +960,6 @@ class Compiler : Program.Visitor<ClassPool> {
                     aload_1()
                     putfield(targetClass.name, "__owner", "L$KLOX_CLASS;")
                     return_()
-                }
-                .addMethod(PUBLIC, "getCaptured", "(Ljava/lang/String;)L$KLOX_CAPTURED_VAR;") {
-                    aload_0()
-                    getfield(targetClass.name, "__captured", "Ljava/util/Map;")
-                    aload_1()
-                    invokeinterface("java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;")
-                    checkcast(KLOX_CAPTURED_VAR)
-                    areturn()
                 }
                 .addMethod(PUBLIC, "getReceiver", "()L$KLOX_INSTANCE;") {
                     if (functionStmt.isBindable) {
