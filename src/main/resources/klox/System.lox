@@ -80,3 +80,25 @@ class String {
 // Aliases for common top-level string functions.
 var strlen = String.length;
 var substr = String.substr;
+
+class Array {
+    init(size) {
+        System.fail(Error("Native implementation for 'Array' not provided."));
+    }
+
+    get(i) {
+        System.fail(Error("Native implementation for 'get' not provided."));
+    }
+
+    set(i, value) {
+        System.fail(Error("Native implementation for 'set' not provided."));
+    }
+
+    length() {
+        System.fail(Error("Native implementation for 'length' not provided."));
+    }
+
+    toString() {
+        return "Array(" + this.length() + ")";
+    }
+}

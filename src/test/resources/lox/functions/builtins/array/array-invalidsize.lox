@@ -1,0 +1,1 @@
+var array = Array(-1); // expect runtime error: Array size must be a positive integer.

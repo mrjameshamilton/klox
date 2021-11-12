@@ -1,0 +1,13 @@
+var size = 100000;
+var array = Array(size);
+for (var i = 0; i < size; i = i + 1) {
+    array.set(i, i);
+}
+print array.get(size - 1); // expect: 99999
+
+var sum = 0;
+for (var i = 0; i < size; i = i + 1) {
+    sum = sum + array.get(i);
+}
+
+print sum; // expect: 4.99995E9

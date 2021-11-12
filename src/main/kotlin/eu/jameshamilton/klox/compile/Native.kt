@@ -109,6 +109,57 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
     }
 
     when (functionStmt.classStmt?.name?.lexeme) {
+        "Array" -> when (functionStmt.name.lexeme) {
+            "init" -> return {
+                val (error) = labels(1)
+                withkloxfield("\$array", "[Ljava/lang/Object;") {
+                    aload_1()
+                    checktype("java/lang/Integer", "Array size must be a positive integer.")
+                    unbox("java/lang/Double")
+                    d2i()
+                    dup()
+                    iflt(error)
+                    anewarray("java/lang/Object")
+                }
+                pop()
+                loadkloxinstance()
+                areturn()
+
+                label(error)
+                pop()
+                throw_("java/lang/RuntimeException", "Array size must be a positive integer.")
+            }
+            "get" -> return {
+                loadkloxinstance()
+                getkloxfield("\$array", "[Ljava/lang/Object;")
+                aload_1()
+                checktype("java/lang/Integer", "Array index must be an integer")
+                unbox("java/lang/Double")
+                d2i()
+                aaload()
+                areturn()
+            }
+            "set" -> return {
+                loadkloxinstance()
+                getkloxfield("\$array", "[Ljava/lang/Object;")
+                aload_1()
+                checktype("java/lang/Integer", "Array index must be an integer")
+                unbox("java/lang/Double")
+                d2i()
+                aload_2()
+                aastore()
+                aconst_null()
+                areturn()
+            }
+            "length" -> return {
+                loadkloxinstance()
+                getkloxfield("\$array", "[Ljava/lang/Object;")
+                arraylength()
+                i2d()
+                box("java/lang/Double")
+                areturn()
+            }
+        }
         "Math" -> when (functionStmt.name.lexeme) {
             "sqrt" -> return {
                 aload_1()

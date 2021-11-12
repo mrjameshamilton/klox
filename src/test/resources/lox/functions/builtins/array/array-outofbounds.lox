@@ -1,0 +1,2 @@
+var array = Array(3);
+print array.get(4); // expect runtime error: Index 4 out of bounds for length 3
