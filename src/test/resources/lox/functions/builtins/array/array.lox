@@ -1,9 +1,9 @@
 var array = Array(3);
 print array; // expect: Array(3)
 array.set(0, "a");
-array.set(1, "b");
+array.set(1, 123);
 array.set(2, "c");
 print array.get(0); // expect: a
-print array.get(1); // expect: b
+print array.get(1); // expect: 123
 print array.get(2); // expect: c
 print array.length(); // expect: 3
