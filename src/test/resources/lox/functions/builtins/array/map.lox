@@ -1,0 +1,13 @@
+var array = Array(3);
+array.set(0, 1);
+array.set(1, 2);
+array.set(2, 3);
+
+fun foo(i) { return "Array entry " + i; }
+fun bar(i) { return i + "!"; }
+
+array = array.map(foo).map(bar);
+
+print array.get(0); // expect: Array entry 1!
+print array.get(1); // expect: Array entry 2!
+print array.get(2); // expect: Array entry 3!

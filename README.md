@@ -217,6 +217,9 @@ class Array {
     get(index);
     set(index, value);
     length();
+    map(function);
+    reduce(initialValue, function);
+    filter(function);
 }
 
 var array = Array(2);

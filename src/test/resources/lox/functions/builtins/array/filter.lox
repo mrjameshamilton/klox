@@ -1,0 +1,29 @@
+var array = Array(6);
+array.set(0, 1);
+array.set(1, 2);
+array.set(2, 3);
+array.set(3, 4);
+array.set(4, 5);
+array.set(5, 6);
+
+fun isTwoOrSix(x) {
+    return x == 2 or x == 6;
+}
+
+fun timesTwo(x) {
+    return x * 2;
+}
+
+fun add(x, y) {
+    return x + y;
+}
+
+print array
+        .filter(isTwoOrSix)
+        .length(); // expect: 2
+
+print array
+        .filter(isTwoOrSix)
+        .map(timesTwo)
+        .reduce(0, add);  // expect: 16
+

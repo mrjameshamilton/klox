@@ -117,6 +117,45 @@ class Array {
         System.fail(Error("Native implementation for 'length' not provided."));
     }
 
+    map(function) {
+        var length = this.length();
+        var result = Array(length);
+        for (var i = 0; i < length; i = i + 1) {
+            result.set(i, function(this.get(i)));
+        }
+        return result;
+    }
+
+    reduce(initial, function) {
+        var length = this.length();
+        var result = initial;
+        for (var i = 0; i < length; i = i + 1) {
+            result = function(result, this.get(i));
+        }
+        return result;
+    }
+
+    filter(function) {
+        var length = this.length();
+        var result = Array(length);
+        var resultLength = 0;
+
+        for (var i = 0; i < length; i = i + 1) {
+            var value = this.get(i);
+            if (function(value)) {
+                result.set(resultLength, value);
+                resultLength = resultLength + 1;
+            }
+        }
+
+        var shrunkResult = Array(resultLength);
+        for (var i = 0; i < resultLength; i = i + 1) {
+            shrunkResult.set(i, result.get(i));
+        }
+
+        return shrunkResult;
+    }
+
     toString() {
         return "Array(" + this.length() + ")";
     }
