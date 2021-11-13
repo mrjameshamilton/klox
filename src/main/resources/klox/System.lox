@@ -75,6 +75,22 @@ class String {
     class charAt(str, index) {
         return String.substr(str, index, index + 1);
     }
+
+    class indexOf(str, search) {
+        var result = -1;
+        var length = String.length(str);
+        var searchLength = String.length(search);
+        for (var i = 0; i < length; i = i + 1) {
+            var end = i + searchLength;
+            if (end > length) end = length;
+            if (String.substr(str, i, end) == search) {
+                result = i;
+                break;
+            }
+        }
+        return result;
+    }
+
 }
 
 // Aliases for common top-level string functions.
