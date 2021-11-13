@@ -237,6 +237,7 @@ print array.length(); // 2
 * `String.length(string): number` returns the length of `string`.
 * `String.substr(string, start, end): string | Error`
 returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
+* `String.toNumber(string): number | Error`
 
 ### Files
 
