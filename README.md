@@ -248,6 +248,7 @@ returns the substring of `string` between `start` (inclusive) and `end` (exclusi
 class File {
     init(path);
     readText();
+    writeText(string);
     delete();
 }
 ```
