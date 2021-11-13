@@ -1,0 +1,42 @@
+var zero = String.toNumber("0");
+var one = String.toNumber("1");
+var two = String.toNumber("2");
+var three = String.toNumber("3");
+var four = String.toNumber("4");
+var five = String.toNumber("5");
+var six = String.toNumber("6");
+var seven = String.toNumber("7");
+var eight = String.toNumber("8");
+var nine = String.toNumber("9");
+
+print zero / 1; // expect: 0
+print one / 1; // expect: 1
+print two / 1; // expect: 2
+print three / 1; // expect: 3
+print four / 1; // expect: 4
+print five / 1; // expect: 5
+print six / 1; // expect: 6
+print seven / 1; // expect: 7
+print eight / 1; // expect: 8
+print nine / 1; // expect: 9
+
+print String.toNumber("TEST"); // expect: Invalid number 'TEST'.
+
+print String.toNumber("1234") / 1; // expect: 1234
+print String.toNumber("-1234") / 1; // expect: -1234
+
+print String.toNumber("3.14"); // expect: 3.14
+print String.toNumber(""+Math.PI); // expect: 3.141592653589793
+print String.toNumber(""+Math.PI) == Math.PI; // expect: true
+
+print String.toNumber("3.3.3"); // expect: Invalid number '3.3.3'.
+
+print String.toNumber("+1"); // expect: 1
+
+print String.toNumber("1E10"); // expect: 1.0E10
+print String.toNumber("1e10"); // expect: 1.0E10
+print String.toNumber("1E+10"); // expect: 1.0E10
+print String.toNumber("1e-1"); // expect: 0.1
+print String.toNumber("1E5"); // expect: 100000
+print String.toNumber("1E-2"); // expect: 0.01
+print String.toNumber("3.14E2"); // expect: 314

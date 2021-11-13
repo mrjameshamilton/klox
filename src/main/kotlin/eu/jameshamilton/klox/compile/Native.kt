@@ -424,6 +424,25 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 }
                 areturn()
             }
+            "toNumber" -> return {
+                val (tryStart, tryEnd) = try_ {
+                    aload_1()
+                    checkcast("java/lang/String")
+                    invokestatic("java/lang/Double", "parseDouble", "(Ljava/lang/String;)D")
+                    box("java/lang/Double")
+                }
+                catchAll(tryStart, tryEnd) {
+                    pop()
+                    error(functionStmt) {
+                        concat(
+                            { ldc("Invalid number '") },
+                            { aload_1() },
+                            { ldc("'.") }
+                        )
+                    }
+                }
+                areturn()
+            }
         }
     }
     return null

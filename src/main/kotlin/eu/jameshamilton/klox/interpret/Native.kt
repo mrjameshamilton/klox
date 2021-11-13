@@ -217,6 +217,11 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                     )
                 }
             }
+            "toNumber" -> return fun (_, args): Any = try {
+                (args.first() as String).toDouble()
+            } catch (e: Exception) {
+                kloxError("Invalid number '${args.first()}'.")
+            }
         }
     }
 

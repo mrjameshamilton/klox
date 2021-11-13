@@ -91,6 +91,9 @@ class String {
         return result;
     }
 
+    class toNumber(str) {
+        System.fail(Error("Native implementation for 'toNumber' not provided."));
+    }
 }
 
 // Aliases for common top-level string functions.
