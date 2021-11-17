@@ -87,7 +87,7 @@ class StackSizeComputerTest : FunSpec({
 
     test("Function definition should produce empty stack") {
         val program = """
-            fun foo { return 1; }
+            fun foo() { return 1; }
         """.parse()
 
         program.statementAccept(StackSizeComputer()).sum() shouldBe 0
