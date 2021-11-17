@@ -430,6 +430,11 @@ class Compiler : Program.Visitor<ClassPool> {
                         areturn()
                     }
                 }
+                COMMA -> {
+                    binaryExpr.left.accept(this@FunctionCompiler)
+                    composer.pop()
+                    binaryExpr.right.accept(this@FunctionCompiler)
+                }
                 else -> {}
             }
         }

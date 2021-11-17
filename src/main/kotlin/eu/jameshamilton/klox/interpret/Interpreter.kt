@@ -24,21 +24,7 @@ import eu.jameshamilton.klox.parse.Stmt
 import eu.jameshamilton.klox.parse.SuperExpr
 import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
-import eu.jameshamilton.klox.parse.TokenType.AND
-import eu.jameshamilton.klox.parse.TokenType.BANG
-import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.GREATER
-import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
-import eu.jameshamilton.klox.parse.TokenType.IS
-import eu.jameshamilton.klox.parse.TokenType.LESS
-import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.MINUS
-import eu.jameshamilton.klox.parse.TokenType.OR
-import eu.jameshamilton.klox.parse.TokenType.PLUS
-import eu.jameshamilton.klox.parse.TokenType.SLASH
-import eu.jameshamilton.klox.parse.TokenType.STAR
+import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
@@ -83,7 +69,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
     private fun evaluate(expr: Expr): Any? = expr.accept(this)
 
-    override fun visitBinaryExpr(binaryExpr: BinaryExpr): Any {
+    override fun visitBinaryExpr(binaryExpr: BinaryExpr): Any? {
         val left = evaluate(binaryExpr.left)
         val right = evaluate(binaryExpr.right)
 
@@ -128,6 +114,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                     return false
                 }
             }
+            COMMA -> return right
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }

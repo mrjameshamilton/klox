@@ -241,15 +241,16 @@ class Parser(private val tokens: List<Token>) {
         return continueStmt
     }
 
-    private fun expression(): Expr {
+    private fun expression(allowCommaExpr: Boolean = true): Expr = comma(allowCommaExpr)
+
+    private fun comma(allowCommaExpr: Boolean): Expr {
         val expr = assignment()
 
-/*        // TODO comma expressions
-        while (match(COMMA)) {
+        if (allowCommaExpr && match(COMMA)) {
             val op = previous()
             val right = expression()
-            expr = BinaryExpr(expr, op, right)
-        }*/
+            return BinaryExpr(expr, op, right)
+        }
 
         return expr
     }
@@ -381,7 +382,7 @@ class Parser(private val tokens: List<Token>) {
                 if (arguments.size >= 255) {
                     error(peek(), "Can't have more than 255 arguments.")
                 }
-                arguments.add(expression())
+                arguments.add(expression(allowCommaExpr = false))
             } while (match(COMMA))
         }
 

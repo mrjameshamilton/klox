@@ -116,6 +116,15 @@ var foo = fun (x) {
 print foo(1); // 2
 ```
 
+* comma operator
+
+The comma operator is used to chain multiple expressions together, the left-hand side of the
+expression is evaluated & its result discarded then right-hand side is evaluated and returned.
+
+```c
+print "foo", "bar"; // prints bar
+```
+
 * `break` and `continue` statements
 
 ```c
