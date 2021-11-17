@@ -949,7 +949,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         putfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                       throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
+                        throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC, "isStatic", "()Z") {
@@ -977,7 +977,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         getfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                       throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
+                        throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
@@ -1010,7 +1010,7 @@ class Compiler : Program.Visitor<ClassPool> {
         }
     }
 
-     private val FunctionExpr.isBindable
+    private val FunctionExpr.isBindable
         get() = !flags.contains(ANONYMOUS) && !flags.contains(FunctionFlag.STATIC)
 
     private fun initialize(programClassPool: ClassPool) = with(programClassPool) {
