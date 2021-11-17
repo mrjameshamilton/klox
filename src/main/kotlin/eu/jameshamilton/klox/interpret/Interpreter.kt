@@ -84,8 +84,8 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     private fun evaluate(expr: Expr): Any? = expr.accept(this)
 
     override fun visitBinaryExpr(binaryExpr: BinaryExpr): Any {
-        val right = evaluate(binaryExpr.right)
         val left = evaluate(binaryExpr.left)
+        val right = evaluate(binaryExpr.right)
 
         when (binaryExpr.operator.type) {
             MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL ->
