@@ -1,0 +1,3 @@
+// from book-tests: klox supports function expressions.
+// expect runtime error: Named function not allowed here.
+while (true) fun foo() {}

@@ -2,11 +2,11 @@ package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CAPTURED_VAR
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
-import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobalLateInit
+import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.debug
-import eu.jameshamilton.klox.parse.FunctionStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.PUBLIC
@@ -349,9 +349,9 @@ fun Composer.stringify(): Composer = helper("Main", "stringify", stackInputSize 
 /**
  * Declare a Klox local variable - takes into account if the variable is captured or not.
  */
-fun Composer.declare(functionStmt: FunctionStmt, varDef: VarDef): Composer {
+fun Composer.declare(func: FunctionExpr, varDef: VarDef): Composer {
     if (varDef.isCaptured) when {
-        varDef.isGlobalLateInit -> {
+        varDef.isLateInit -> {
             // Variable was not yet initialized, so set the initial value. A CapturedVar
             // with a null value is put in the field in the function's constructor.
             aload_0()
@@ -369,7 +369,7 @@ fun Composer.declare(functionStmt: FunctionStmt, varDef: VarDef): Composer {
         }
     }
 
-    astore(functionStmt.slot(varDef))
+    astore(func.slot(varDef))
 
     return this
 }

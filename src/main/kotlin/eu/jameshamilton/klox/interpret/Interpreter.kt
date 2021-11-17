@@ -1,6 +1,5 @@
 package eu.jameshamilton.klox.interpret
 
-import eu.jameshamilton.klox.parse.Access.*
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -10,8 +9,9 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
+import eu.jameshamilton.klox.parse.FunctionFlag.*
 import eu.jameshamilton.klox.parse.FunctionStmt
-import eu.jameshamilton.klox.parse.FunctionType.GETTER
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
@@ -167,12 +167,12 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 obj.get(getExpr.name)
             } else if (obj is LoxClass) {
                 val method = obj.findMethod(getExpr.name.lexeme)
-                if (method != null && !method.declaration.accessFlags.contains(STATIC)) {
-                    throw RuntimeError(getExpr.name, "'${method.declaration.name.lexeme}' is not a static class method.")
+                if (method != null && !method.declaration.flags.contains(STATIC)) {
+                    throw RuntimeError(getExpr.name, "'${method.name}' is not a static class method.")
                 } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
             } else null
 
-            if (value is LoxFunction && value.declaration.kind == GETTER) value.call(this) else value
+            if (value is LoxFunction && value.declaration.flags.contains(GETTER)) value.call(this) else value
         }
         else -> throw RuntimeError(getExpr.name, "Only instances have properties.")
     }
@@ -191,8 +191,12 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         environment.define(
             functionStmt.name.lexeme,
-            LoxFunction(functionStmt, environment)
+            LoxFunction(classStmt = null, functionStmt.name.lexeme, functionStmt.functionExpr, environment)
         )
+    }
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr): LoxFunction {
+        return LoxFunction(classStmt = null, "anon", functionExpr, environment)
     }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr): Any? =
@@ -318,7 +322,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
-            methods[it.name.lexeme] = LoxFunction(it, environment)
+            methods[it.name.lexeme] = LoxFunction(classStmt, it.name.lexeme, it.functionExpr, environment)
         }
 
         val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)

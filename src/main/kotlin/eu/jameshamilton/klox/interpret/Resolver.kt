@@ -10,6 +10,7 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -82,7 +83,7 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
         }
     }
 
-    private fun resolveFunction(functionStmt: FunctionStmt) {
+    private fun resolveFunction(functionStmt: FunctionExpr) {
         beginScope()
         functionStmt.params.forEach {
             declare(it.name)
@@ -173,7 +174,11 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         declare(functionStmt.name)
         define(functionStmt.name)
-        resolveFunction(functionStmt)
+        resolveFunction(functionStmt.functionExpr)
+    }
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr) {
+        resolveFunction(functionExpr)
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
@@ -194,7 +199,7 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
         beginScope()
         scopes.peek()["this"] = true
 
-        classStmt.methods.forEach { resolveFunction(it) }
+        classStmt.methods.forEach { resolveFunction(it.functionExpr) }
 
         endScope()
 

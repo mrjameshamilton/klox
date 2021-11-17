@@ -36,7 +36,8 @@ interface Expr {
         GetExpr.Visitor<R>,
         SetExpr.Visitor<R>,
         ThisExpr.Visitor<R>,
-        SuperExpr.Visitor<R>
+        SuperExpr.Visitor<R>,
+        FunctionExpr.Visitor<R>
 }
 
 class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
@@ -163,6 +164,22 @@ class SuperExpr(override val name: Token, val method: Token) : Expr, VarAccess {
     }
 }
 
+class FunctionExpr(
+    val flags: EnumSet<FunctionFlag>,
+    val params: List<Parameter> = emptyList(),
+    val body: List<Stmt> = emptyList()
+) : Expr {
+
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitFunctionExpr(this)
+
+    interface Visitor<R> {
+        fun visitFunctionExpr(functionExpr: FunctionExpr): R
+    }
+
+    override fun toString(): String = "<fn-expr>"
+}
+
 interface Stmt {
     fun <R> accept(visitor: Visitor<R>): R
 
@@ -256,27 +273,24 @@ class ContinueStmt : Stmt {
     }
 }
 
-enum class Access {
-    STATIC;
+enum class FunctionFlag {
+    STATIC,
+    ANONYMOUS,
+    GETTER,
+    INITIALIZER,
+    METHOD;
 
     companion object {
-        fun empty(): EnumSet<Access> = noneOf(Access::class.java)
+        fun empty(): EnumSet<FunctionFlag> = noneOf(FunctionFlag::class.java)
     }
 }
 
-open class FunctionStmt(
-    val accessFlags: EnumSet<Access>,
-    override val name: Token,
-    open val kind: FunctionType,
-    val classStmt: ClassStmt? = null,
-    open val params: List<Parameter> = emptyList(),
-    val body: List<Stmt> = emptyList()
-) : Stmt, VarDef {
+open class FunctionStmt(override val name: Token, val functionExpr: FunctionExpr, val classStmt: ClassStmt? = null) : Stmt, VarDef {
 
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)
 
-    override fun toString(): String = "<fn ${name.lexeme}>"
+    override fun toString(): String = "<fn ${name.lexeme} $functionExpr>"
 
     interface Visitor<R> {
         fun visitFunctionStmt(functionStmt: FunctionStmt): R

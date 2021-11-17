@@ -106,6 +106,16 @@ Employee("John", "Smith").greet();
 
 `klox` includes some features not implemented in the Crafting Interpreters implementation:
 
+* Anonymous functions
+
+```c
+var foo = fun (x) {
+    return x + 1;
+};
+
+print foo(1); // 2
+```
+
 * `break` and `continue` statements
 
 ```c

@@ -1,8 +1,49 @@
 package eu.jameshamilton.klox.parse
 
-import eu.jameshamilton.klox.parse.FunctionType.*
-import eu.jameshamilton.klox.parse.TokenType.*
+import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.TokenType.AND
+import eu.jameshamilton.klox.parse.TokenType.BANG
+import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CLASS
+import eu.jameshamilton.klox.parse.TokenType.COMMA
+import eu.jameshamilton.klox.parse.TokenType.CONTINUE
+import eu.jameshamilton.klox.parse.TokenType.DOT
+import eu.jameshamilton.klox.parse.TokenType.ELSE
+import eu.jameshamilton.klox.parse.TokenType.EOF
+import eu.jameshamilton.klox.parse.TokenType.EQUAL
+import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.FALSE
+import eu.jameshamilton.klox.parse.TokenType.FOR
+import eu.jameshamilton.klox.parse.TokenType.FUN
+import eu.jameshamilton.klox.parse.TokenType.GREATER
+import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
+import eu.jameshamilton.klox.parse.TokenType.IF
+import eu.jameshamilton.klox.parse.TokenType.IS
+import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACE
+import eu.jameshamilton.klox.parse.TokenType.LEFT_PAREN
+import eu.jameshamilton.klox.parse.TokenType.LESS
+import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.MINUS
+import eu.jameshamilton.klox.parse.TokenType.NIL
+import eu.jameshamilton.klox.parse.TokenType.NUMBER
+import eu.jameshamilton.klox.parse.TokenType.OR
+import eu.jameshamilton.klox.parse.TokenType.PLUS
+import eu.jameshamilton.klox.parse.TokenType.PRINT
+import eu.jameshamilton.klox.parse.TokenType.RETURN
+import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACE
+import eu.jameshamilton.klox.parse.TokenType.RIGHT_PAREN
+import eu.jameshamilton.klox.parse.TokenType.SEMICOLON
+import eu.jameshamilton.klox.parse.TokenType.SLASH
+import eu.jameshamilton.klox.parse.TokenType.STAR
+import eu.jameshamilton.klox.parse.TokenType.STRING
+import eu.jameshamilton.klox.parse.TokenType.SUPER
+import eu.jameshamilton.klox.parse.TokenType.THIS
+import eu.jameshamilton.klox.parse.TokenType.TRUE
+import eu.jameshamilton.klox.parse.TokenType.VAR
+import eu.jameshamilton.klox.parse.TokenType.WHILE
+import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
 class Parser(private val tokens: List<Token>) {
@@ -19,7 +60,10 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Stmt? {
         try {
             if (match(CLASS)) return classDeclaration()
-            if (match(FUN)) return function(classStmt = null, FUNCTION)
+            if (check(FUN, IDENTIFIER)) {
+                consume(FUN, "")
+                return function(flags = FunctionFlag.empty(), initializer = ::FunctionStmt)
+            }
             if (match(VAR)) return varDeclaration()
             return statement()
         } catch (error: ParseError) {
@@ -29,20 +73,28 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun classDeclaration(): Stmt {
-        val name = consume(IDENTIFIER, "Expect class name.")
+        val className = consume(IDENTIFIER, "Expect class name.")
         val superClass = if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.")
             VariableExpr(previous())
-        } else if (name.lexeme != "Object") {
+        } else if (className.lexeme != "Object") {
             VariableExpr(Token(IDENTIFIER, "Object", previous().line))
         } else null // Only Object has no superclass
 
         consume(LEFT_BRACE, "Expect '{' before class body.")
 
         val methods = mutableListOf<FunctionStmt>()
-        val classStmt = ClassStmt(name, superClass, methods)
+        val classStmt = ClassStmt(className, superClass, methods)
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function(classStmt, METHOD))
+            val flags = FunctionFlag.empty()
+            flags.add(METHOD)
+            if (match(CLASS)) flags.add(STATIC)
+            methods.add(
+                function(flags) { name, body ->
+                    if (name.lexeme == "init") flags.add(INITIALIZER)
+                    FunctionStmt(name, body, classStmt)
+                }
+            )
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.")
@@ -50,20 +102,13 @@ class Parser(private val tokens: List<Token>) {
         return classStmt
     }
 
-    private fun function(classStmt: ClassStmt?, originalKind: FunctionType): FunctionStmt {
-        val isStatic = check(CLASS)
-        if (isStatic) consume(CLASS, "")
+    private fun function(flags: EnumSet<FunctionFlag>, initializer: (Token, FunctionExpr) -> FunctionStmt): FunctionStmt =
+        initializer(consume(IDENTIFIER, "Expect function name."), functionBody(flags))
 
-        val name = consume(IDENTIFIER, "Expect $originalKind name.")
-        val parameters = mutableListOf<Parameter>()
-
-        var kind = when {
-            originalKind == METHOD && name.lexeme == "init" -> INITIALIZER
-            else -> originalKind
-        }
-
-        if (check(LEFT_PAREN)) {
-            consume(LEFT_PAREN, "Expected '(' after $kind name")
+    private fun functionBody(flags: EnumSet<FunctionFlag>): FunctionExpr {
+        val parameters = if (check(LEFT_PAREN)) {
+            val parameters = mutableListOf<Parameter>()
+            consume(LEFT_PAREN, "Expected '(' after function name")
             if (!check(RIGHT_PAREN)) {
                 do {
                     if (parameters.size >= 255) {
@@ -73,14 +118,19 @@ class Parser(private val tokens: List<Token>) {
                 } while (match(COMMA))
             }
             consume(RIGHT_PAREN, "Expect ')' after parameters.")
+            parameters
+        } else if (flags.contains(METHOD)) {
+            flags.add(GETTER)
+            emptyList()
+        } else if (flags.contains(ANONYMOUS)) {
+            throw error(peek(), "Named function not allowed here.")
         } else {
-            kind = GETTER
+            throw error(peek(), "Expect ')' after parameters.")
         }
 
-        consume(LEFT_BRACE, "Expect '{' before $kind body.")
-        val flags = Access.empty()
-        if (isStatic) flags.add(Access.STATIC)
-        return FunctionStmt(flags, name, kind, classStmt, parameters, body = block())
+        consume(LEFT_BRACE, "Expect '{' before function body.")
+
+        return FunctionExpr(flags, parameters, block())
     }
 
     private fun varDeclaration(): Stmt {
@@ -344,10 +394,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(FALSE)) return LiteralExpr(false)
         if (match(TRUE)) return LiteralExpr(true)
         if (match(NIL)) return LiteralExpr(null)
-
-        if (match(NUMBER, STRING)) {
-            return LiteralExpr(previous().literal)
-        }
+        if (match(NUMBER, STRING)) return LiteralExpr(previous().literal)
 
         if (match(SUPER)) {
             val keyword = previous()
@@ -359,10 +406,8 @@ class Parser(private val tokens: List<Token>) {
         }
 
         if (match(THIS)) return ThisExpr(previous())
-
-        if (match(IDENTIFIER)) {
-            return VariableExpr(previous())
-        }
+        if (match(IDENTIFIER)) return VariableExpr(previous())
+        if (match(FUN)) return functionBody(EnumSet.of(ANONYMOUS))
 
         if (match(LEFT_PAREN)) {
             val expr = expression()
@@ -407,9 +452,11 @@ class Parser(private val tokens: List<Token>) {
         return false
     }
 
-    private fun check(type: TokenType): Boolean {
-        if (isAtEnd()) return false
-        return peek().type == type
+    private fun check(type: TokenType, nextType: TokenType? = null): Boolean = when {
+        isAtEnd() -> false
+        nextType == null -> peek().type == type
+        tokens[current + 1].type == EOF -> false
+        else -> peek().type == type && tokens[current + 1].type == nextType
     }
 
     private fun advance(): Token {

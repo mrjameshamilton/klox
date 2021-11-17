@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.error
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
@@ -10,6 +11,7 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -30,18 +32,49 @@ import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.parse.visitor.AllFunctionExprVisitor
+import eu.jameshamilton.klox.parse.visitor.AllVarStmtVisitor
 import java.util.Stack
 import java.util.WeakHashMap
 
 class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
+    private lateinit var mainFunction: FunctionStmt
     private val scopes = Stack<MutableMap<VarDef, Boolean>>()
-    private val unresolved = mutableSetOf<Pair<FunctionStmt, VarAccess>>()
-    private val functionStack = Stack<FunctionStmt>()
-    private val currentFunction: FunctionStmt get() = functionStack.peek()
+    private val unresolved = mutableSetOf<Pair<FunctionExpr, VarAccess>>()
+    private val functionStack = Stack<FunctionExpr>()
+    private val functionNameStack = Stack<String>()
+    private val currentFunction: FunctionExpr get() = functionStack.peek()
+    private var lambdaNumber = 0
 
     // Global scope == 1 because we start with the wrapper main function
     private val isGlobalScope: Boolean get() = scopes.size == 1
+    private val FunctionExpr.isMain: Boolean get() = this == mainFunction.functionExpr
+
+    fun execute(mainFunction: FunctionStmt) {
+        this.mainFunction = mainFunction
+        mainFunction.accept(this)
+
+        if (debug == true) {
+            println("Unresolved: $unresolved")
+        }
+
+        // Late initialization when capturing in initializer e.g. f in the following:
+        // var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
+        mainFunction.accept(
+            AllVarStmtVisitor(object : VarStmt.Visitor<Unit> {
+                override fun visitVarStmt(varStmt: VarStmt) {
+                    if (varStmt.isCaptured) varStmt.initializer?.accept(
+                        AllFunctionExprVisitor(object : FunctionExpr.Visitor<Unit> {
+                            override fun visitFunctionExpr(functionExpr: FunctionExpr) {
+                                if (functionExpr.captured.contains(varStmt)) lateInits += varStmt
+                            }
+                        })
+                    )
+                }
+            })
+        )
+    }
 
     private fun resolve(stmts: List<Stmt>) = stmts.forEach { it.accept(this) }
 
@@ -50,8 +83,17 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     private fun resolve(expr: Expr) = expr.accept(this)
 
     private fun beginScope(): MutableMap<VarDef, Boolean>? = scopes.push(mutableMapOf())
+    private fun beginScope(functionExpr: FunctionExpr) {
+        functionDepths[functionExpr] = scopes.size
+        functionStack.push(functionExpr)
+        beginScope()
+    }
 
     private fun endScope() = scopes.pop()
+    private fun endScope(@Suppress("UNUSED_PARAMETER") functionExpr: FunctionExpr) {
+        functionStack.pop()
+        endScope()
+    }
 
     private fun declare(inVarDef: VarDef) {
         if (scopes.empty()) return
@@ -86,15 +128,6 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             unresolved.remove(it)
         }
 
-        when (varDef) {
-            is FunctionStmt -> classNames[varDef] = functionStack
-                .joinToString(
-                    separator = "$",
-                    postfix = "$${varDef.name.lexeme}"
-                ) { it.name.lexeme }
-            is ClassStmt -> classNames[varDef] = varDef.name.lexeme
-        }
-
         javaFieldNames[varDef] = "${varDef.name.lexeme}#${varDef.hashCode()}"
         definedIns[varDef] = currentFunction // TODO why does use_local_in_initializer fail without this?
         currentFunction.assign(varDef)
@@ -112,6 +145,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     }
 
     private fun resolveLocal(varAccess: VarAccess) {
+        if (debug == true) print("resolveLocal($varAccess)")
         for (i in scopes.size - 1 downTo 0) {
             if (scopes[i].count { it.key.name.lexeme == varAccess.name.lexeme } > 0) {
                 scopes[i].map { it.key }.single { it.name.lexeme == varAccess.name.lexeme }.let { varDef ->
@@ -122,24 +156,34 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                         if (currentFunction != varDef.definedIn) currentFunction.capture(varDef)
                         varUseMap[varAccess] = varDef
                     }
+                    if (debug == true) println(" = $varDef")
                     return
                 }
             }
         }
 
+        if (debug == true) println(" = unresolved")
         unresolved.add(Pair(currentFunction, varAccess))
     }
 
-    private fun resolveFunction(functionStmt: FunctionStmt) {
-        functionStack.push(functionStmt)
-        beginScope()
-        functionStmt.params.forEach {
+    private fun resolveFunction(functionExpr: FunctionExpr, name: String) {
+        javaClassNames[functionExpr] = when {
+            !functionExpr.isMain -> {
+                functionNameStack.push(if (this.isGlobalScope) "${mainFunction.name.lexeme}\$$name" else name)
+                functionNameStack.joinToString(separator = "$") { it.toString() }
+            }
+            else -> mainFunction.name.lexeme
+        }
+
+        beginScope(functionExpr)
+        functionExpr.params.forEach {
             declare(it)
             define(it)
         }
-        resolve(functionStmt.body)
-        endScope()
-        functionStack.pop()
+        resolve(functionExpr.body)
+        endScope(functionExpr)
+
+        if (!functionExpr.isMain) functionNameStack.pop()
     }
 
     override fun visitExprStmt(exprStmt: ExprStmt) = resolve(exprStmt.expression)
@@ -211,10 +255,13 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        functionDepths[functionStmt] = scopes.size
         declare(functionStmt)
         define(functionStmt)
-        resolveFunction(functionStmt)
+        resolveFunction(functionStmt.functionExpr, functionStmt.name.lexeme)
+    }
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr) {
+        resolveFunction(functionExpr, "lambda${lambdaNumber++}")
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
@@ -225,6 +272,12 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         declare(classStmt)
         define(classStmt)
 
+        javaClassNames[classStmt] = if (!isGlobalScope) {
+            functionNameStack.joinToString(separator = "$") { it } + "\$" + classStmt.name.lexeme
+        } else {
+            classStmt.name.lexeme
+        }
+
         classStmt.superClass?.let { resolve(it) }
 
         beginScope()
@@ -233,9 +286,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         classStmt.superClass?.let { define(SUPER) }
 
         classStmt.methods.forEach {
-            functionDepths[it] = scopes.size
-            classNames[it] = "${classStmt.name.lexeme}\$${it.name.lexeme}"
-            resolveFunction(it)
+            resolveFunction(it.functionExpr, "${classStmt.name.lexeme}\$${it.name.lexeme}")
         }
 
         endScope()
@@ -256,7 +307,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         // AST decorations for variable definition and usage.
 
         private val lateInits = mutableSetOf<VarDef>()
-        val VarDef.isGlobalLateInit
+        val VarDef.isLateInit
             get() = lateInits.contains(this)
 
         private val superThisAccessDepths = WeakHashMap<VarAccess, Int>()
@@ -273,38 +324,38 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         val VarAccess.isDefined: Boolean
             get() = varDef != null
 
-        private val captures = WeakHashMap<FunctionStmt, MutableSet<VarDef>>()
+        private val captures = WeakHashMap<FunctionExpr, MutableSet<VarDef>>()
         val VarDef.isCaptured: Boolean
             get() = captures.filterValues { it.contains(this) }.isNotEmpty()
 
-        val FunctionStmt.captured: MutableSet<VarDef>
+        val FunctionExpr.captured: MutableSet<VarDef>
             get() = captures.getOrPut(this) { HashSet() }
 
-        private fun FunctionStmt.capture(varDef: VarDef) {
+        private fun FunctionExpr.capture(varDef: VarDef) {
             if (!captured.contains(varDef)) {
                 assign(varDef)
                 captured.add(varDef)
             }
         }
 
-        private val definedIns = WeakHashMap<VarDef, FunctionStmt>()
-        val VarDef.definedIn: FunctionStmt
+        private val definedIns = WeakHashMap<VarDef, FunctionExpr>()
+        val VarDef.definedIn: FunctionExpr
             get() = definedIns[this]!!
 
-        val FunctionStmt.variables
+        val FunctionExpr.variables
             get() = definedIns.keys.filter { it.definedIn == this }
 
-        private val functionDepths = WeakHashMap<FunctionStmt, Int>()
-        val FunctionStmt.depth: Int
+        private val functionDepths = WeakHashMap<FunctionExpr, Int>()
+        val FunctionExpr.depth: Int
             get() = functionDepths[this]!!
 
-        private val slotsInFunctions = WeakHashMap<FunctionStmt, MutableMap<VarDef, Int>>()
-        private val FunctionStmt.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
-        private val FunctionStmt.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
+        private val slotsInFunctions = WeakHashMap<FunctionExpr, MutableMap<VarDef, Int>>()
+        private val FunctionExpr.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
+        private val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
 
-        fun FunctionStmt.slot(varDef: VarDef): Int = slots.getOrDefault(varDef, -1)
+        fun FunctionExpr.slot(varDef: VarDef): Int = slots.getOrDefault(varDef, -1)
 
-        private fun FunctionStmt.assign(varDef: VarDef): Int {
+        private fun FunctionExpr.assign(varDef: VarDef): Int {
             slots[varDef] = nextSlot
             return this.slot(varDef)
         }
@@ -313,12 +364,12 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         val VarDef.javaName: String
             get() = javaFieldNames.getOrDefault(this, this.name.lexeme)
 
-        private val classNames = WeakHashMap<VarDef, String>()
-        val FunctionStmt.javaClassName: String
-            get() = classNames.getOrDefault(this, this.name.lexeme)
+        private val javaClassNames = WeakHashMap<Any, String>()
+        val FunctionExpr.javaClassName: String
+            get() = javaClassNames[this]!!
 
         val ClassStmt.javaClassName: String
-            get() = classNames.getOrDefault(this, this.name.lexeme)
+            get() = javaClassNames.getOrDefault(this, this.name.lexeme)
 
         private val THIS = object : VarDef {
             override val name: Token get() = Token(IDENTIFIER, "this")

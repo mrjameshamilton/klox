@@ -1,7 +1,6 @@
 package eu.jameshamilton.klox.interpret
 
 import eu.jameshamilton.klox.interpret.Interpreter.Companion.stringify
-import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import java.io.File
@@ -23,16 +22,16 @@ private fun isKloxInteger(index: Any?): Boolean {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environment, List<Any?>) -> Any?)? {
+fun findNative(interpreter: Interpreter, className: String?, name: String): ((Environment, List<Any?>) -> Any?)? {
     val errorClass: LoxClass by lazy {
         interpreter.globals.get(Token(IDENTIFIER, "Error")) as LoxClass
     }
 
     fun kloxError(message: String) = errorClass.call(interpreter, listOf(message))
 
-    when (functionStmt.classStmt?.name?.lexeme) {
+    when (className) {
         "Array" -> {
-            when (functionStmt.name.lexeme) {
+            when (name) {
                 "init" -> return { env, args ->
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
                     val size = args.first()
@@ -75,12 +74,12 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 }
             }
         }
-        "Math" -> when (functionStmt.name.lexeme) {
+        "Math" -> when (name) {
             "sqrt" -> return fun (_, args): Any =
                 if (args.first() is Number) sqrt(args.first() as Double)
                 else kloxError("sqrt `n` parameter should be a number")
         }
-        "System" -> when (functionStmt.name.lexeme) {
+        "System" -> when (name) {
             "clock" -> return fun (_, _) { System.currentTimeMillis() / 1000.0 }
             "arg" -> return fun (_, arguments): Any? {
                 val index = arguments.first()
@@ -102,7 +101,7 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
             }
         }
         "File" -> {
-            when (functionStmt.name.lexeme) {
+            when (name) {
                 "delete" -> return fun(env, _): Any = try {
                     val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
                     val path = file.get(Token(IDENTIFIER, "path")) as String
@@ -128,7 +127,7 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
 
                 return inputStream.read()
             }
-            when (functionStmt.name.lexeme) {
+            when (name) {
                 "readChar" -> return fun(env, _): Any? = try {
                     val i = read(env)
                     if (i == -1) null else i.toChar().toString()
@@ -174,7 +173,7 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
 
                 return true
             }
-            when (functionStmt.name.lexeme) {
+            when (name) {
                 "writeByte" -> return fun (env, args): Any {
                     if (!isKloxInteger(args.first())) return kloxError("Byte should be an integer between 0 and 255.")
                     val i = args.first() as Double
@@ -201,7 +200,7 @@ fun findNative(interpreter: Interpreter, functionStmt: FunctionStmt): ((Environm
                 }
             }
         }
-        "String" -> when (functionStmt.name.lexeme) {
+        "String" -> when (name) {
             "length" -> return fun (_, args): Double { return stringify(interpreter, args.first()).length.toDouble() }
             "substr" -> return fun (_, args): Any {
                 val (str, start, end) = args

@@ -1,17 +1,16 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.error
-import eu.jameshamilton.klox.parse.Access.*
-import eu.jameshamilton.klox.parse.ClassType.NONE
-import eu.jameshamilton.klox.parse.ClassType.SUBCLASS
-import eu.jameshamilton.klox.parse.FunctionType.INITIALIZER
+import eu.jameshamilton.klox.parse.Checker.ClassType.CLASS
+import eu.jameshamilton.klox.parse.Checker.ClassType.NONE
+import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
+import eu.jameshamilton.klox.parse.FunctionFlag.*
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
-import java.util.Locale
 
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
-    private var currentFunction: FunctionStmt? = null
+    private var currentFunction: FunctionExpr? = null
     private var currentClassType = NONE
 
     override fun visitProgram(program: Program) {
@@ -91,20 +90,26 @@ class Checker : ASTVisitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-        resolveFunction(functionStmt)
+        resolveFunction(functionStmt.functionExpr)
+    }
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr) {
+        resolveFunction(functionExpr)
     }
 
     override fun visitReturnStmt(returnStmt: ReturnStmt) {
-        if (returnStmt.value != null) when (currentFunction?.kind) {
-            INITIALIZER -> error(returnStmt.keyword, "Can't return a value from an initializer.")
-            null /* SCRIPT */ -> error(returnStmt.keyword, "Can't return from top-level code.")
-            else -> returnStmt.value.accept(this)
+        if (returnStmt.value != null) {
+            if (currentFunction == null) {
+                error(returnStmt.keyword, "Can't return from top-level code.")
+            } else if (currentFunction?.flags?.contains(INITIALIZER) == true) {
+                error(returnStmt.keyword, "Can't return a value from an initializer.")
+            } else returnStmt.value.accept(this)
         }
     }
 
     override fun visitClassStmt(classStmt: ClassStmt) {
         val enclosingClass = currentClassType
-        currentClassType = ClassType.CLASS
+        currentClassType = CLASS
         if (classStmt.superClass == null) {
             if (classStmt.name.lexeme != "Object") {
                 error(classStmt.name, "Only Object has no super class.")
@@ -120,14 +125,14 @@ class Checker : ASTVisitor<Unit> {
 
             classStmt.superClass.accept(this)
         }
-        classStmt.methods.forEach { resolveFunction(it) }
+        classStmt.methods.forEach { resolveFunction(it.functionExpr) }
         currentClassType = enclosingClass
     }
 
-    private fun resolveFunction(functionStmt: FunctionStmt) {
+    private fun resolveFunction(functionExpr: FunctionExpr) {
         val enclosingFunction = currentFunction
-        currentFunction = functionStmt
-        functionStmt.body.forEach { it.accept(this) }
+        currentFunction = functionExpr
+        functionExpr.body.forEach { it.accept(this) }
         currentFunction = enclosingFunction
     }
 
@@ -151,27 +156,14 @@ class Checker : ASTVisitor<Unit> {
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == NONE) {
             error(thisExpr.name, "Can't use 'this' outside of a class.")
-        } else if (currentFunction?.accessFlags?.contains(STATIC) == true) {
+        } else if (currentFunction?.flags?.contains(STATIC) == true) {
             error(thisExpr.name, "Can't use 'this' in a static method.")
         }
     }
-}
 
-enum class ClassType {
-    NONE,
-    CLASS,
-    SUBCLASS
-}
-
-enum class FunctionType {
-    SCRIPT,
-    METHOD,
-    FUNCTION,
-    INITIALIZER,
-    GETTER,
-    NATIVE;
-
-    override fun toString(): String {
-        return super.toString().lowercase(Locale.getDefault())
+    private enum class ClassType {
+        NONE,
+        CLASS,
+        SUBCLASS
     }
 }

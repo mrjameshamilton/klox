@@ -1,0 +1,16 @@
+fun thrice(fn) {
+    print "thrice start";
+    for (var i = 1; i <= 3; i = i + 1) {
+        fn(i);
+    }
+    print "thrice end";
+}
+
+// expect: thrice start
+thrice(fun (a) {
+    print a;
+    // expect: 1
+    // expect: 2
+    // expect: 3
+});
+// expect: thrice end

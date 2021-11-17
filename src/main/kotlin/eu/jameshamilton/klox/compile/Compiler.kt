@@ -5,7 +5,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.definedIn
 import eu.jameshamilton.klox.compile.Resolver.Companion.depth
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
 import eu.jameshamilton.klox.compile.Resolver.Companion.isDefined
-import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobalLateInit
+import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaClassName
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
@@ -13,7 +13,6 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.hadError
-import eu.jameshamilton.klox.parse.Access
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -23,8 +22,11 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
+import eu.jameshamilton.klox.parse.FunctionFlag
+import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.FunctionFlag.Companion.empty
 import eu.jameshamilton.klox.parse.FunctionStmt
-import eu.jameshamilton.klox.parse.FunctionType.*
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
@@ -77,18 +79,15 @@ class Compiler : Program.Visitor<ClassPool> {
 
     override fun visitProgram(program: Program): ClassPool {
         mainFunction = FunctionStmt(
-            Access.empty(),
             Token(FUN, "Main"),
-            SCRIPT,
-            params = emptyList(),
-            body = program.stmts
+            FunctionExpr(flags = empty(), params = emptyList(), body = program.stmts)
         )
 
-        mainFunction.accept(Resolver())
+        Resolver().execute(mainFunction)
 
         if (hadError) return ClassPool()
 
-        val (mainClass, _) = FunctionCompiler().compile(mainFunction)
+        val (mainClass, _) = FunctionCompiler().compile("Main", "main", mainFunction.functionExpr)
 
         ClassBuilder(mainClass)
             .addField(PUBLIC or STATIC, "args", "[Ljava/lang/String;")
@@ -156,41 +155,41 @@ class Compiler : Program.Visitor<ClassPool> {
 
     private inner class FunctionCompiler(private val enclosingCompiler: FunctionCompiler? = null) : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         private lateinit var composer: Composer
-        private lateinit var functionStmt: FunctionStmt
+        private lateinit var function: FunctionExpr
 
-        fun compile(functionStmt: FunctionStmt): Pair<ProgramClass, ProgramMethod> {
-            this.functionStmt = functionStmt
-            val (clazz, method) = create(functionStmt)
+        fun compile(className: String?, name: String, function: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
+            this.function = function
+            val (clazz, method) = create(name, function)
             composer = Composer(clazz)
             with(composer) {
                 beginCodeFragment(65_535)
 
-                if (functionStmt.params.isNotEmpty()) {
+                if (function.params.isNotEmpty()) {
                     aload_1()
-                    unpackarray(functionStmt.params.size) { i ->
-                        declare(functionStmt, functionStmt.params[i])
+                    unpackarray(function.params.size) { i ->
+                        declare(function, function.params[i])
                     }
                 }
 
-                for (captured in functionStmt.captured) {
+                for (captured in function.captured) {
                     aload_0()
                     getfield(targetClass.name, captured.javaName, "L$KLOX_CAPTURED_VAR;")
-                    astore(functionStmt.slot(captured))
+                    astore(function.slot(captured))
                 }
 
-                val native = findNative(mainFunction, functionStmt)
+                val native = findNative(mainFunction.functionExpr, className, name, function)
                 if (native != null) {
                     native(this)
                 } else {
-                    functionStmt.body.forEach {
+                    function.body.forEach {
                         it.accept(this@FunctionCompiler)
                     }
 
-                    if (functionStmt.kind == INITIALIZER) {
+                    if (function.flags.contains(INITIALIZER)) {
                         aload_0()
                         invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
                         areturn()
-                    } else if (functionStmt.body.count { it is ReturnStmt } == 0) {
+                    } else if (function.body.count { it is ReturnStmt } == 0) {
                         aconst_null()
                         areturn()
                     }
@@ -224,7 +223,7 @@ class Compiler : Program.Visitor<ClassPool> {
         override fun visitVarStmt(varStmt: VarStmt): Unit = with(composer) {
             if (varStmt.initializer != null) varStmt.initializer!!.accept(this@FunctionCompiler) else aconst_null()
 
-            declare(functionStmt, varStmt)
+            declare(function, varStmt)
         }
 
         override fun visitBlockStmt(block: BlockStmt) = block.stmts.forEach { it.accept(this) }
@@ -476,7 +475,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitVariableExpr(variableExpr: VariableExpr): Unit = with(composer) {
             if (variableExpr.isDefined) {
-                aload(functionStmt.slot(variableExpr.varDef!!))
+                aload(function.slot(variableExpr.varDef!!))
                 if (variableExpr.varDef!!.isCaptured) unbox(variableExpr.varDef!!)
             } else {
                 throw_("java/lang/RuntimeException", "Undefined variable '${variableExpr.name.lexeme}'.")
@@ -492,14 +491,14 @@ class Compiler : Program.Visitor<ClassPool> {
             val varDef = assignExpr.varDef!!
 
             if (varDef.isCaptured) {
-                aload(functionStmt.slot(varDef))
+                aload(function.slot(varDef))
                 assignExpr.value.accept(this@FunctionCompiler)
                 dup_x1()
                 invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
             } else {
                 assignExpr.value.accept(this@FunctionCompiler)
                 dup()
-                astore(functionStmt.slot(varDef))
+                astore(function.slot(varDef))
             }
         }
 
@@ -541,41 +540,49 @@ class Compiler : Program.Visitor<ClassPool> {
 
             // TODO create only one of these handlers per method
             catch_(tryStart, tryEnd, "java/lang/ClassCastException") {
-                pop()
                 new_("java/lang/RuntimeException")
-                dup()
+                dup_x1()
+                swap()
                 ldc("Can only call functions and classes.")
-                invokespecial("java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V")
+                swap()
+                invokespecial("java/lang/RuntimeException", "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V")
                 athrow()
             }
         }
 
-        override fun visitFunctionStmt(functionStmt: FunctionStmt): Unit = with(composer) {
-            val (clazz, _) = FunctionCompiler(enclosingCompiler = this@FunctionCompiler).compile(functionStmt)
+        override fun visitFunctionStmt(functionStmt: FunctionStmt): Unit =
+            visitFunction(functionStmt.classStmt?.name?.lexeme, functionStmt.name.lexeme, functionStmt.functionExpr) {
+                // If a method, don't need to store, it should remain on the stack so that it can be added to the class
+                if (functionStmt.classStmt == null) declare(this@FunctionCompiler.function, functionStmt)
+            }
+
+        override fun visitFunctionExpr(functionExpr: FunctionExpr) = visitFunction(null, "Anonymous", functionExpr)
+
+        private fun visitFunction(className: String?, name: String, function: FunctionExpr, initializer: (Composer.() -> Unit)? = null): Unit = with(composer) {
+            val (clazz, _) = FunctionCompiler(enclosingCompiler = this@FunctionCompiler)
+                .compile(className, name, function)
+
             new_(clazz)
             dup()
             aload_0()
             invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;)V")
 
-            if (functionStmt.captured.isNotEmpty()) dup()
+            if (function.captured.isNotEmpty()) dup()
 
-            if (functionStmt.kind != INITIALIZER && functionStmt.kind != METHOD && functionStmt.kind != GETTER && !functionStmt.accessFlags.contains(Access.STATIC)) {
-                // Don't need to store, it should remain on the stack so that it can be added to the class
-                declare(this@FunctionCompiler.functionStmt, functionStmt)
-            }
+            initializer?.invoke(composer)
 
-            if (functionStmt.captured.isNotEmpty()) {
-                for (varDef in functionStmt.captured) {
+            if (function.captured.isNotEmpty()) {
+                for (varDef in function.captured) {
                     dup()
                     aload_0()
-                    if (enclosingCompiler?.functionStmt != null) {
-                        for (i in enclosingCompiler.functionStmt.depth downTo varDef.definedIn.depth) {
+                    if (enclosingCompiler?.function != null) {
+                        for (i in enclosingCompiler.function.depth downTo varDef.definedIn.depth) {
                             invokeinterface(KLOX_CALLABLE, "getEnclosing", "()L$KLOX_CALLABLE;")
                         }
                         checkcast(varDef.definedIn.javaClassName)
                     }
                     getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                    putfield(functionStmt.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                    putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
                 }
                 pop()
             }
@@ -584,7 +591,7 @@ class Compiler : Program.Visitor<ClassPool> {
         override fun visitReturnStmt(returnStmt: ReturnStmt): Unit = with(composer) {
             when {
                 returnStmt.value != null -> returnStmt.value.accept(this@FunctionCompiler)
-                functionStmt.kind == INITIALIZER -> aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                function.flags.contains(INITIALIZER) -> aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
                 else -> aconst_null()
             }
 
@@ -611,7 +618,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
             if (classStmt.methods.isNotEmpty()) dup()
 
-            declare(functionStmt, classStmt)
+            declare(function, classStmt)
 
             for (method in classStmt.methods) {
                 dup()
@@ -619,7 +626,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 method.accept(this@FunctionCompiler)
                 dup_x2()
                 invokevirtual(classStmt.javaClassName, "addMethod", "(L$KLOX_FUNCTION;)V")
-                invokevirtual(method.javaClassName, "setOwner", "(L$KLOX_CLASS;)V")
+                invokevirtual(method.functionExpr.javaClassName, "setOwner", "(L$KLOX_CLASS;)V")
             }
         }
 
@@ -878,7 +885,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     areturn()
                 }
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
-                    ldc(classStmt.javaClassName)
+                    ldc(classStmt.name.lexeme)
                     areturn()
                 }
                 .apply {
@@ -888,18 +895,21 @@ class Compiler : Program.Visitor<ClassPool> {
             return clazz
         }
 
-        private fun create(functionStmt: FunctionStmt): Pair<ProgramClass, ProgramMethod> {
+        private fun create(name: String, functionExpr: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
+            if (debug == true) {
+                println("Compiling function $name (${functionExpr.javaClassName})")
+            }
             val clazz = ClassBuilder(
                 CLASS_VERSION_1_8,
                 PUBLIC,
-                functionStmt.javaClassName,
+                functionExpr.javaClassName,
                 "java/lang/Object"
             )
                 .addInterface(KLOX_FUNCTION)
                 .addField(PRIVATE or FINAL, "__enclosing", "L$KLOX_CALLABLE;")
                 .addField(PRIVATE or FINAL, "__owner", "L$KLOX_CLASS;")
                 .apply {
-                    for (captured in functionStmt.captured + functionStmt.variables.filter { it.isCaptured }) {
+                    for (captured in functionExpr.captured + functionExpr.variables.filter { it.isCaptured }) {
                         addField(PUBLIC, captured.javaName, "L$KLOX_CAPTURED_VAR;")
                     }
                 }
@@ -909,28 +919,28 @@ class Compiler : Program.Visitor<ClassPool> {
                     invokespecial("java/lang/Object", "<init>", "()V")
                     aload_1()
                     putfield(targetClass.name, "__enclosing", "L$KLOX_CALLABLE;")
-                    val globalLateInitVariables = functionStmt.variables.filter { it.isGlobalLateInit }
+                    val lateInitVars = functionExpr.variables.filter { it.isLateInit }
                     // Create null captured values for global lateinit variables
-                    for ((i, variable) in globalLateInitVariables.withIndex()) {
+                    for ((i, variable) in lateInitVars.withIndex()) {
                         if (i == 0) aload_0()
                         dup()
                         aconst_null()
                         box(variable)
                         putfield(targetClass.name, variable.javaName, "L$KLOX_CAPTURED_VAR;")
-                        if (i == globalLateInitVariables.size - 1) pop()
+                        if (i == lateInitVars.size - 1) pop()
                     }
                     return_()
                 }
                 .addMethod(PUBLIC, "getName", "()Ljava/lang/String;") {
-                    ldc(functionStmt.name.lexeme)
+                    ldc(name)
                     areturn()
                 }
                 .addMethod(PUBLIC, "arity", "()I") {
-                    if (functionStmt.kind == GETTER) iconst_m1() else iconst(functionStmt.params.size)
+                    if (functionExpr.flags.contains(GETTER)) iconst_m1() else iconst(functionExpr.params.size)
                     ireturn()
                 }
                 .addMethod(PUBLIC, "bind", "(L$KLOX_INSTANCE;)L$KLOX_FUNCTION;") {
-                    if (functionStmt.isBindable) {
+                    if (functionExpr.isBindable) {
                         aload_0()
                         invokevirtual(targetClass.name, "clone", "()Ljava/lang/Object;")
                         checkcast(targetClass.name)
@@ -939,11 +949,11 @@ class Compiler : Program.Visitor<ClassPool> {
                         putfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        throw_("java/lang/UnsupportedOperationException", "${functionStmt.name.lexeme} cannot be bound.")
+                       throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC, "isStatic", "()Z") {
-                    iconst(if (functionStmt.accessFlags.contains(Access.STATIC)) 1 else 0)
+                    iconst(if (functionExpr.flags.contains(FunctionFlag.STATIC)) 1 else 0)
                     ireturn()
                 }
                 .addMethod(PUBLIC, "getEnclosing", "()L$KLOX_CALLABLE;") {
@@ -962,21 +972,21 @@ class Compiler : Program.Visitor<ClassPool> {
                     return_()
                 }
                 .addMethod(PUBLIC, "getReceiver", "()L$KLOX_INSTANCE;") {
-                    if (functionStmt.isBindable) {
+                    if (functionExpr.isBindable) {
                         aload_0()
                         getfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        throw_("java/lang/UnsupportedOperationException", "${functionStmt.name.lexeme} cannot be bound.")
+                       throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
-                    ldc("<fn ${functionStmt.name.lexeme}>")
+                    ldc("<fn $name>")
                     areturn()
                 }
                 .apply {
-                    if (InvokeDynamicCounter().count(functionStmt) > 0) {
+                    if (InvokeDynamicCounter().count(functionExpr) > 0) {
                         addBootstrapMethod(
                             REF_INVOKE_STATIC,
                             KLOX_INVOKER,
@@ -984,7 +994,7 @@ class Compiler : Program.Visitor<ClassPool> {
                             "(Ljava/lang/invoke/MethodHandles\$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
                         )
                     }
-                    if (functionStmt.isBindable) {
+                    if (functionExpr.isBindable) {
                         addInterface("java/lang/Cloneable")
                         addField(PRIVATE, "this", "L$KLOX_INSTANCE;")
                         addMethod(PUBLIC, "clone", "()Ljava/lang/Object;") {
@@ -1000,8 +1010,8 @@ class Compiler : Program.Visitor<ClassPool> {
         }
     }
 
-    private val FunctionStmt.isBindable
-        get() = kind == FUNCTION || kind == METHOD || kind == INITIALIZER || kind == GETTER
+     private val FunctionExpr.isBindable
+        get() = !flags.contains(ANONYMOUS) && !flags.contains(FunctionFlag.STATIC)
 
     private fun initialize(programClassPool: ClassPool) = with(programClassPool) {
         addClass(

@@ -1,0 +1,18 @@
+fun factorial(n) {
+    var factorial_impl = fun(n) {
+        if (n == 0) {
+            return 1;
+        } else {
+            return n * factorial_impl(n - 1);
+        }
+    };
+    return factorial_impl(n);
+}
+
+print factorial(5); // expect: 120
+
+var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
+print f(5); // expect: 15
+
+var g = (fun (a) { if (a == 0) return 0; else return a + g(a - 1); });
+print g(5); // expect: 15

@@ -1,0 +1,15 @@
+var T = fun(a,b) { return a; };
+var F = fun(a,b) { return b; };
+
+var NOT = fun(x) { return x(F, T); };
+var AND = fun(a,b) { return a(b, F); };
+var OR = fun(a,b) { return a(a, b); };
+
+var result = fun(x) { return x("true", "false"); };
+
+print result(AND(T,F)); // expect: false
+print result(AND(T,T)); // expect: true
+print result(OR(T,F)); // expect: true
+print result(OR(F,F)); // expect: false
+print result(AND(NOT(T),T)); // expect: false
+print result(NOT(NOT(T))); // expect: true

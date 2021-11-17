@@ -1,0 +1,18 @@
+fun thrice(fn) {
+    print "thrice start";
+    for (var i = 1; i <= 3; i = i + 1) {
+        fn(i);
+    }
+    print "thrice end";
+}
+
+var foo = "Hello ";
+// expect: thrice start
+thrice(fun (a) {
+    class X { fooX() { } }
+    fun (x) { return fun (y) { print x + y; }; }(foo)(a);
+    // expect: Hello 1
+    // expect: Hello 2
+    // expect: Hello 3
+});
+// expect: thrice end

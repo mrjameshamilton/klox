@@ -8,6 +8,7 @@ import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -35,7 +36,7 @@ import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
  */
 class InvokeDynamicCounter : ExprVisitor<Int>, StmtVisitor<Int> {
 
-    fun count(functionStmt: FunctionStmt) =
+    fun count(functionStmt: FunctionExpr) =
         functionStmt.body.sumOf { it.accept(this) }
 
     override fun visitBinaryExpr(binaryExpr: BinaryExpr): Int =
@@ -82,6 +83,8 @@ class InvokeDynamicCounter : ExprVisitor<Int>, StmtVisitor<Int> {
     override fun visitContinueStmt(continueStmt: ContinueStmt): Int = 0
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt): Int = 0
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr): Int = 0
 
     override fun visitClassStmt(classStmt: ClassStmt): Int = 0
 

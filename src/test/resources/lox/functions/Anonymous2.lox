@@ -1,0 +1,7 @@
+var adder = fun (x) {
+    return fun (y) {
+        return x + y;
+    };
+};
+var add5 = adder(5);
+print add5(1) == 6; // expect: true

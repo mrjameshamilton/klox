@@ -1,0 +1,8 @@
+var array = Array(3);
+array.set(0, "1");
+array.set(1, "2");
+array.set(2, "3");
+
+print array
+        .map(String.toNumber)
+        .reduce(0, fun (a, b) { return a + b; }); // expect: 6

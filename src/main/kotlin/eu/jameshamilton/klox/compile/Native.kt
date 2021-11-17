@@ -5,18 +5,19 @@ import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
-import eu.jameshamilton.klox.parse.FunctionStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import proguard.classfile.AccessConstants.PRIVATE
 import proguard.classfile.ProgramClass
 import proguard.classfile.ProgramMethod
 import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Composer.() -> Unit)? {
+fun findNative(mainFunction: FunctionExpr, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
+    // if (debug == true) println("findName($className, $functionName)")
     // TODO deal with native functions that capture variables
     //      Error is already captured since the default implementation is to return an Error
 
-    fun Composer.error(func: FunctionStmt, messageComposer: Composer.() -> Composer): Composer {
+    fun Composer.error(func: FunctionExpr, messageComposer: Composer.() -> Composer): Composer {
         val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" }
         messageComposer(this)
         aload(func.slot(errorClass)).unbox(errorClass)
@@ -27,7 +28,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
         return this
     }
 
-    fun Composer.error(func: FunctionStmt, message: String): Composer =
+    fun Composer.error(func: FunctionExpr, message: String): Composer =
         error(func) { ldc(message) }
 
     fun Composer.loadkloxinstance(): Composer {
@@ -101,15 +102,15 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
             TRUE()
         }
         catchAll(tryStart, endTry) {
-            error(functionStmt) {
+            error(func) {
                 invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
             }
         }
         return this
     }
 
-    when (functionStmt.classStmt?.name?.lexeme) {
-        "Array" -> when (functionStmt.name.lexeme) {
+    when (className) {
+        "Array" -> when (functionName) {
             "init" -> return {
                 val (error) = labels(1)
                 withkloxfield("\$array", "[Ljava/lang/Object;") {
@@ -160,7 +161,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
-        "Math" -> when (functionStmt.name.lexeme) {
+        "Math" -> when (functionName) {
             "sqrt" -> return {
                 aload_1()
                 boxed("java/lang/Double") {
@@ -169,7 +170,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
-        "System" -> when (functionStmt.name.lexeme) {
+        "System" -> when (functionName) {
             "clock" -> return {
                 invokestatic("java/lang/System", "currentTimeMillis", "()J")
                 l2d()
@@ -191,7 +192,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     aconst_null()
                 }
                 catchAll(tryStart, tryEnd) {
-                    error(functionStmt) {
+                    error(func) {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -206,7 +207,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 areturn()
             }
         }
-        "File" -> when (functionStmt.name.lexeme) {
+        "File" -> when (functionName) {
             "delete" -> return {
                 val (handler) = labels(1)
                 new_("java/io/File")
@@ -221,11 +222,11 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     areturn()
 
                     label(handler)
-                    error(functionStmt, "Unknown error deleting file")
+                    error(func, "Unknown error deleting file")
                     areturn()
                 }
                 catchAll(tryStart, tryEnd) {
-                    error(functionStmt) {
+                    error(func) {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -252,7 +253,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         ireturn()
                     }
 
-            when (functionStmt.name.lexeme) {
+            when (functionName) {
                 "readByte" -> return {
                     val (tryStart, tryEnd) = try_ {
                         aload_0()
@@ -261,7 +262,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         box("java/lang/Double")
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(functionStmt) {
+                        error(func) {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -284,7 +285,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         aconst_null()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(functionStmt) {
+                        error(func) {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -318,7 +319,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         return_()
                     }
 
-            when (functionStmt.name.lexeme) {
+            when (functionName) {
                 "writeByte" -> return {
                     val (error) = labels(1)
                     val (tryStart, tryEnd) = try_ {
@@ -336,7 +337,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         TRUE()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(functionStmt) {
+                        error(func) {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -344,7 +345,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
 
                     label(error)
                     pop()
-                    error(functionStmt, "Byte should be an integer between 0 and 255.")
+                    error(func, "Byte should be an integer between 0 and 255.")
                     areturn()
                 }
                 "writeChar" -> return {
@@ -363,7 +364,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                         TRUE()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(functionStmt) {
+                        error(func) {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -371,7 +372,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
 
                     label(error)
                     pop()
-                    error(functionStmt, "Parameter should be a single character.")
+                    error(func, "Parameter should be a single character.")
                     areturn()
                 }
                 "close" -> return {
@@ -380,7 +381,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 }
             }
         }
-        "String" -> when (functionStmt.name.lexeme) {
+        "String" -> when (functionName) {
             "length" -> return {
                 aload_1()
                 stringify()
@@ -405,7 +406,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 }
                 catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
                     pop()
-                    error(functionStmt) {
+                    error(func) {
                         concat(
                             { ldc("String index out of bounds for '") },
                             { aload_1() },
@@ -418,7 +419,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                     }
                 }
                 catchAll(start, end) {
-                    error(functionStmt) {
+                    error(func) {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -433,7 +434,7 @@ fun findNative(mainFunction: FunctionStmt, functionStmt: FunctionStmt): (Compose
                 }
                 catchAll(tryStart, tryEnd) {
                     pop()
-                    error(functionStmt) {
+                    error(func) {
                         concat(
                             { ldc("Invalid number '") },
                             { aload_1() },

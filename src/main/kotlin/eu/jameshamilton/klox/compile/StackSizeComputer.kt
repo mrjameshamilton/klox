@@ -8,6 +8,7 @@ import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
 import eu.jameshamilton.klox.parse.ExprStmt
+import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -143,6 +144,11 @@ class StackSizeComputer : ExprVisitor<Int>, StmtVisitor<Int> {
     override fun visitFunctionStmt(functionStmt: FunctionStmt): Int = compute(
         consumes = 0,
         produces = 0
+    )
+
+    override fun visitFunctionExpr(functionExpr: FunctionExpr): Int = compute(
+        consumes = 0,
+        produces = 1
     )
 
     override fun visitClassStmt(classStmt: ClassStmt): Int = compute(

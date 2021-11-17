@@ -47,6 +47,12 @@ class KLoxTest : FunSpec({
 
             !file.path.contains("function/print.lox") && // Lox native functions all print as <native fn>
 
+            // klox supports function expressions
+            !file.path.contains("for/fun_in_body.lox") &&
+            !file.path.contains("while/fun_in_body.lox") &&
+            !file.path.contains("if/fun_in_then.lox") &&
+            !file.path.contains("if/fun_in_else.lox") &&
+
             // not relevant for klox?
             !file.path.contains("limit/too_many_constants.lox") &&
             !file.path.contains("limit/loop_too_large.lox") &&
