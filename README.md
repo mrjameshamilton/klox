@@ -181,6 +181,12 @@ expression is evaluated & its result discarded then right-hand side is evaluated
 print "foo", "bar"; // prints bar
 ```
 
+* modulo operator
+
+```c
+print 5 % 2; // prints 1
+```
+
 * `break` and `continue` statements
 
 ```c

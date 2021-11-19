@@ -30,6 +30,7 @@ import eu.jameshamilton.klox.parse.TokenType.MINUS
 import eu.jameshamilton.klox.parse.TokenType.NIL
 import eu.jameshamilton.klox.parse.TokenType.NUMBER
 import eu.jameshamilton.klox.parse.TokenType.OR
+import eu.jameshamilton.klox.parse.TokenType.PERCENT
 import eu.jameshamilton.klox.parse.TokenType.PLUS
 import eu.jameshamilton.klox.parse.TokenType.PRINT
 import eu.jameshamilton.klox.parse.TokenType.RETURN
@@ -342,7 +343,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun factor(): Expr {
         var expr = unary()
-        while (match(SLASH, STAR)) {
+        while (match(SLASH, STAR, PERCENT)) {
             val op = previous()
             val right = unary()
             expr = BinaryExpr(expr, op, right)

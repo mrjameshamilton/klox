@@ -87,6 +87,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 return left as Double / right
             }
             STAR -> (left as Double) * (right as Double)
+            PERCENT -> (left as Double) % (right as Double)
             GREATER -> (left as Double) > (right as Double)
             GREATER_EQUAL -> (left as Double) >= (right as Double)
             LESS -> (left as Double) < (right as Double)
