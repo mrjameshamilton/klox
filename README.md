@@ -393,6 +393,12 @@ class FileOutputStream < OutputStream {
 
 * `Math.PI` 3.141592653589793
 * `Math.sqrt(number): number`
+* `Math.ceil(number): number`
+* `Math.floor(number): number`
+* `Math.round(number): number`
+* `Math.min(number): number`
+* `Math.max(number): number`
+* `Math.abs(number): number`
 
 ### Error handling
 

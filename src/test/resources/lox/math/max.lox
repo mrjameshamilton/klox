@@ -1,0 +1,5 @@
+print Math.max(1, 2); // expect: 2
+print Math.max(2, 1); // expect: 2
+print Math.max(-1, -2); // expect: -1
+print Math.max(-2, -1); // expect: -1
+print Math.max(1.1, 2.2); // expect: 2.2

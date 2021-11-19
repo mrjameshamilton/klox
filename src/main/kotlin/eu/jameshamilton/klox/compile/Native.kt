@@ -107,13 +107,36 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                 areturn()
             }
         }
-        "Math" -> when (functionName) {
-            "sqrt" -> return {
+        "Math" -> {
+            val math = fun Composer.(composer: Composer.() -> Composer) {
                 aload_1()
                 boxed("java/lang/Double") {
-                    invokestatic("java/lang/Math", "sqrt", "(D)D")
+                    composer()
                 }
                 areturn()
+            }
+            when (functionName) {
+                "sqrt" -> return {
+                    math {
+                        invokestatic("java/lang/Math", "sqrt", "(D)D")
+                    }
+                }
+                "ceil" -> return {
+                    math {
+                        invokestatic("java/lang/Math", "ceil", "(D)D")
+                    }
+                }
+                "floor" -> return {
+                    math {
+                        invokestatic("java/lang/Math", "floor", "(D)D")
+                    }
+                }
+                "round" -> return {
+                    math {
+                        invokestatic("java/lang/Math", "round", "(D)J")
+                        l2d()
+                    }
+                }
             }
         }
         "System" -> when (functionName) {

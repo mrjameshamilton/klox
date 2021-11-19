@@ -10,6 +10,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.round
 import kotlin.math.sqrt
 import kotlin.system.exitProcess
 
@@ -78,6 +81,15 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
             "sqrt" -> return fun (_, args): Any =
                 if (args.first() is Number) sqrt(args.first() as Double)
                 else kloxError("sqrt `n` parameter should be a number")
+            "ceil" -> return fun (_, args): Any =
+                if (args.first() is Number) ceil(args.first() as Double)
+                else kloxError("ceil `n` parameter should be a number")
+            "floor" -> return fun (_, args): Any =
+                if (args.first() is Number) floor(args.first() as Double)
+                else kloxError("floor `n` parameter should be a number")
+            "round" -> return fun (_, args): Any =
+                if (args.first() is Number) round(args.first() as Double)
+                else kloxError("round `n` parameter should be a number")
         }
         "System" -> when (name) {
             "clock" -> return fun (_, _) { System.currentTimeMillis() / 1000.0 }

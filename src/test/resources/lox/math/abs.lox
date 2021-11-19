@@ -1,0 +1,3 @@
+print Math.abs(-1); // expect: 1
+print Math.abs(1); // expect: 1
+print Math.abs(-1.1); // expect: 1.1
