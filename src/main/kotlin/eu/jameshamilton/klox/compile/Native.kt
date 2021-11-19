@@ -1,10 +1,8 @@
 package eu.jameshamilton.klox.compile
 
-import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
-import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
-import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
+import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import proguard.classfile.AccessConstants.PRIVATE
 import proguard.classfile.ProgramClass
@@ -17,70 +15,15 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
     // TODO deal with native functions that capture variables
     //      Error is already captured since the default implementation is to return an Error
 
-    fun Composer.error(func: FunctionExpr, messageComposer: Composer.() -> Composer): Composer {
-        val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" }
-        messageComposer(this)
-        aload(func.slot(errorClass)).unbox(errorClass)
-        checkcast(KLOX_CALLABLE)
-        swap()
-        packarray(1)
-        invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+    val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" } as ClassStmt
+
+    fun Composer.error(func: FunctionExpr, message: Composer.() -> Composer): Composer {
+        message(this)
+        new_(func, errorClass)
         return this
     }
 
-    fun Composer.error(func: FunctionExpr, message: String): Composer =
-        error(func) { ldc(message) }
-
-    fun Composer.loadkloxinstance(): Composer {
-        aload_0()
-        invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
-        return this
-    }
-
-    fun Composer.getkloxfield(name: String, expectedType: String): Composer {
-        ldc(name)
-        invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
-        checkcast(expectedType)
-        return this
-    }
-
-    fun Composer.setkloxfield(name: String): Composer {
-        ldc(name)
-        swap()
-        invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
-        return this
-    }
-
-    fun Composer.removekloxfield(name: String): Composer {
-        ldc(name)
-        invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
-        return this
-    }
-
-    fun Composer.haskloxfield(name: String): Composer {
-        ldc(name)
-        invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
-        return this
-    }
-
-    fun Composer.withkloxfield(name: String, expectedType: String, newValueComposer: Composer.() -> Composer): Composer {
-        val (hasField, end) = labels(2)
-
-        loadkloxinstance()
-        dup()
-        haskloxfield(name)
-        ifne(hasField)
-        newValueComposer(this)
-        dup_x1()
-        setkloxfield(name)
-        goto_(end)
-
-        label(hasField)
-        getkloxfield(name, expectedType)
-
-        label(end)
-        return this
-    }
+    fun Composer.error(func: FunctionExpr, message: String): Composer = error(func) { ldc(message) }
 
     fun Composer.closestream(name: String, type: String): Composer {
         val (close, end) = labels(2)
@@ -113,7 +56,10 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
         "Array" -> when (functionName) {
             "init" -> return {
                 val (error) = labels(1)
-                withkloxfield("\$array", "[Ljava/lang/Object;") {
+                loadkloxinstance()
+                dup()
+
+                getkloxfield("\$array", "[Ljava/lang/Object;") {
                     aload_1()
                     checktype("java/lang/Integer", "Array size must be a positive integer.")
                     unbox("java/lang/Double")
@@ -122,9 +68,9 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                     iflt(error)
                     anewarray("java/lang/Object")
                 }
-                pop()
-                loadkloxinstance()
-                areturn()
+                pop() // pop the underlying array
+
+                areturn() // return the KloxInstance
 
                 label(error)
                 pop()
@@ -239,7 +185,9 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
             fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_read", "()I") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "()I") {
-                        withkloxfield(INPUT_STREAM, "java/io/FileInputStream") {
+                        loadkloxinstance()
+
+                        getkloxfield(INPUT_STREAM, "java/io/FileInputStream") {
                             loadkloxinstance()
                             getkloxfield("file", KLOX_INSTANCE)
                             getkloxfield("path", "java/lang/String")
@@ -303,7 +251,9 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
             fun write(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_write", "(I)V") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_write", "(I)V") {
-                        withkloxfield(OUTPUT_STREAM, "java/io/FileOutputStream") {
+                        loadkloxinstance()
+
+                        getkloxfield(OUTPUT_STREAM, "java/io/FileOutputStream") {
                             loadkloxinstance()
                             getkloxfield("file", KLOX_INSTANCE)
                             getkloxfield("path", "java/lang/String")
@@ -311,7 +261,6 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                             dup_x1()
                             swap()
                             invokespecial("java/io/FileOutputStream", "<init>", "(Ljava/lang/String;)V")
-                            // leave the file output stream on the stack
                         }
 
                         iload_1()

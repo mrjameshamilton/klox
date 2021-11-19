@@ -22,6 +22,7 @@ import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import eu.jameshamilton.klox.parse.TokenType.IF
 import eu.jameshamilton.klox.parse.TokenType.IS
 import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACE
+import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACKET
 import eu.jameshamilton.klox.parse.TokenType.LEFT_PAREN
 import eu.jameshamilton.klox.parse.TokenType.LESS
 import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
@@ -33,6 +34,7 @@ import eu.jameshamilton.klox.parse.TokenType.PLUS
 import eu.jameshamilton.klox.parse.TokenType.PRINT
 import eu.jameshamilton.klox.parse.TokenType.RETURN
 import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACE
+import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACKET
 import eu.jameshamilton.klox.parse.TokenType.RIGHT_PAREN
 import eu.jameshamilton.klox.parse.TokenType.SEMICOLON
 import eu.jameshamilton.klox.parse.TokenType.SLASH
@@ -359,15 +361,31 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun call(): Expr {
-        var expr = primary()
+        var expr = arrayAccess()
 
         while (true) {
-            if (match(LEFT_PAREN)) {
-                expr = finishCall(expr)
+            expr = if (match(LEFT_PAREN)) {
+                finishCall(expr)
             } else if (match(DOT)) {
-                expr = GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
+                GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
             } else {
                 break
+            }
+        }
+
+        return expr
+    }
+
+    private fun arrayAccess(): Expr {
+        var expr = primary()
+
+        while (match(LEFT_BRACKET)) {
+            val index = or()
+            consume(RIGHT_BRACKET, "Expect ']' after index.")
+            expr = if (match(EQUAL)) {
+                CallExpr(GetExpr(expr, Token(IDENTIFIER, "set")), Token(LEFT_PAREN, "("), listOf(index, or()))
+            } else {
+                CallExpr(GetExpr(expr, Token(IDENTIFIER, "get")), Token(LEFT_PAREN, "("), listOf(index))
             }
         }
 
@@ -396,6 +414,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(TRUE)) return LiteralExpr(true)
         if (match(NIL)) return LiteralExpr(null)
         if (match(NUMBER, STRING)) return LiteralExpr(previous().literal)
+        if (match(LEFT_BRACKET)) return list()
 
         if (match(SUPER)) {
             val keyword = previous()
@@ -417,6 +436,19 @@ class Parser(private val tokens: List<Token>) {
         }
 
         throw error(peek(), "Expect expression.")
+    }
+
+    private fun list(): Expr {
+        val elements = mutableListOf<Expr>()
+
+        if (!check(RIGHT_BRACKET)) do {
+            if (check(RIGHT_BRACKET)) break // trailing comma
+            elements.add(or())
+        } while (match(COMMA))
+
+        consume(RIGHT_BRACKET, "Expect ']'.")
+
+        return ArrayExpr(elements.toList())
     }
 
     private fun consume(type: TokenType, message: String): Token {

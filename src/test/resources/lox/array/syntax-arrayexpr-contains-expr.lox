@@ -1,0 +1,8 @@
+fun foo() {
+    return "first element";
+}
+
+var array = [foo()];
+print array; // expect: Array(1)
+
+print array.get(0); // expect: first element

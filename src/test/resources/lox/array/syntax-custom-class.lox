@@ -1,0 +1,23 @@
+class Foo {
+    init(value) {
+        this.value = value;
+    }
+
+    get(index) {
+        if (index == 0) {
+            return this.value;
+        } else {
+            return nil;
+        }
+    }
+
+    set(index, value) {
+        this.value = index + ": " + value;
+    }
+}
+
+var foo = Foo("foo");
+print foo[0]; // expect: foo
+print foo[1]; // expect: nil
+foo[0] = "bar";
+print foo[0]; // expect: 0: bar

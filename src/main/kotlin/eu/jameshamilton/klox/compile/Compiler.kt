@@ -13,6 +13,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.hadError
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -71,6 +72,7 @@ import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 class Compiler : Program.Visitor<ClassPool> {
 
     private lateinit var mainFunction: FunctionStmt
+    private lateinit var arrayClass: ClassStmt
 
     fun compile(program: Program): ClassPool {
         initialize(programClassPool)
@@ -84,6 +86,8 @@ class Compiler : Program.Visitor<ClassPool> {
         )
 
         Resolver().execute(mainFunction)
+
+        arrayClass = mainFunction.functionExpr.variables.single { it.name.lexeme == "Array" } as ClassStmt
 
         if (hadError) return ClassPool()
 
@@ -480,8 +484,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitVariableExpr(variableExpr: VariableExpr): Unit = with(composer) {
             if (variableExpr.isDefined) {
-                aload(function.slot(variableExpr.varDef!!))
-                if (variableExpr.varDef!!.isCaptured) unbox(variableExpr.varDef!!)
+                load(function, variableExpr.varDef!!)
             } else {
                 throw_("java/lang/RuntimeException", "Undefined variable '${variableExpr.name.lexeme}'.")
             }
@@ -718,6 +721,24 @@ class Compiler : Program.Visitor<ClassPool> {
             throw_("java/lang/RuntimeException", "Only instances have fields.")
 
             label(end)
+        }
+
+        override fun visitArrayExpr(arrayExpr: ArrayExpr): Unit = with(composer) {
+            iconst(arrayExpr.elements.size)
+            i2d()
+            box("java/lang/Double")
+            new_(function, arrayClass)
+            dup()
+
+            getkloxfield("\$array", "[Ljava/lang/Object;")
+            for ((index, element) in arrayExpr.elements.withIndex()) {
+                dup()
+                iconst(index)
+                element.accept(this@FunctionCompiler)
+                aastore()
+            }
+            pop() // the underlying array
+            // the klox Array instance is on the stack
         }
 
         override fun visitSuperExpr(superExpr: SuperExpr): Unit = with(composer) {

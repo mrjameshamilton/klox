@@ -2,6 +2,7 @@ package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.error
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -297,6 +298,14 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     override fun visitSetExpr(setExpr: SetExpr) {
         resolve(setExpr.obj)
         resolve(setExpr.value)
+    }
+
+    override fun visitArrayExpr(arrayExpr: ArrayExpr) {
+        if (!currentFunction.isMain) {
+            currentFunction.capture(mainFunction.functionExpr.variables.single { it.name.lexeme == "Array" })
+        }
+
+        arrayExpr.elements.forEach { it.accept(this) }
     }
 
     override fun visitSuperExpr(superExpr: SuperExpr) = resolveLocal(superExpr)

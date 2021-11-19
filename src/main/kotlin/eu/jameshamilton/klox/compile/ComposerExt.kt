@@ -1,12 +1,18 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CAPTURED_VAR
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CLASS
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.debug
+import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
+import eu.jameshamilton.klox.parse.FunctionFlag.INITIALIZER
 import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.PUBLIC
@@ -375,9 +381,29 @@ fun Composer.declare(func: FunctionExpr, varDef: VarDef): Composer {
 }
 
 /**
+ * Creates a new klox class instance. The ClassStmt variable will be loaded
+ * from the given function.
+ *
+ * The constructor parameters should be placed on the stack before calling this method.
+ * After this method is called, the stack will contain the new instance.
+ */
+fun Composer.new_(function: FunctionExpr, klass: ClassStmt): Composer {
+    val init = klass.methods.singleOrNull { it.functionExpr.flags.contains(INITIALIZER) }
+    packarray(init?.functionExpr?.params?.size ?: 0)
+    load(function, klass)
+    checkcast(KLOX_CLASS)
+    swap()
+    invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+    checkcast(KLOX_INSTANCE)
+    return this
+}
+
+/**
  * Box a Klox captured variable in a CapturedVar container.
  */
-fun Composer.box(@Suppress("UNUSED_PARAMETER") varDef: VarDef): Composer {
+fun Composer.box(varDef: VarDef): Composer {
+    if (!varDef.isCaptured) throw RuntimeException("Cannot box a non-captured variable.")
+
     new_(KLOX_CAPTURED_VAR)
     dup_x1()
     swap()
@@ -388,9 +414,84 @@ fun Composer.box(@Suppress("UNUSED_PARAMETER") varDef: VarDef): Composer {
 /**
  * Unbox a captured Klox variable.
  */
-fun Composer.unbox(@Suppress("UNUSED_PARAMETER") varDef: VarDef): Composer {
+fun Composer.unbox(varDef: VarDef): Composer {
+    if (!varDef.isCaptured) throw RuntimeException("Cannot unbox a non-captured variable.")
+
     checkcast(KLOX_CAPTURED_VAR)
     invokevirtual(KLOX_CAPTURED_VAR, "getValue", "()Ljava/lang/Object;")
+    return this
+}
+
+/**
+ * Load a klox variable.
+ *
+ * Takes into account if it's captured or not.
+ */
+fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer {
+    aload(function.slot(varDef))
+    if (varDef.isCaptured) unbox(varDef)
+    return this
+}
+
+/**
+ * Assuming a KloxFunction is on the stack, load it's related instance.
+ */
+fun Composer.loadkloxinstance(): Composer {
+    aload_0()
+    invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+    return this
+}
+
+/**
+ * Assuming a Klox instance is on the stack, get a field from it.
+ */
+fun Composer.getkloxfield(name: String, expectedType: String): Composer {
+    ldc(name)
+    invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
+    checkcast(expectedType)
+    return this
+}
+
+/**
+ * Assuming a Klox instance is on the stack, get a field from it.
+ *
+ * A new value can be provided by using the newValueComposer - this composer
+ * should leave a value on the stack.
+ */
+fun Composer.getkloxfield(name: String, expectedType: String, newValueComposer: Composer.() -> Composer): Composer {
+    val (hasField, end) = labels(2)
+
+    dup()
+    haskloxfield(name)
+    ifne(hasField)
+    newValueComposer(this)
+    dup_x1()
+    setkloxfield(name)
+    goto_(end)
+
+    label(hasField)
+    getkloxfield(name, expectedType)
+
+    label(end)
+    return this
+}
+
+fun Composer.setkloxfield(name: String): Composer {
+    ldc(name)
+    swap()
+    invokevirtual(KLOX_INSTANCE, "set", "(Ljava/lang/String;Ljava/lang/Object;)V")
+    return this
+}
+
+fun Composer.removekloxfield(name: String): Composer {
+    ldc(name)
+    invokevirtual(KLOX_INSTANCE, "removeField", "(Ljava/lang/String;)V")
+    return this
+}
+
+fun Composer.haskloxfield(name: String): Composer {
+    ldc(name)
+    invokevirtual(KLOX_INSTANCE, "hasField", "(Ljava/lang/String;)Z")
     return this
 }
 

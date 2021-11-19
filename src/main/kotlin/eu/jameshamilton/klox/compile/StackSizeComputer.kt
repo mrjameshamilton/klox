@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -164,4 +165,10 @@ class StackSizeComputer : ExprVisitor<Int>, StmtVisitor<Int> {
 
     private fun compute(before: Int = 0, consumes: Int = 0, produces: Int = 0) =
         before - consumes + produces
+
+    override fun visitArrayExpr(arrayExpr: ArrayExpr): Int = compute(
+        before = 0, // arrayExpr.elements.sumOf { it?.accept(this) ?: 0},
+        consumes = arrayExpr.elements.size,
+        produces = 1
+    )
 }

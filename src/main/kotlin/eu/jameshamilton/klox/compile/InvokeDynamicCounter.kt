@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -89,4 +90,6 @@ class InvokeDynamicCounter : ExprVisitor<Int>, StmtVisitor<Int> {
     override fun visitClassStmt(classStmt: ClassStmt): Int = 0
 
     override fun visitReturnStmt(returnStmt: ReturnStmt): Int = returnStmt.value?.accept(this) ?: 0
+
+    override fun visitArrayExpr(arrayExpr: ArrayExpr): Int = arrayExpr.elements.sumOf { it.accept(this) }
 }

@@ -37,7 +37,8 @@ interface Expr {
         SetExpr.Visitor<R>,
         ThisExpr.Visitor<R>,
         SuperExpr.Visitor<R>,
-        FunctionExpr.Visitor<R>
+        FunctionExpr.Visitor<R>,
+        ArrayExpr.Visitor<R>
 }
 
 class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
@@ -178,6 +179,17 @@ class FunctionExpr(
     }
 
     override fun toString(): String = "<fn-expr>"
+}
+
+class ArrayExpr(val elements: List<Expr>) : Expr {
+    override fun <R> accept(visitor: Expr.Visitor<R>): R =
+        visitor.visitArrayExpr(this)
+
+    interface Visitor<R> {
+        fun visitArrayExpr(arrayExpr: ArrayExpr): R
+    }
+
+    override fun toString(): String = "<array-expr ${elements.size}>"
 }
 
 interface Stmt {

@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.interpret
 
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -365,6 +366,25 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             }
             else -> value.toString()
         }
+    }
+
+    override fun visitArrayExpr(arrayExpr: ArrayExpr): Any {
+        val array = evaluate(
+            CallExpr(
+                VariableExpr(Token(IDENTIFIER, "Array")),
+                Token(LEFT_PAREN, "("),
+                listOf(LiteralExpr(arrayExpr.elements.size.toDouble()))
+            )
+        ) as LoxInstance
+
+        @Suppress("UNCHECKED_CAST")
+        val underlyingArray =
+            array.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
+
+        for ((index, element) in arrayExpr.elements.withIndex())
+            underlyingArray[index] = evaluate(element)
+
+        return array
     }
 }
 

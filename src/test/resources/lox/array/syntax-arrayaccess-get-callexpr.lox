@@ -1,0 +1,5 @@
+fun bar() {
+    return "bar";
+}
+var array = [bar];
+print array[0](); // expect: bar

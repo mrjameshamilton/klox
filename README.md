@@ -106,6 +106,62 @@ Employee("John", "Smith").greet();
 
 `klox` includes some features not implemented in the Crafting Interpreters implementation:
 
+* Arrays
+
+Arrays can be created with the `[]` syntax
+
+```c
+var arr = [1, 2, 3];
+```
+
+The `[]` syntax is also used to access array elements:
+
+```c 
+print arr[0]; // 1
+```
+
+This is actually syntactic sugar for the `init`, `get` and `set` methods on the `Array` object:
+
+```c 
+// var arr = [1, 2, 3];
+var arr = Array(3);
+arr.set(0, 1);
+arr.set(1, 2);
+arr.set(2, 3);
+
+print arr.get(0); // print arr[0]; // 1
+arr.set(0, 1); // arr[0] = 1;
+```
+
+* `get` and `set` methods
+
+Like `Array`, any class can define `get` and `set` methods to take advantage of the `[]` syntax:
+
+```c
+class Foo {
+    init(value) {
+        this.value = value;
+    }
+    
+    get(index) {
+        if (index == 0) {
+            return this.value;
+        } else {
+            return null;
+        }
+    }
+    
+    set(index, value) {
+        this.value = index + ": " + value;
+    }
+}
+
+var foo = Foo("foo");
+print foo[0]; // foo
+foo[0] = "bar";
+print foo[0]; // bar
+```
+
 * Anonymous functions
 
 ```c

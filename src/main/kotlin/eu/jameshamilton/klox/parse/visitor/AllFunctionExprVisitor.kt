@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.parse.visitor
 
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.CallExpr
@@ -54,4 +55,7 @@ class AllFunctionExprVisitor(private val visitor: FunctionExpr.Visitor<Unit>) : 
     override fun visitSuperExpr(superExpr: SuperExpr) = Unit
 
     override fun visitFunctionExpr(functionExpr: FunctionExpr) = visitor.visitFunctionExpr(functionExpr)
+    override fun visitArrayExpr(arrayExpr: ArrayExpr) {
+        arrayExpr.elements.forEach { it.accept(this) }
+    }
 }

@@ -1,6 +1,7 @@
 package eu.jameshamilton.klox.interpret
 
 import eu.jameshamilton.klox.parse.ASTVisitor
+import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
 import eu.jameshamilton.klox.parse.BlockStmt
@@ -221,5 +222,9 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
 
     override fun visitThisExpr(thisExpr: ThisExpr) {
         resolveLocal(thisExpr, thisExpr.name)
+    }
+
+    override fun visitArrayExpr(arrayExpr: ArrayExpr) {
+        arrayExpr.elements.forEach { resolve(it) }
     }
 }
