@@ -75,6 +75,32 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                     val array = loxInstance.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
                     array.size.toDouble()
                 }
+                "copy" -> return { _, args ->
+                    if (args.first() !is LoxInstance) throw RuntimeError(Token(IDENTIFIER, "Array"), "Source must be an array.")
+                    if (!isKloxInteger(args[1])) throw RuntimeError(Token(IDENTIFIER, "Array"), "Source position must be a positive integer.")
+                    if (args[2] !is LoxInstance) throw RuntimeError(Token(IDENTIFIER, "Array"), "Destination must be an array.")
+                    if (!isKloxInteger(args[3])) throw RuntimeError(Token(IDENTIFIER, "Array"), "Destination position must be a positive integer.")
+                    if (!isKloxInteger(args[4])) throw RuntimeError(Token(IDENTIFIER, "Array"), "Length must be a positive integer.")
+
+                    try {
+                        val src = args.first() as LoxInstance
+                        val srcPos = args[1] as Double
+                        val dest = args[2] as LoxInstance
+                        val destPos = args[3] as Double
+                        val length = args[4] as Double
+
+                        @Suppress("UNCHECKED_CAST")
+                        val srcArray = src.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
+
+                        @Suppress("UNCHECKED_CAST")
+                        val destArray = dest.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
+
+                        System.arraycopy(srcArray, srcPos.toInt(), destArray, destPos.toInt(), length.toInt())
+                        true
+                    } catch (e: Exception) {
+                        throw RuntimeError(Token(IDENTIFIER, "Array"), "Array copy failed.")
+                    }
+                }
             }
         }
         "Math" -> when (name) {

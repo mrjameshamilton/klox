@@ -301,6 +301,7 @@ class Array {
     map(function);
     reduce(initialValue, function);
     filter(function);
+    class copy(src, srcPos, dest, destPos, length);
 }
 
 var array = Array(2);
@@ -309,6 +310,8 @@ array.set(1, 123);
 print array.get(0); // foo
 print array.length(); // 2
 ```
+
+The static method `Array.copy` can be used to efficiently copy one array to another.
 
 ### System
 

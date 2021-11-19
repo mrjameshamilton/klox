@@ -117,6 +117,10 @@ class Array {
         System.fail(Error("Native implementation for 'length' not provided."));
     }
 
+    class copy(src, srcPos, dest, destPos, length) {
+        System.fail(Error("Native implementation for 'copy' not provided."));
+    }
+
     map(function) {
         var length = this.length();
         var result = Array(length);
@@ -149,10 +153,7 @@ class Array {
         }
 
         var shrunkResult = Array(resultLength);
-        for (var i = 0; i < resultLength; i = i + 1) {
-            shrunkResult.set(i, result.get(i));
-        }
-
+        Array.copy(result, 0, shrunkResult, 0, resultLength);
         return shrunkResult;
     }
 
