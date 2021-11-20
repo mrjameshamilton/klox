@@ -1,0 +1,9 @@
+var f;
+
+if (true) {
+    f = fun () { return "foo"; };
+} else {
+    f = fun () { return "bar"; };
+}
+
+print f(); // expect: foo

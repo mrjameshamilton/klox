@@ -63,6 +63,7 @@ import proguard.classfile.attribute.visitor.AllAttributeVisitor
 import proguard.classfile.constant.MethodHandleConstant.REF_INVOKE_STATIC
 import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
+import proguard.classfile.util.ClassSuperHierarchyInitializer
 import proguard.classfile.visitor.AllMethodVisitor
 import proguard.classfile.visitor.ClassPrinter
 import proguard.classfile.visitor.ClassVersionFilter
@@ -136,6 +137,20 @@ class Compiler : Program.Visitor<ClassPool> {
      * @param programClassPool the classes to be preverified.
      */
     private fun preverify(programClassPool: ClassPool): ClassPool {
+        val libraryClassPool = ClassPool().apply {
+            // The following classes are required for the preverifier.
+            //
+            // For example, to complete the class hierarchy in a klox program like:
+            // two classes will be generated and the preverifier will need to know their common superclass.
+            // var f;
+            // if (true) f = fun() { return 1; } else; f = fun() { return 2; };
+            // f();
+            //
+            addClass(LibraryClass(PUBLIC, "java/lang/Object", null))
+        }
+        programClassPool.classesAccept(
+            ClassSuperHierarchyInitializer(programClassPool, libraryClassPool)
+        )
         programClassPool.classesAccept { clazz ->
             try {
                 clazz.accept(
