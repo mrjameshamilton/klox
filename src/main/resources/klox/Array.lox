@@ -55,6 +55,71 @@ class Array {
         return shrunkResult;
     }
 
+    slice(start, stop, step) {
+        // Slice implementation based on cpython implementation.
+
+        fun adjust_endpoint(length, endpoint, step) {
+            if (endpoint < 0) {
+                endpoint = length + endpoint;
+                if (endpoint < 0) {
+                    if (step < 0) endpoint = -1; else endpoint = 0;
+                }
+            } else if (endpoint >= length) {
+                if (step < 0) endpoint = length - 1; else endpoint = length;
+            }
+
+            return endpoint;
+        }
+
+        fun adjust_slice(length, start, stop, step) {
+            if (step == nil) step = 1;
+            if (step == 0) return Error("Step cannot be zero.");
+
+            if (start == nil) {
+                if (step < 0) start = length - 1; else start = 0;
+            } else {
+                start = adjust_endpoint(length, start, step);
+            }
+
+            if (stop == nil) {
+                if (step < 0) stop = -1;
+                else stop = 0;
+            } else {
+                stop = adjust_endpoint(length, stop, step);
+            }
+
+            return [start, stop, step];
+        }
+
+        fun indices(length, start, stop, step) {
+            var slice = adjust_slice(length, start, stop, step);
+            start = slice[0];
+            stop = slice[1];
+            step = slice[2];
+
+            var sliceLength;
+            if ((step < 0 and stop >= start) or (step > 0 and start >= stop)) {
+                sliceLength = 0;
+            } else if (step < 0) {
+                sliceLength = Math.floor((stop - start + 1) / step + 1);
+            } else {
+                sliceLength = Math.floor((stop - start - 1) / step + 1);
+            }
+
+            var result = Array(sliceLength);
+            var index = start;
+            for (var i = 0; i < sliceLength; i = i + 1, index = index + step) {
+                result[i] = index;
+            }
+
+            return result;
+        }
+
+        return indices(this.length(), start, stop, step).map(fun (index) {
+            return this[index];
+        });
+    }
+
     toString() {
         return "Array(" + this.length() + ")";
     }

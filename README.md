@@ -298,8 +298,9 @@ class Array {
     get(index);
     set(index, value);
     length();
+    slice(start, stop, step);
     map(function);
-    reduce(initialValue, function);
+    reduce(initial, function);
     filter(function);
     class copy(src, srcPos, dest, destPos, length);
 }
