@@ -1,0 +1,7 @@
+var (foo, _) = ["foo", "bar"];
+print foo; // expect: foo
+
+var (_, bar) = ["foo", "bar"];
+print bar; // expect: bar
+
+var (_, _) = ["foo", "bar"];

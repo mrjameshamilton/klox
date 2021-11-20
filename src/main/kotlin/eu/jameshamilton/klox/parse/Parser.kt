@@ -44,6 +44,7 @@ import eu.jameshamilton.klox.parse.TokenType.STRING
 import eu.jameshamilton.klox.parse.TokenType.SUPER
 import eu.jameshamilton.klox.parse.TokenType.THIS
 import eu.jameshamilton.klox.parse.TokenType.TRUE
+import eu.jameshamilton.klox.parse.TokenType.UNDERSCORE
 import eu.jameshamilton.klox.parse.TokenType.VAR
 import eu.jameshamilton.klox.parse.TokenType.WHILE
 import java.util.EnumSet
@@ -146,7 +147,8 @@ class Parser(private val tokens: List<Token>) {
 
             val names = mutableListOf<Token>()
             do {
-                names.add(consume(IDENTIFIER, "Expect variable name."))
+                if (match(UNDERSCORE)) names.add(previous())
+                else names.add(consume(IDENTIFIER, "Expect variable name."))
             } while (match(COMMA))
 
             consume(RIGHT_PAREN, "Expect ')' after variable list.")
@@ -155,15 +157,17 @@ class Parser(private val tokens: List<Token>) {
                 val tmp = Token(IDENTIFIER, nameFactory.next())
 
                 val variables: Array<Stmt> = names.mapIndexed { index, name ->
-                    VarStmt(
-                        name,
-                        CallExpr(
-                            GetExpr(VariableExpr(tmp), Token(IDENTIFIER, "get")),
-                            Token(LEFT_PAREN, ")"),
-                            listOf(LiteralExpr(index.toDouble()))
+                    if (name.type != UNDERSCORE) {
+                        VarStmt(
+                            name,
+                            CallExpr(
+                                GetExpr(VariableExpr(tmp), Token(IDENTIFIER, "get")),
+                                Token(LEFT_PAREN, ")"),
+                                listOf(LiteralExpr(index.toDouble()))
+                            )
                         )
-                    )
-                }.toTypedArray()
+                    } else null
+                }.filterNotNull().toTypedArray()
 
                 val declaration = MultiStmt(
                     VarStmt(tmp, expression()),

@@ -174,6 +174,12 @@ print bar; // bar
 Destructuring declarations are syntactic sugar for `get` methods - any class can implement
 `get(index)` to take advantage of destructuring declarations.
 
+Underscore can be used to ignore a value:
+
+```c
+var (_, bar) = ["foo", "bar"];
+```
+
 ### Anonymous functions
 
 ```c

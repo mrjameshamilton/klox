@@ -36,6 +36,7 @@ class Scanner(private val source: String) {
             ';' -> addToken(SEMICOLON)
             '*' -> addToken(STAR)
             '%' -> addToken(PERCENT)
+            '_' -> addToken(UNDERSCORE)
             '!' -> addToken(if (match('=')) BANG_EQUAL else BANG)
             '=' -> addToken(if (match('=')) EQUAL_EQUAL else EQUAL)
             '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
