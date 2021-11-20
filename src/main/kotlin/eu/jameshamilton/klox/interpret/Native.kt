@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.RuntimeException
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.ceil
@@ -46,27 +47,41 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                     loxInstance
                 }
                 "set" -> return { env, args ->
-                    val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
+                    try {
+                        val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
 
-                    @Suppress("UNCHECKED_CAST")
-                    val array = loxInstance.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
-                    val (index, value) = args
-                    if (!isKloxInteger(index)) throw RuntimeError(Token(IDENTIFIER, "Array"), "Array index must be a positive integer.")
-                    val indexInt = index.toInt()
-                    if (index < 0 || index > array.size) throw RuntimeError(Token(IDENTIFIER, "Array"), "Index $indexInt out of bounds for length ${array.size}")
-                    array[indexInt] = value
-                    null
+                        @Suppress("UNCHECKED_CAST")
+                        val array = loxInstance.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
+                        val (index, value) = args
+                        if (!isKloxInteger(index)) throw RuntimeError(
+                            Token(IDENTIFIER, "Array"),
+                            "Array index must be a positive integer."
+                        )
+                        val indexInt = index.toInt()
+                        if (index < 0 || index > array.size) throw RuntimeError(
+                            Token(IDENTIFIER, "Array"),
+                            "Index $indexInt out of bounds for length ${array.size}"
+                        )
+                        array[indexInt] = value
+                        null
+                    } catch (e: Exception) {
+                        throw RuntimeError(Token(IDENTIFIER, "Array"), e.message ?: "Array set failed")
+                    }
                 }
                 "get" -> return { env, args ->
-                    val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
+                    try {
+                        val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
 
-                    @Suppress("UNCHECKED_CAST")
-                    val array = loxInstance.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
-                    val index = args.first()
-                    if (!isKloxInteger(index)) throw RuntimeError(Token(IDENTIFIER, "Array"), "Array index must be a positive integer.")
-                    val indexInt = index.toInt()
-                    if (index < 0 || index > array.size) throw RuntimeError(Token(IDENTIFIER, "Array"), "Index $indexInt out of bounds for length ${array.size}")
-                    array[indexInt]
+                        @Suppress("UNCHECKED_CAST")
+                        val array = loxInstance.get(Token(IDENTIFIER, "\$array")) as Array<Any?>
+                        val index = args.first()
+                        if (!isKloxInteger(index)) throw RuntimeError(Token(IDENTIFIER, "Array"), "Array index must be a positive integer.")
+                        val indexInt = index.toInt()
+                        if (index < 0 || index > array.size) throw RuntimeError(Token(IDENTIFIER, "Array"), "Index $indexInt out of bounds for length ${array.size}")
+                        array[indexInt]
+                    } catch (e: Exception) {
+                        throw RuntimeError(Token(IDENTIFIER, "Array"), e.message ?: "Array get failed")
+                    }
                 }
                 "length" -> return { env, _ ->
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
