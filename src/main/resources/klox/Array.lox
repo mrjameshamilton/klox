@@ -82,8 +82,7 @@ class Array {
             }
 
             if (stop == nil) {
-                if (step < 0) stop = -1;
-                else stop = 0;
+                if (step < 0) stop = -1; else stop = length;
             } else {
                 stop = adjust_endpoint(length, stop, step);
             }
