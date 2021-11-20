@@ -1,0 +1,17 @@
+// Ensure that multiple uses for the same global late init var
+// is resolved correctly.
+
+class Foo {
+    class foo() {
+        print Bar; // expect: Bar
+        print Bar; // expect: Bar
+    }
+}
+
+class Bar {
+    class test() {
+        print "test";
+    }
+}
+
+Foo.foo();

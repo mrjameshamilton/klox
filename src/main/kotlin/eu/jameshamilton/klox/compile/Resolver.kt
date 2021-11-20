@@ -57,7 +57,8 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         mainFunction.accept(this)
 
         if (debug == true) {
-            println("Unresolved: $unresolved")
+            println("Unresolved: ${unresolved.map { "$it (${it.second.hashCode()})" }}")
+            println("Lateinits: ${lateInits.map { "$it (${it.hashCode()})" }}")
         }
 
         // Late initialization when capturing in initializer e.g. f in the following:
@@ -121,7 +122,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         scopes.peek()[varDef] = false
 
         // Special case: globals used before they're declared
-        if (isGlobalScope) unresolved.find { it.second.name.lexeme == varDef.name.lexeme }?.let {
+        if (isGlobalScope) unresolved.filter { it.second.name.lexeme == varDef.name.lexeme }.forEach {
             val (func, varAccess) = it
             varUseMap[varAccess] = varDef
             func.capture(varDef)
