@@ -96,7 +96,8 @@ fun parse(code: String): Program? {
 
     val stdlib = readFiles("/klox/")
         .filter { it.fileName.name.endsWith(".lox") }
-        .sortedBy { it.fileName.name != "System.lox" } // ensure that System.lox is loaded first
+        // ensure that Object.lox is loaded first since it defines the base class for all other classes
+        .sortedBy { it.fileName.name != "Object.lox" }
         .map {
             val inputStream = InputStreamReader(it.toUri().toURL().openStream())
             val text = inputStream.readText()

@@ -1,0 +1,61 @@
+class Array {
+    init(size) {
+        System.fail(Error("Native implementation for 'Array' not provided."));
+    }
+
+    get(i) {
+        System.fail(Error("Native implementation for 'get' not provided."));
+    }
+
+    set(i, value) {
+        System.fail(Error("Native implementation for 'set' not provided."));
+    }
+
+    length() {
+        System.fail(Error("Native implementation for 'length' not provided."));
+    }
+
+    class copy(src, srcPos, dest, destPos, length) {
+        System.fail(Error("Native implementation for 'copy' not provided."));
+    }
+
+    map(function) {
+        var length = this.length();
+        var result = Array(length);
+        for (var i = 0; i < length; i = i + 1) {
+            result.set(i, function(this.get(i)));
+        }
+        return result;
+    }
+
+    reduce(initial, function) {
+        var length = this.length();
+        var result = initial;
+        for (var i = 0; i < length; i = i + 1) {
+            result = function(result, this.get(i));
+        }
+        return result;
+    }
+
+    filter(function) {
+        var length = this.length();
+        var result = Array(length);
+        var resultLength = 0;
+
+        for (var i = 0; i < length; i = i + 1) {
+            var value = this.get(i);
+            if (function(value)) {
+                result.set(resultLength, value);
+                resultLength = resultLength + 1;
+            }
+        }
+
+        var shrunkResult = Array(resultLength);
+        Array.copy(result, 0, shrunkResult, 0, resultLength);
+        return shrunkResult;
+    }
+
+    toString() {
+        return "Array(" + this.length() + ")";
+    }
+}
