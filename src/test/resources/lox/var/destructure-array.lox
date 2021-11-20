@@ -1,0 +1,4 @@
+var (foo, bar) = ["foo", "bar"];
+
+print foo; // expect: foo
+print bar; // expect: bar

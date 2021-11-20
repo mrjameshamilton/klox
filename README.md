@@ -104,9 +104,10 @@ Employee("John", "Smith").greet();
 
 ## Extra features
 
-`klox` includes some features not implemented in the Crafting Interpreters implementation:
+The `klox` language is a super-set of `lox` and includes some features not
+implemented in the Crafting Interpreters `lox` implementation.
 
-* Arrays
+### Arrays
 
 Arrays can be created with the `[]` syntax
 
@@ -133,7 +134,7 @@ print arr.get(0); // print arr[0]; // 1
 arr.set(0, 1); // arr[0] = 1;
 ```
 
-* `get` and `set` methods
+### `get` and `set` methods
 
 Like `Array`, any class can define `get` and `set` methods to take advantage of the `[]` syntax:
 
@@ -162,7 +163,18 @@ foo[0] = "bar";
 print foo[0]; // bar
 ```
 
-* Anonymous functions
+### Destructuring declarations
+
+```c
+var (foo, bar) = ["foo", "bar"];
+print foo; // foo
+print bar; // bar
+```
+
+Destructuring declarations are syntactic sugar for `get` methods - any class can implement
+`get(index)` to take advantage of destructuring declarations.
+
+### Anonymous functions
 
 ```c
 var foo = fun (x) {
@@ -172,7 +184,7 @@ var foo = fun (x) {
 print foo(1); // 2
 ```
 
-* comma operator
+### comma operator
 
 The comma operator is used to chain multiple expressions together, the left-hand side of the
 expression is evaluated & its result discarded then right-hand side is evaluated and returned.
@@ -181,13 +193,13 @@ expression is evaluated & its result discarded then right-hand side is evaluated
 print "foo", "bar"; // prints bar
 ```
 
-* modulo operator
+### modulo operator
 
 ```c
 print 5 % 2; // prints 1
 ```
 
-* `break` and `continue` statements
+### `break` and `continue` statements
 
 ```c
 for (var i = 0; i < 10; i = i + 1) {
@@ -198,7 +210,7 @@ for (var i = 0; i < 10; i = i + 1) {
     }
 }
 ```
-* property getters
+### property getters
 ```c
 class Circle {
     init(radius) {
@@ -213,7 +225,7 @@ class Circle {
 var circle = Circle(4);
 print circle.area; // approx 50.266
 ```
-* static class methods
+### static class methods
 ```c
 class Math {
     class square(n) {
@@ -223,7 +235,7 @@ class Math {
 
 print Math.square(3); // prints 9
 ```
-* static class property getters
+### static class property getters
 ```c
 class Math {
     class PI {
@@ -233,7 +245,7 @@ class Math {
 
 print Math.PI; // approx. 50.265
 ```
-* multi-line comments (nestable)
+### multi-line comments (nestable)
 ```c
 /*
 * Does something. /* nested comment */
@@ -245,7 +257,7 @@ fun foo() {
 }
 ```
 
-* `is` instance check
+### `is` instance check
 
 ```c
 class Super { }
@@ -259,7 +271,7 @@ print foo is Super; // true
 print foo is Bar; // false
 ```
 
-* `toString` method
+### `toString` method
 
 ```c
 class Greeter {

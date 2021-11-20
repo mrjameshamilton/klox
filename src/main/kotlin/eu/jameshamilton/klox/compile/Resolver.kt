@@ -19,6 +19,7 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.MultiStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.SetExpr
@@ -218,6 +219,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     override fun visitBreakStmt(breakStmt: BreakStmt) { }
 
     override fun visitContinueStmt(continueStmt: ContinueStmt) { }
+
+    override fun visitMultiStmt(multiStmt: MultiStmt) =
+        multiStmt.statements.forEach { it.accept(this) }
 
     override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
         resolve(binaryExpr.left)

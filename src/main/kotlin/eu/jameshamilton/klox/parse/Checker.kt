@@ -167,7 +167,7 @@ class Checker : ASTVisitor<Unit> {
         SUBCLASS
     }
 
-    override fun visitArrayExpr(arrayExpr: ArrayExpr) {
-        arrayExpr.elements.forEach { it.accept(this) }
-    }
+    override fun visitArrayExpr(arrayExpr: ArrayExpr) = arrayExpr.elements.forEach { it.accept(this) }
+
+    override fun visitMultiStmt(multiStmt: MultiStmt) = multiStmt.statements.forEach { it.accept(this) }
 }

@@ -1,0 +1,8 @@
+fun foo() {
+    return ["foo", "bar"];
+}
+
+var (foo, bar) = foo();
+
+print foo; // expect: foo
+print bar; // expect: bar

@@ -206,7 +206,8 @@ interface Stmt {
         ContinueStmt.Visitor<R>,
         FunctionStmt.Visitor<R>,
         ReturnStmt.Visitor<R>,
-        ClassStmt.Visitor<R>
+        ClassStmt.Visitor<R>,
+        MultiStmt.Visitor<R>
 }
 
 class ExprStmt(val expression: Expr) : Stmt {
@@ -282,6 +283,15 @@ class ContinueStmt : Stmt {
 
     interface Visitor<R> {
         fun visitContinueStmt(continueStmt: ContinueStmt): R
+    }
+}
+
+class MultiStmt(vararg val statements: Stmt) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitMultiStmt(this)
+
+    interface Visitor<R> {
+        fun visitMultiStmt(multiStmt: MultiStmt): R
     }
 }
 

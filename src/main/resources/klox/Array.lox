@@ -91,11 +91,8 @@ class Array {
             return [start, stop, step];
         }
 
-        fun indices(length, start, stop, step) {
-            var slice = adjust_slice(length, start, stop, step);
-            start = slice[0];
-            stop = slice[1];
-            step = slice[2];
+        fun indices(length, originalStart, originalStop, originalStep) {
+            var (start, stop, step) = adjust_slice(length, originalStart, originalStop, originalStep);
 
             var sliceLength;
             if ((step < 0 and stop >= start) or (step > 0 and start >= stop)) {

@@ -1,0 +1,17 @@
+class Foo {
+    get(index) {
+        if (index == 0) {
+            return "foo";
+        } else if (index == 1) {
+            return "bar";
+        } else {
+            return "baz";
+        }
+    }
+}
+
+var (foo, bar, baz) = Foo();
+
+print foo; // expect: foo
+print bar; // expect: bar
+print baz; // expect: baz

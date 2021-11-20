@@ -1,0 +1,2 @@
+fun foo() { }
+var (foo()) = [1, 2]; // expect error: Expect ')' after variable list.

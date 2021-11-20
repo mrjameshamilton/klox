@@ -137,10 +137,50 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun varDeclaration(): Stmt {
-        val name = consume(IDENTIFIER, "Expect variable name.")
-        val initializer = if (match(EQUAL)) expression() else null
-        consume(SEMICOLON, "Expect ';' after variable declaration.")
-        return VarStmt(name, initializer)
+        if (match(LEFT_PAREN)) {
+            // destructuring declaration e.g. var (a, b) = [1, 2];
+            // syntactic sugar for
+            //     var temp = [1, 2]; var a = temp.get(0); var b = temp.get(1); temp = null;
+
+            if (check(RIGHT_PAREN)) throw error(peek(), "Expect variable name after '('.")
+
+            val names = mutableListOf<Token>()
+            do {
+                names.add(consume(IDENTIFIER, "Expect variable name."))
+            } while (match(COMMA))
+
+            consume(RIGHT_PAREN, "Expect ')' after variable list.")
+
+            if (match(EQUAL)) {
+                val tmp = Token(IDENTIFIER, nameFactory.next())
+
+                val variables: Array<Stmt> = names.mapIndexed { index, name ->
+                    VarStmt(
+                        name,
+                        CallExpr(
+                            GetExpr(VariableExpr(tmp), Token(IDENTIFIER, "get")),
+                            Token(LEFT_PAREN, ")"),
+                            listOf(LiteralExpr(index.toDouble()))
+                        )
+                    )
+                }.toTypedArray()
+
+                val declaration = MultiStmt(
+                    VarStmt(tmp, expression()),
+                    *variables,
+                    ExprStmt(AssignExpr(tmp, LiteralExpr(null)))
+                )
+
+                consume(SEMICOLON, "Expect ';' after variable declaration.")
+
+                return declaration
+            } else throw error(peek(), "Expect '=' with destructuring declaration.")
+        } else {
+            val name = consume(IDENTIFIER, "Expect variable name.")
+            val initializer = if (match(EQUAL)) expression() else null
+            consume(SEMICOLON, "Expect ';' after variable declaration.")
+            return VarStmt(name, initializer)
+        }
     }
 
     private fun statement(): Stmt {
@@ -505,4 +545,16 @@ class Parser(private val tokens: List<Token>) {
     private fun previous(): Token = tokens[current - 1]
 
     class ParseError : RuntimeException()
+
+    companion object {
+        private val nameFactory = NameFactory("v")
+    }
+
+    private class NameFactory(private val prefix: String) {
+        private var index = 0
+        fun next(): String {
+            index++
+            return "$prefix$index"
+        }
+    }
 }
