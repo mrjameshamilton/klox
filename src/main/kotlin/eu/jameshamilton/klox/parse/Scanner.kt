@@ -44,8 +44,14 @@ class Scanner(private val source: String) {
             '~' -> addToken(TILDE)
             '!' -> addToken(if (match('=')) BANG_EQUAL else BANG)
             '=' -> addToken(if (match('=')) EQUAL_EQUAL else EQUAL)
-            '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
-            '>' -> addToken(if (match('=')) GREATER_EQUAL else GREATER)
+            '<' -> addToken(if (match('<')) LESS_LESS else if (match('=')) LESS_EQUAL else LESS)
+            '>' -> addToken(
+                when {
+                    match('>') -> if (match('>')) GREATER_GREATER_GREATER else GREATER_GREATER
+                    match('=') -> GREATER_EQUAL
+                    else -> GREATER
+                }
+            )
             '/' -> {
                 if (match('*')) {
                     var depth = 1 // Already at depth 1

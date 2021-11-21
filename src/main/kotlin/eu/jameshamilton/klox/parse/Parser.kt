@@ -21,6 +21,8 @@ import eu.jameshamilton.klox.parse.TokenType.FOR
 import eu.jameshamilton.klox.parse.TokenType.FUN
 import eu.jameshamilton.klox.parse.TokenType.GREATER
 import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.GREATER_GREATER
+import eu.jameshamilton.klox.parse.TokenType.GREATER_GREATER_GREATER
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import eu.jameshamilton.klox.parse.TokenType.IF
 import eu.jameshamilton.klox.parse.TokenType.IS
@@ -29,6 +31,7 @@ import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACKET
 import eu.jameshamilton.klox.parse.TokenType.LEFT_PAREN
 import eu.jameshamilton.klox.parse.TokenType.LESS
 import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.LESS_LESS
 import eu.jameshamilton.klox.parse.TokenType.MINUS
 import eu.jameshamilton.klox.parse.TokenType.NIL
 import eu.jameshamilton.klox.parse.TokenType.NUMBER
@@ -383,12 +386,24 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun instance(): Expr {
-        var expr = term()
+        var expr = shift()
         while (match(IS)) {
+            val op = previous()
+            val right = shift()
+            expr = BinaryExpr(expr, op, right)
+        }
+        return expr
+    }
+
+    private fun shift(): Expr {
+        var expr = term()
+
+        while (match(GREATER_GREATER, GREATER_GREATER_GREATER, LESS_LESS)) {
             val op = previous()
             val right = term()
             expr = BinaryExpr(expr, op, right)
         }
+
         return expr
     }
 

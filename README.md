@@ -214,7 +214,7 @@ print 5 % 2; // prints 1
 
 ### bitwise operators
 
-`&`, `|`, `^` and `~` bitwise operators are supported.
+`&` (and), `|` (or), `^` (xor) and `~` (complement), `<<` (left shift), `>>` (right shift) and `>>>` (unsigned right shift) bitwise operators are supported.
 
 ### `break` and `continue` statements
 

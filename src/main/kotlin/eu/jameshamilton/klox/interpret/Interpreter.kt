@@ -84,7 +84,8 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         }
 
         when (binaryExpr.operator.type) {
-            PIPE, AMPERSAND, CARET -> checkIntegerOperands(binaryExpr.operator, left, right)
+            PIPE, AMPERSAND, CARET, LESS_LESS, GREATER_GREATER ->
+                checkIntegerOperands(binaryExpr.operator, left, right)
             else -> { }
         }
 
@@ -128,6 +129,9 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             PIPE -> ((left as Double).toInt() or (right as Double).toInt()).toDouble()
             AMPERSAND -> ((left as Double).toInt() and (right as Double).toInt()).toDouble()
             CARET -> ((left as Double).toInt() xor (right as Double).toInt()).toDouble()
+            LESS_LESS -> ((left as Double).toInt() shl (right as Double).toInt()).toDouble()
+            GREATER_GREATER -> ((left as Double).toInt() shr (right as Double).toInt()).toDouble()
+            GREATER_GREATER_GREATER -> ((left as Double).toInt() ushr (right as Double).toInt()).toDouble()
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }

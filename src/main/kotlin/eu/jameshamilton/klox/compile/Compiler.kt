@@ -471,6 +471,9 @@ class Compiler : Program.Visitor<ClassPool> {
                 PIPE -> bitwise { ior() }
                 AMPERSAND -> bitwise { iand() }
                 CARET -> bitwise { ixor() }
+                LESS_LESS -> bitwise { ishl() }
+                GREATER_GREATER -> bitwise { ishr() }
+                GREATER_GREATER_GREATER -> bitwise { iushr() }
                 else -> {}
             }
         }

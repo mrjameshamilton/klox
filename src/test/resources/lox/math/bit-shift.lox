@@ -1,0 +1,16 @@
+print 1 << 0; // expect: 1
+print 1 << 1; // expect: 2
+print 1 << 2; // expect: 4
+print 1 << 3; // expect: 8
+print 1 << 4; // expect: 16
+print 1 << 5; // expect: 32
+
+print 32 >> 0; // expect: 32
+print 32 >> 1; // expect: 16
+print 32 >> 2; // expect: 8
+print 32 >> 3; // expect: 4
+print 32 >> 4; // expect: 2
+print 32 >> 5; // expect: 1
+
+print -255 >> 1; // expect: -128
+print -255 >>> 1; // expect: 2.14748352E9
