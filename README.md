@@ -5,6 +5,8 @@
 A Kotlin implementation of lox, the language from [Crafting Interpreters](https://craftinginterpreters.com/),
 with a JVM backend built with [ProGuardCORE](https://github.com/guardsquare/proguard-core).
 
+The `klox` language is a superset of `lox` and includes features not implemented in the Crafting Interpreters `lox` implementation.
+
 ## Building
 
 ```shell
@@ -102,10 +104,7 @@ Employee("John", "Smith").greet();
 // Keep up the good work!
 ```
 
-## Extra features
-
-The `klox` language is a super-set of `lox` and includes some features not
-implemented in the Crafting Interpreters `lox` implementation.
+## `klox` features
 
 ### Arrays
 
