@@ -120,7 +120,15 @@ The `[]` syntax is also used to access array elements:
 print arr[0]; // 1
 ```
 
-This is actually syntactic sugar for the `init`, `get` and `set` methods on the `Array` object:
+Python-style slices are also supported:
+
+```c
+print [1, 2, 3][0:2]; // [1, 2]
+print [1, 2, 3][:]; // [1, 2, 3]
+print [1, 2, 3][::-1]; // [3, 2, 1]
+```
+
+These are actually syntactic sugar for the `init`, `get`, `set` and `slice` methods on the `Array` object:
 
 ```c 
 // var arr = [1, 2, 3];
@@ -133,9 +141,9 @@ print arr.get(0); // print arr[0]; // 1
 arr.set(0, 1); // arr[0] = 1;
 ```
 
-### `get` and `set` methods
+### `get`, `set` and `slice` methods
 
-Like `Array`, any class can define `get` and `set` methods to take advantage of the `[]` syntax:
+Like `Array`, any class can define `get`, `set` and `slice` methods to take advantage of the `[]` syntax:
 
 ```c
 class Foo {

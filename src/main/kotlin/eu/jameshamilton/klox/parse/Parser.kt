@@ -6,6 +6,7 @@ import eu.jameshamilton.klox.parse.TokenType.BANG
 import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CLASS
+import eu.jameshamilton.klox.parse.TokenType.COLON
 import eu.jameshamilton.klox.parse.TokenType.COMMA
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
 import eu.jameshamilton.klox.parse.TokenType.DOT
@@ -425,12 +426,38 @@ class Parser(private val tokens: List<Token>) {
         var expr = primary()
 
         while (match(LEFT_BRACKET)) {
-            val index = or()
+            var start: Expr = LiteralExpr(null)
+            var stop: Expr = LiteralExpr(null)
+            var step: Expr = LiteralExpr(null)
+            var isSlice = false
+
+            val matchColon = {
+                if (match(COLON)) { isSlice = true; true } else false
+            }
+
+            if (check(COLON, COLON)) { // [::step] or [::]
+                // [::step]
+                matchColon(); matchColon()
+                if (!check(RIGHT_BRACKET)) step = or()
+            } else { // [start:stop:step]
+                // start
+                if (!matchColon()) start = or()
+                // [:stop[:step]]
+                if (matchColon()) {
+                    if (!matchColon() && !check(RIGHT_BRACKET)) stop = or()
+                    if (matchColon()) step = or()
+                } else if (!check(RIGHT_BRACKET)) {
+                    stop = or()
+                    if (matchColon() && !check(RIGHT_BRACKET)) step = or()
+                }
+            }
+
             consume(RIGHT_BRACKET, "Expect ']' after index.")
-            expr = if (match(EQUAL)) {
-                CallExpr(GetExpr(expr, Token(IDENTIFIER, "set")), Token(LEFT_PAREN, "("), listOf(index, or()))
-            } else {
-                CallExpr(GetExpr(expr, Token(IDENTIFIER, "get")), Token(LEFT_PAREN, "("), listOf(index))
+
+            expr = when {
+                isSlice -> CallExpr(GetExpr(expr, Token(IDENTIFIER, "slice")), Token(LEFT_PAREN, "("), listOf(start, stop, step))
+                match(EQUAL) -> CallExpr(GetExpr(expr, Token(IDENTIFIER, "set")), Token(LEFT_PAREN, "("), listOf(start, or()))
+                else -> CallExpr(GetExpr(expr, Token(IDENTIFIER, "get")), Token(LEFT_PAREN, "("), listOf(start))
             }
         }
 

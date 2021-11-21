@@ -33,6 +33,7 @@ class Scanner(private val source: String) {
             '.' -> addToken(DOT)
             '-' -> addToken(MINUS)
             '+' -> addToken(PLUS)
+            ':' -> addToken(COLON)
             ';' -> addToken(SEMICOLON)
             '*' -> addToken(STAR)
             '%' -> addToken(PERCENT)

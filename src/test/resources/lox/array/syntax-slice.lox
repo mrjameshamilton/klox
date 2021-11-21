@@ -1,0 +1,25 @@
+var array = [1,2,3,4,5,6,7,8,9,10];
+
+var toString = fun (a, b) {
+    var start = a;
+    if (a != "") start = start + ", ";
+    return start + b;
+};
+
+var slice = array[0:1:1];
+print slice.reduce("", toString); // expect: 1
+print array[0:5:1].reduce("", toString); // expect: 1, 2, 3, 4, 5
+print array[0:array.length():1].reduce("", toString); // expect: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+print array[0:6:2].reduce("", toString); // expect: 1, 3, 5
+print array[0:5:2].reduce("", toString); // expect: 1, 3, 5
+print array[0:5:3].reduce("", toString); // expect: 1, 4
+print array[-1:0:1]; // expect: Array(0)
+print array[0:-2:1].reduce("", toString); // expect: 1, 2, 3, 4, 5, 6, 7, 8
+print array[0:-1:1].reduce("", toString); // expect: 1, 2, 3, 4, 5, 6, 7, 8, 9
+print array[nil:nil:-1].reduce("", toString); // expect: 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+print array[5:0:-1].reduce("", toString); // expect: 6, 5, 4, 3, 2
+print array[10:2:-1].reduce("", toString); // expect: 10, 9, 8, 7, 6, 5, 4
+print array[8:2:-2].reduce("", toString); // expect: 9, 7, 5
+print array[0:10:2].reduce("", toString); // expect: 1, 3, 5, 7, 9
+print array[2:8:2].reduce("", toString); // expect: 3, 5, 7
+print array[0:array.length():1].reduce("", toString); // expect: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
