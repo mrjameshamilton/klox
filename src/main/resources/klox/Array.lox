@@ -58,6 +58,12 @@ class Array {
     slice(start, stop, step) {
         // Slice implementation based on cpython implementation.
 
+        if (((start == nil and stop == nil) or (start == 0 and stop == this.length())) and (step == 1 or step == nil)) {
+            var result = Array(this.length());
+            Array.copy(this, 0, result, 0, this.length());
+            return result;
+        }
+
         fun adjust_endpoint(length, endpoint, step) {
             if (endpoint < 0) {
                 endpoint = length + endpoint;
