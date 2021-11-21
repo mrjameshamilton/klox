@@ -59,6 +59,8 @@ class UnaryExpr(val operator: Token, val right: Expr) : Expr {
     interface Visitor<R> {
         fun visitUnaryExpr(unaryExpr: UnaryExpr): R
     }
+
+    override fun toString(): String = "<${operator.lexeme} $right>"
 }
 
 class GroupingExpr(val expression: Expr) : Expr {
