@@ -187,6 +187,12 @@ Underscore can be used to ignore a value:
 var (_, bar) = ["foo", "bar"];
 ```
 
+### Multiple declarations in the same statement
+
+```c
+var a = 1, b = 2;
+```
+
 ### Anonymous functions
 
 ```c

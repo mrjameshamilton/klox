@@ -188,10 +188,14 @@ class Parser(private val tokens: List<Token>) {
                 return declaration
             } else throw error(peek(), "Expect '=' with destructuring declaration.")
         } else {
-            val name = consume(IDENTIFIER, "Expect variable name.")
-            val initializer = if (match(EQUAL)) expression() else null
+            val varStmts = mutableListOf<Stmt>()
+            do {
+                val name = consume(IDENTIFIER, "Expect variable name.")
+                val initializer = if (match(EQUAL)) expression(allowCommaExpr = false) else null
+                varStmts.add(VarStmt(name, initializer))
+            } while (match(COMMA))
             consume(SEMICOLON, "Expect ';' after variable declaration.")
-            return VarStmt(name, initializer)
+            return MultiStmt(*varStmts.toTypedArray())
         }
     }
 

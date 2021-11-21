@@ -109,8 +109,8 @@ class Array {
             }
 
             var result = Array(sliceLength);
-            var index = start;
-            for (var i = 0; i < sliceLength; i = i + 1, index = index + step) {
+
+            for (var index = start, i = 0; i < sliceLength; i = i + 1, index = index + step) {
                 result[i] = index;
             }
 
