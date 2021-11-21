@@ -1,10 +1,12 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.TokenType.AMPERSAND
 import eu.jameshamilton.klox.parse.TokenType.AND
 import eu.jameshamilton.klox.parse.TokenType.BANG
 import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.BREAK
+import eu.jameshamilton.klox.parse.TokenType.CARET
 import eu.jameshamilton.klox.parse.TokenType.CLASS
 import eu.jameshamilton.klox.parse.TokenType.COLON
 import eu.jameshamilton.klox.parse.TokenType.COMMA
@@ -32,6 +34,7 @@ import eu.jameshamilton.klox.parse.TokenType.NIL
 import eu.jameshamilton.klox.parse.TokenType.NUMBER
 import eu.jameshamilton.klox.parse.TokenType.OR
 import eu.jameshamilton.klox.parse.TokenType.PERCENT
+import eu.jameshamilton.klox.parse.TokenType.PIPE
 import eu.jameshamilton.klox.parse.TokenType.PLUS
 import eu.jameshamilton.klox.parse.TokenType.PRINT
 import eu.jameshamilton.klox.parse.TokenType.RETURN
@@ -44,6 +47,7 @@ import eu.jameshamilton.klox.parse.TokenType.STAR
 import eu.jameshamilton.klox.parse.TokenType.STRING
 import eu.jameshamilton.klox.parse.TokenType.SUPER
 import eu.jameshamilton.klox.parse.TokenType.THIS
+import eu.jameshamilton.klox.parse.TokenType.TILDE
 import eu.jameshamilton.klox.parse.TokenType.TRUE
 import eu.jameshamilton.klox.parse.TokenType.UNDERSCORE
 import eu.jameshamilton.klox.parse.TokenType.VAR
@@ -335,12 +339,24 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun and(): Expr {
-        var expr = equality()
+        var expr = bitwise()
 
         while (match(AND)) {
             val operator = previous()
-            val right = equality()
+            val right = bitwise()
             expr = LogicalExpr(expr, operator, right)
+        }
+
+        return expr
+    }
+
+    private fun bitwise(): Expr {
+        var expr = equality()
+
+        while (match(PIPE, AMPERSAND, CARET)) {
+            val operator = previous()
+            val right = equality()
+            expr = BinaryExpr(expr, operator, right)
         }
 
         return expr
@@ -397,7 +413,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun unary(): Expr {
-        if (match(BANG, MINUS)) {
+        if (match(BANG, MINUS, TILDE)) {
             val op = previous()
             val right = unary()
             return UnaryExpr(op, right)

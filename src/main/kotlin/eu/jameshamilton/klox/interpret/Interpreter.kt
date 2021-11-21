@@ -32,6 +32,8 @@ import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.runtimeError
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
@@ -76,8 +78,13 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         val right = evaluate(binaryExpr.right)
 
         when (binaryExpr.operator.type) {
-            MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL ->
+            MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
                 checkNumberOperands(binaryExpr.operator, left, right)
+            else -> { }
+        }
+
+        when (binaryExpr.operator.type) {
+            PIPE, AMPERSAND, CARET -> checkIntegerOperands(binaryExpr.operator, left, right)
             else -> { }
         }
 
@@ -118,6 +125,9 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 }
             }
             COMMA -> return right
+            PIPE -> ((left as Double).toInt() or (right as Double).toInt()).toDouble()
+            AMPERSAND -> ((left as Double).toInt() and (right as Double).toInt()).toDouble()
+            CARET -> ((left as Double).toInt() xor (right as Double).toInt()).toDouble()
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }
@@ -130,6 +140,10 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             MINUS -> {
                 checkNumberOperand(unaryExpr.operator, right)
                 -(right as Double)
+            }
+            TILDE -> {
+                checkIntegerOperand(unaryExpr.operator, right)
+                (right as Double).toInt().inv().toDouble()
             }
             else -> null
         }
@@ -213,11 +227,33 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         }
     }
 
+    @OptIn(ExperimentalContracts::class)
+    private fun checkIntegerOperand(operator: Token, operand: Any?) {
+        contract {
+            returns(true) implies (operand is Double)
+        }
+
+        if (!isKloxInteger(operand)) {
+            throw RuntimeError(operator, "Operand must be an integer.")
+        }
+    }
+
     private fun checkNumberOperands(operator: Token, left: Any?, right: Any?) {
         if (left == null && right == null) return
 
         if (!(left is Double && right is Double)) {
             throw RuntimeError(operator, "Operands must be numbers.")
+        }
+    }
+
+    @OptIn(ExperimentalContracts::class)
+    private fun checkIntegerOperands(operator: Token, left: Any?, right: Any?) {
+        contract {
+            returns(true) implies (left is Double && right is Double)
+        }
+
+        if (!isKloxInteger(left) && !isKloxInteger(right)) {
+            throw RuntimeError(operator, "Operands must be integers.")
         }
     }
 

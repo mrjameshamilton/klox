@@ -1,0 +1,3 @@
+print 1 & 1; // expect: 1
+print 1 & 0; // expect: 0
+print 255 & 1; // expect: 1

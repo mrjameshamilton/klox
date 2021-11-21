@@ -1,0 +1,3 @@
+print ~1; // expect: -2
+print ~7; // expect: -8
+print ~6 == (-6 - 1); // expect: true

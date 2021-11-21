@@ -212,6 +212,10 @@ print "foo", "bar"; // prints bar
 print 5 % 2; // prints 1
 ```
 
+### bitwise operators
+
+`&`, `|`, `^` and `~` bitwise operators are supported.
+
 ### `break` and `continue` statements
 
 ```c

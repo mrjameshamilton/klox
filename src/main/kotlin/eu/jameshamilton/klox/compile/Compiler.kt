@@ -302,6 +302,14 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
             }
 
+            fun bitwise(op: Composer.() -> Composer) = binaryOp("java/lang/Double") {
+                d2i()
+                dup_x2().pop() // swap
+                d2i()
+                op(this)
+                i2d()
+            }
+
             fun comparison(op: Composer.(label: Label) -> Unit) = binaryOp("java/lang/Boolean") {
                 val (l0, l1) = labels(2)
                 op(composer, l0)
@@ -459,6 +467,9 @@ class Compiler : Program.Visitor<ClassPool> {
                     composer.pop()
                     binaryExpr.right.accept(this@FunctionCompiler)
                 }
+                PIPE -> bitwise { ior() }
+                AMPERSAND -> bitwise { iand() }
+                CARET -> bitwise { ixor() }
                 else -> {}
             }
         }
@@ -485,6 +496,21 @@ class Compiler : Program.Visitor<ClassPool> {
                     catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
                         pop()
                         throw_("java/lang/RuntimeException", "Operand must be a number.")
+                    }
+                }
+                TILDE -> {
+                    val (tryStart, tryEnd) = try_ {
+                        boxed("java/lang/Double") {
+                            d2i()
+                            ineg()
+                            iconst_1()
+                            isub()
+                            i2d()
+                        }
+                    }
+                    catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
+                        pop()
+                        throw_("java/lang/RuntimeException", "Operand must be an integer.")
                     }
                 }
                 else -> {}

@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 import kotlin.system.exitProcess
 
 @ExperimentalContracts
-private fun isKloxInteger(index: Any?): Boolean {
+fun isKloxInteger(index: Any?): Boolean {
     contract {
         returns(true) implies (index is Double)
     }
