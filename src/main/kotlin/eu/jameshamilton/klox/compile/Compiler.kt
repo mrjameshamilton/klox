@@ -306,6 +306,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 d2i()
                 dup_x2().pop() // swap
                 d2i()
+                swap()
                 op(this)
                 i2d()
             }
