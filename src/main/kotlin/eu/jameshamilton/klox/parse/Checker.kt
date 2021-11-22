@@ -7,6 +7,8 @@ import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
 import eu.jameshamilton.klox.parse.FunctionFlag.*
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
+import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
+import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
 
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
@@ -65,6 +67,14 @@ class Checker : ASTVisitor<Unit> {
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr) {
         unaryExpr.right.accept(this)
+
+        when (unaryExpr.operator.type) {
+            PLUS_PLUS, MINUS_MINUS -> if (ungroup(unaryExpr.right) !is VariableExpr) error(
+                unaryExpr.operator,
+                "${unaryExpr.operator.lexeme} operand must be a variable."
+            )
+            else -> {}
+        }
     }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr) {

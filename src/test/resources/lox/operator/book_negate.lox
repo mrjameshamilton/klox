@@ -1,0 +1,6 @@
+// klox implements prefix decrement operator (`--`) so these don't work anymore
+// prefix decrement operator requires a variable as operand.
+
+print -(3); // expect: -3
+//print --(3);
+//print ---(3);

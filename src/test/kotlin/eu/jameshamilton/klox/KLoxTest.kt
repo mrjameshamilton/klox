@@ -56,6 +56,9 @@ class KLoxTest : FunSpec({
             // klox supports bitwise or
             !file.path.contains("unexpected_character.lox") &&
 
+            // klox supports --
+            !file.path.contains("operator/negate.lox") &&
+
             // not relevant for klox?
             !file.path.contains("limit/too_many_constants.lox") &&
             !file.path.contains("limit/loop_too_large.lox") &&

@@ -1,0 +1,27 @@
+var foo = 0;
+print ++foo; // expect: 1
+print foo; // expect: 1
+
+foo = 0;
+print foo++; // expect: 0
+print foo; // expect: 1
+
+for (var i = 0; i < 5; i++) {
+    print i;
+    // expect: 0
+    // expect: 1
+    // expect: 2
+    // expect: 3
+    // expect: 4
+}
+
+foo = 0;
+print ++(foo); // expect: 1
+
+foo = 0;
+fun bar() {
+    return foo++;
+}
+
+print bar(); // expect: 0
+print foo; // expect: 1

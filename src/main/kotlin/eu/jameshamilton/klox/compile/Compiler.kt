@@ -47,6 +47,7 @@ import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.ABSTRACT
 import proguard.classfile.AccessConstants.FINAL
@@ -517,6 +518,45 @@ class Compiler : Program.Visitor<ClassPool> {
                         throw_("java/lang/RuntimeException", "Operand must be an integer.")
                     }
                 }
+                PLUS_PLUS, MINUS_MINUS -> {
+                    val (isNull, end) = labels(2)
+                    val varDef = (ungroup(unaryExpr.right) as VariableExpr)
+                    if (!varDef.isDefined) {
+                        pop().throw_("java/lang/RuntimeException", "Variable ${varDef.name} is not defined.")
+                    } else {
+                        val isIncrement = unaryExpr.operator.type == PLUS_PLUS
+                        val (tryStart, tryEnd) = try_ {
+                            dup()
+                            ifnull(isNull)
+
+                            if (unaryExpr.postfix) dup()
+                            boxed("java/lang/Double") {
+                                dconst_1()
+                                if (isIncrement) dadd() else dsub()
+                            }
+                            if (!unaryExpr.postfix) dup()
+
+                            store(function, varDef.varDef!!)
+                            goto_(end)
+                        }
+                        catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
+                            pop()
+                            throw_(
+                                "java/lang/RuntimeException",
+                                "${unaryExpr.operator.lexeme} operand must be a number."
+                            )
+                        }
+
+                        label(isNull)
+                        pop()
+                        throw_(
+                            "java/lang/RuntimeException",
+                            "${unaryExpr.operator.lexeme} operand is 'nil'."
+                        )
+
+                        label(end)
+                    }
+                }
                 else -> {}
             }
         }
@@ -543,20 +583,10 @@ class Compiler : Program.Visitor<ClassPool> {
         override fun visitAssignExpr(assignExpr: AssignExpr): Unit = with(composer) {
             if (!assignExpr.isDefined) {
                 throw_("java/lang/RuntimeException", "Undefined variable '${assignExpr.name.lexeme}'.")
-                return
-            }
-
-            val varDef = assignExpr.varDef!!
-
-            if (varDef.isCaptured) {
-                aload(function.slot(varDef))
-                assignExpr.value.accept(this@FunctionCompiler)
-                dup_x1()
-                invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
             } else {
                 assignExpr.value.accept(this@FunctionCompiler)
-                dup()
-                astore(function.slot(varDef))
+                dup() // assignments leave the value on the stack after storing it
+                store(function, assignExpr.varDef!!)
             }
         }
 

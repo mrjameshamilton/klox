@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.interpret
 
+import eu.jameshamilton.klox.error
 import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
 import eu.jameshamilton.klox.parse.BinaryExpr
@@ -31,6 +32,7 @@ import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.runtimeError
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -149,6 +151,26 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 checkIntegerOperand(unaryExpr.operator, right)
                 (right as Double).toInt().inv().toDouble()
             }
+            PLUS_PLUS, MINUS_MINUS -> {
+                if (right == null) error(
+                    unaryExpr.operator,
+                    "${unaryExpr.operator.lexeme} operand is 'nil'."
+                )
+
+                val varExpr = ungroup(unaryExpr.right) as VariableExpr
+
+                checkNumberOperand(
+                    unaryExpr.operator,
+                    right,
+                    "${unaryExpr.operator.lexeme} operand must be a number."
+                )
+
+                with(right as Double) {
+                    val newValue = if (unaryExpr.operator.type == PLUS_PLUS) right + 1 else right - 1
+                    environment.assign(varExpr.name, newValue)
+                    return if (unaryExpr.postfix) right else newValue
+                }
+            }
             else -> null
         }
     }
@@ -225,9 +247,9 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         return evaluate(logicalExpr.right)
     }
 
-    private fun checkNumberOperand(operator: Token, operand: Any?) {
+    private fun checkNumberOperand(operator: Token, operand: Any?, message: String = "Operand must be a number.") {
         if (operand !is Double) {
-            throw RuntimeError(operator, "Operand must be a number.")
+            throw RuntimeError(operator, message)
         }
     }
 

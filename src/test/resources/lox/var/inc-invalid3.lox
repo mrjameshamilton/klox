@@ -1,0 +1,1 @@
+print 1++; // expect error: ++ operand must be a variable.

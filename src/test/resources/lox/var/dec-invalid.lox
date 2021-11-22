@@ -1,0 +1,2 @@
+var foo = "test";
+print foo--; // expect runtime error: -- operand must be a number.

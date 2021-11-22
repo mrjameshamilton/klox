@@ -434,6 +434,19 @@ fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer {
 }
 
 /**
+ * Store a klox variable.
+ *
+ * Takes into account if it's captured or not.
+ */
+fun Composer.store(function: FunctionExpr, varDef: VarDef): Composer = if (varDef.isCaptured) {
+    aload(function.slot(varDef))
+    swap()
+    invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
+} else {
+    astore(function.slot(varDef))
+}
+
+/**
  * Assuming a KloxFunction is on the stack, load it's related instance.
  */
 fun Composer.loadkloxinstance(): Composer {

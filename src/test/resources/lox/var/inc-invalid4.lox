@@ -1,0 +1,2 @@
+var x;
+x++; // expect runtime error: ++ operand is 'nil'.

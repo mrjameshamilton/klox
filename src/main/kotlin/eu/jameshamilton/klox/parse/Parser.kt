@@ -33,12 +33,14 @@ import eu.jameshamilton.klox.parse.TokenType.LESS
 import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.LESS_LESS
 import eu.jameshamilton.klox.parse.TokenType.MINUS
+import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
 import eu.jameshamilton.klox.parse.TokenType.NIL
 import eu.jameshamilton.klox.parse.TokenType.NUMBER
 import eu.jameshamilton.klox.parse.TokenType.OR
 import eu.jameshamilton.klox.parse.TokenType.PERCENT
 import eu.jameshamilton.klox.parse.TokenType.PIPE
 import eu.jameshamilton.klox.parse.TokenType.PLUS
+import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
 import eu.jameshamilton.klox.parse.TokenType.PRINT
 import eu.jameshamilton.klox.parse.TokenType.RETURN
 import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACE
@@ -422,13 +424,23 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun factor(): Expr {
-        var expr = unary()
+        var expr = prefix()
         while (match(SLASH, STAR, PERCENT)) {
             val op = previous()
-            val right = unary()
+            val right = prefix()
             expr = BinaryExpr(expr, op, right)
         }
         return expr
+    }
+
+    private fun prefix(): Expr {
+        if (match(PLUS_PLUS, MINUS_MINUS)) {
+            val op = previous()
+            val right = primary()
+            return UnaryExpr(op, right)
+        }
+
+        return unary()
     }
 
     private fun unary(): Expr {
@@ -436,6 +448,25 @@ class Parser(private val tokens: List<Token>) {
             val op = previous()
             val right = unary()
             return UnaryExpr(op, right)
+        }
+
+        return postfix()
+    }
+
+    private fun postfix(): Expr {
+        if (matchNext(PLUS_PLUS, MINUS_MINUS)) {
+            // i|++
+            // --^
+            val op = back()
+            // i|++
+            // ^
+            val left = primary()
+            // i|++
+            // --^
+            advance()
+            // i|++|
+            // -----^
+            return UnaryExpr(op, left, true)
         }
 
         return call()
@@ -579,11 +610,17 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun match(vararg types: TokenType): Boolean {
-        for (type in types) {
-            if (check(type)) {
-                advance()
-                return true
-            }
+        for (type in types) if (check(type)) {
+            advance()
+            return true
+        }
+        return false
+    }
+
+    private fun matchNext(vararg types: TokenType): Boolean {
+        for (type in types) if (checkNext(type)) {
+            advance()
+            return true
         }
         return false
     }
@@ -591,8 +628,18 @@ class Parser(private val tokens: List<Token>) {
     private fun check(type: TokenType, nextType: TokenType? = null): Boolean = when {
         isAtEnd() -> false
         nextType == null -> peek().type == type
+        else -> peek().type == type && checkNext(nextType)
+    }
+
+    private fun checkNext(type: TokenType): Boolean = when {
+        isAtEnd() -> false
         tokens[current + 1].type == EOF -> false
-        else -> peek().type == type && tokens[current + 1].type == nextType
+        else -> tokens[current + 1].type == type
+    }
+
+    private fun back(): Token {
+        if (current > 0) current--
+        return tokens[current + 1]
     }
 
     private fun advance(): Token {

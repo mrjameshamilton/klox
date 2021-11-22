@@ -30,7 +30,7 @@ class File {
         var outputStream = FileOutputStream(this);
         var length = String.length(text);
 
-        for (var i = 0; i < length; i = i + 1) {
+        for (var i = 0; i < length; i++) {
             var c = String.charAt(text, i);
             if (c is Error) {
                 outputStream.close();

@@ -193,6 +193,18 @@ var (_, bar) = ["foo", "bar"];
 var a = 1, b = 2;
 ```
 
+### (Post/pre)fix increment and decrement operators
+
+Numerical values can be incremented and decremented:
+
+```c
+var i = 0;
+i++;
+++i;
+i--;
+--i;
+```
+
 ### Anonymous functions
 
 ```c

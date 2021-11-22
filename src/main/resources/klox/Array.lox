@@ -22,7 +22,7 @@ class Array {
     map(function) {
         var length = this.length();
         var result = Array(length);
-        for (var i = 0; i < length; i = i + 1) {
+        for (var i = 0; i < length; i++) {
             result.set(i, function(this.get(i)));
         }
         return result;
@@ -31,7 +31,7 @@ class Array {
     reduce(initial, function) {
         var length = this.length();
         var result = initial;
-        for (var i = 0; i < length; i = i + 1) {
+        for (var i = 0; i < length; i++) {
             result = function(result, this.get(i));
         }
         return result;
@@ -42,7 +42,7 @@ class Array {
         var result = Array(length);
         var resultLength = 0;
 
-        for (var i = 0; i < length; i = i + 1) {
+        for (var i = 0; i < length; i++) {
             var value = this.get(i);
             if (function(value)) {
                 result.set(resultLength, value);
@@ -110,7 +110,7 @@ class Array {
 
             var result = Array(sliceLength);
 
-            for (var index = start, i = 0; i < sliceLength; i = i + 1, index = index + step) {
+            for (var index = start, i = 0; i < sliceLength; i++, index = index + step) {
                 result[i] = index;
             }
 

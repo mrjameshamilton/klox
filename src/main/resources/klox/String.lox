@@ -16,7 +16,7 @@ class String {
         var result = -1;
         var length = String.length(str);
         var searchLength = String.length(search);
-        for (var i = 0; i < length; i = i + 1) {
+        for (var i = 0; i < length; i++) {
             var end = i + searchLength;
             if (end > length) end = length;
             if (String.substr(str, i, end) == search) {
