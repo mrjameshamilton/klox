@@ -444,14 +444,10 @@ class Parser(private val tokens: List<Token>) {
     private fun call(): Expr {
         var expr = arrayAccess()
 
-        while (true) {
-            expr = if (match(LEFT_PAREN)) {
-                finishCall(expr)
-            } else if (match(DOT)) {
-                GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
-            } else {
-                break
-            }
+        while (true) expr = when {
+            match(LEFT_PAREN) -> finishCall(expr)
+            match(DOT) -> GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
+            else -> break
         }
 
         return expr
