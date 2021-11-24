@@ -1,0 +1,8 @@
+[1, 2, 3].forEach(fun (n) {
+    print n;
+});
+
+// expect: 1
+// expect: 2
+// expect: 3
+

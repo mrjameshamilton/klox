@@ -122,6 +122,20 @@ class Array {
         });
     }
 
+    forEach(function) {
+        var length = this.length();
+        for (var i = 0; i < length; i++) {
+            function(this[i]);
+        }
+    }
+
+    forEachIndexed(function) {
+        var length = this.length();
+        for (var i = 0; i < length; i++) {
+            function(i, this[i]);
+        }
+    }
+
     toString() {
         return "Array(" + this.length() + ")";
     }

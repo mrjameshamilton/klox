@@ -349,6 +349,8 @@ class Array {
     map(function);
     reduce(initial, function);
     filter(function);
+    forEach(function);
+    forEachIndexed(function);
     class copy(src, srcPos, dest, destPos, length);
 }
 
