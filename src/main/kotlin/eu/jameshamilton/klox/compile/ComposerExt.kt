@@ -308,14 +308,11 @@ fun Composer.ifnontruthy(jumpTo: Composer.Label): Composer {
  *     object -> object.toString()
  */
 fun Composer.stringify(): Composer = helper("Main", "stringify", stackInputSize = 1, stackResultSize = 1) {
-    val (nonNull, nonString, returnNumeric, nonNumeric) = labels(4)
+    val (isNull, nonString, returnNumeric, nonNumeric) = labels(4)
     aload_0()
-    ifnonnull(nonNull)
-    ldc("nil")
-    areturn()
+    dup()
+    ifnull(isNull)
 
-    label(nonNull)
-    aload_0()
     instanceof_("java/lang/String")
     ifeq(nonString)
     aload_0()
@@ -349,6 +346,13 @@ fun Composer.stringify(): Composer = helper("Main", "stringify", stackInputSize 
     label(nonNumeric)
     aload_0()
     invokevirtual("java/lang/Object", "toString", "()Ljava/lang/String;")
+    dup()
+    ifnull(isNull)
+    areturn()
+
+    label(isNull)
+    pop()
+    ldc("nil")
     areturn()
 }
 
