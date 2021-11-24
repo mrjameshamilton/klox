@@ -132,7 +132,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 else kloxError("round `n` parameter should be a number")
         }
         "System" -> when (name) {
-            "clock" -> return fun (_, _) { System.currentTimeMillis() / 1000.0 }
+            "clock" -> return fun (_, _): Double { return System.currentTimeMillis() / 1000.0 }
             "arg" -> return fun (_, arguments): Any? {
                 val index = arguments.first()
 
