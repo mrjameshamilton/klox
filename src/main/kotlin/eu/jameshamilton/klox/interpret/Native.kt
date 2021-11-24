@@ -33,6 +33,9 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
     fun kloxError(message: String) = errorClass.call(interpreter, listOf(message))
 
     when (className) {
+        "Object" -> when (name) {
+            "hashCode" -> return { env, _ -> (env.get(Token(IDENTIFIER, "this")) as LoxInstance).hashCode().toDouble() }
+        }
         "Array" -> {
             when (name) {
                 "init" -> return { env, args ->

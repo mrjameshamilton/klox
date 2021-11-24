@@ -1,0 +1,15 @@
+print Object().equals(Object()); // expect: false
+var foo = Object();
+print foo.equals(foo); // expect: true
+
+class Foo {
+    init(baz) {
+        this.baz = baz;
+    }
+
+    equals(other) {
+        return this.baz == other.baz;
+    }
+}
+
+print Foo("a").equals(Foo("a")); // expect: true

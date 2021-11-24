@@ -1,0 +1,4 @@
+print Object().hashCode() == Object().hashCode(); // expect: false
+var foo = Object();
+print foo.hashCode() == foo.hashCode(); // expect: true
+

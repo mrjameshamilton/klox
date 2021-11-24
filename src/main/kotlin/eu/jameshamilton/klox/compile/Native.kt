@@ -53,6 +53,15 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
     }
 
     when (className) {
+        "Object" -> when (functionName) {
+            "hashCode" -> return {
+                loadkloxinstance()
+                invokevirtual("java/lang/Object", "hashCode", "()I")
+                i2d()
+                box("java/lang/Double")
+                areturn()
+            }
+        }
         "Array" -> when (functionName) {
             "init" -> return {
                 val (error) = labels(1)

@@ -1,5 +1,13 @@
 class Object {
 
+    hashCode() {
+        System.fail(Error("Native implementation for 'hashCode' not provided."));
+    }
+
+    equals(other) {
+        return this.hashCode() == other.hashCode();
+    }
+
     // TODO implement toString() in klox
     //      this requires first methods to introspect the instance's class to get the name of the class
     //      because the default toString() should return "$className instance"
