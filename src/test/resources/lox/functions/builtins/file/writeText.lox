@@ -17,3 +17,16 @@ var err = file.writeText("Hello World").andThen(fun (a) {
 
 print err; // expect: nil
 print "done"; // expect: done
+
+fun foo(file) {
+    file.writeText("Hello World")!?;
+    print "File written"; // expect: File written
+    var text = file.readText()!?;
+    print "File read"; // expect: File read
+    print text; // expect: Hello World
+    file.delete()!?;
+    print "File deleted"; // expect: File deleted
+    print "done"; // expect: done
+}
+
+print foo(file); // expect: nil
