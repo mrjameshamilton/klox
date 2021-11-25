@@ -543,33 +543,29 @@ class Parser(private val tokens: List<Token>) {
         return CallExpr(callee, paren, arguments)
     }
 
-    private fun primary(): Expr {
-        if (match(FALSE)) return LiteralExpr(false)
-        if (match(TRUE)) return LiteralExpr(true)
-        if (match(NIL)) return LiteralExpr(null)
-        if (match(NUMBER, STRING)) return LiteralExpr(previous().literal)
-        if (match(LEFT_BRACKET)) return list()
-
-        if (match(SUPER)) {
+    private fun primary(): Expr = when {
+        match(FALSE) -> LiteralExpr(false)
+        match(TRUE) -> LiteralExpr(true)
+        match(NIL) -> LiteralExpr(null)
+        match(NUMBER, STRING) -> LiteralExpr(previous().literal)
+        match(LEFT_BRACKET) -> list()
+        match(SUPER) -> {
             val keyword = previous()
             consume(DOT, "Expect '.' after 'super'.")
-            return SuperExpr(
+            SuperExpr(
                 keyword,
                 method = consume(IDENTIFIER, "Expect superclass method name.")
             )
         }
-
-        if (match(THIS)) return ThisExpr(previous())
-        if (match(IDENTIFIER)) return VariableExpr(previous())
-        if (match(FUN)) return functionBody(EnumSet.of(ANONYMOUS))
-
-        if (match(LEFT_PAREN)) {
+        match(THIS) -> ThisExpr(previous())
+        match(IDENTIFIER) -> VariableExpr(previous())
+        match(FUN) -> functionBody(EnumSet.of(ANONYMOUS))
+        match(LEFT_PAREN) -> {
             val expr = expression()
             consume(RIGHT_PAREN, "Expect ')' after expression.")
-            return GroupingExpr(expr)
+            GroupingExpr(expr)
         }
-
-        throw error(peek(), "Expect expression.")
+        else -> throw error(peek(), "Expect expression.")
     }
 
     private fun list(): Expr {
