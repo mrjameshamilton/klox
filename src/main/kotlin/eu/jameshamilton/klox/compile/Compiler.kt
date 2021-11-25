@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.compile.Resolver.Companion.capture
 import eu.jameshamilton.klox.compile.Resolver.Companion.captured
 import eu.jameshamilton.klox.compile.Resolver.Companion.definedIn
 import eu.jameshamilton.klox.compile.Resolver.Companion.depth
@@ -74,8 +75,11 @@ import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
 class Compiler : Program.Visitor<ClassPool> {
 
-    private lateinit var mainFunction: FunctionStmt
-    private lateinit var arrayClass: ClassStmt
+    lateinit var mainFunction: FunctionStmt
+    lateinit var arrayClass: ClassStmt
+    lateinit var resultClass: ClassStmt
+    lateinit var errorClass: ClassStmt
+    lateinit var okClass: ClassStmt
 
     fun compile(program: Program): ClassPool {
         initialize(programClassPool)
@@ -90,7 +94,11 @@ class Compiler : Program.Visitor<ClassPool> {
 
         Resolver().execute(mainFunction)
 
-        arrayClass = mainFunction.functionExpr.variables.single { it.name.lexeme == "Array" } as ClassStmt
+        val globals = mainFunction.functionExpr.variables
+        arrayClass = globals.single { it.name.lexeme == "Array" } as ClassStmt
+        resultClass = globals.single { it.name.lexeme == "Result" } as ClassStmt
+        errorClass = globals.single { it.name.lexeme == "Error" } as ClassStmt
+        okClass = globals.single { it.name.lexeme == "Ok" } as ClassStmt
 
         if (hadError) return ClassPool()
 
@@ -180,6 +188,14 @@ class Compiler : Program.Visitor<ClassPool> {
 
         fun compile(className: String?, name: String, function: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
             this.function = function
+
+            val native = findNative(this@Compiler, className, name, function)
+            if (native != null) {
+                // TODO for now, assume all native functions need to capture these
+                function.capture(okClass)
+                function.capture(errorClass)
+            }
+
             val (clazz, method) = create(name, function)
             composer = Composer(clazz)
             with(composer) {
@@ -198,7 +214,6 @@ class Compiler : Program.Visitor<ClassPool> {
                     astore(function.slot(captured))
                 }
 
-                val native = findNative(mainFunction.functionExpr, className, name, function)
                 if (native != null) {
                     native(this)
                 } else {
@@ -556,6 +571,35 @@ class Compiler : Program.Visitor<ClassPool> {
 
                         label(end)
                     }
+                }
+                BANG_QUESTION -> {
+                    val (notResult, isOk, end) = labels(3)
+                    dup()
+                    instanceof_(KLOX_INSTANCE)
+                    ifeq(notResult)
+                    checkcast(KLOX_INSTANCE)
+                    dup()
+                    getkloxfield("isError", KLOX_FUNCTION)
+                    iconst_0()
+                    anewarray("java/lang/Object")
+                    invokeinterface(KLOX_FUNCTION, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+                    unbox("java/lang/Boolean")
+                    ifeq(isOk)
+                    // isError
+                    areturn()
+
+                    label(isOk)
+                    getkloxfield("value", "java/lang/Object")
+                    goto_(end)
+
+                    label(notResult)
+                    pop()
+                    throw_(
+                        "java/lang/RuntimeException",
+                        "!? operator can only be used with functions that return 'Result'."
+                    )
+
+                    label(end)
                 }
                 else -> {}
             }

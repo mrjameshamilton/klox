@@ -3,11 +3,12 @@ var file = File("src/test/resources/data/text.txt");
 print file; // expect: src/test/resources/data/text.txt
 
 var inputStream = FileInputStream(file);
-var c;
+var result;
 var str = "";
-while (c = inputStream.readChar()) {
-    if (c is Error) {
-        print c.message;
+while (result = inputStream.readChar()) {
+    var (c, error) = result;
+    if (error is Error) {
+        print error.message;
         break;
     }
 

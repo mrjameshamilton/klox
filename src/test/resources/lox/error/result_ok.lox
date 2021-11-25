@@ -1,0 +1,8 @@
+fun foo(x) {
+    if (x == 0) return Error("This is an error");
+    return Ok("Hello");
+}
+
+var ok = foo(1).orFail();
+print ok is Ok; // expect: false
+print ok; // expect: Hello

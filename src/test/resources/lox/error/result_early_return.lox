@@ -1,0 +1,38 @@
+fun foo(file) {
+    var text = file.readText()!?;
+    print "text read";
+    file.delete()!?;
+    print "done";
+    return Ok(text);
+}
+
+class FileWithReadError {
+    readText() {
+        return Error("Error from test");
+    }
+
+    delete() {
+        return Ok(true);
+    }
+}
+
+class FileWithNoError {
+    readText() {
+        return Ok("Ok from test");
+    }
+
+    delete() {
+        return Ok(true);
+    }
+}
+
+
+var (text, error) = foo(FileWithReadError());
+print text; // expect: nil
+print error; // expect: Error from test
+
+var (result, error) = foo(FileWithNoError());
+// expect: text read
+// expect: done
+print result; // expect: Ok from test
+print error; // expect: nil

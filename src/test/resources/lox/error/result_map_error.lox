@@ -1,0 +1,5 @@
+
+var result = Error("Error").mapError(fun (err) { return "My " + err.message; });
+
+print result is Error; // expect: true
+print result.ignoreOk(); // expect: My Error

@@ -1,0 +1,9 @@
+fun foo(x) {
+    if (x == 0) return Error("This is an error");
+    return Ok("Hello");
+}
+
+var (ok, err) = foo(0);
+print ok; // expect: nil
+print err is Error; // expect: true
+print err; // expect: This is an error

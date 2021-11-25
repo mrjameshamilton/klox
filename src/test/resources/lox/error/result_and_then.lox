@@ -1,0 +1,8 @@
+fun foo(x) {
+    if (x == 0) return Error("Cannot divide by zero");
+    var result = Ok("Hello");
+    return result;
+}
+
+var ok = foo(1).andThen(fun(x) { return x + "!"; });
+print ok; // expect: Hello!

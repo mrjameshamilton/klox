@@ -1,7 +1,19 @@
 var path = "build/tmp.txt";
 if (System.arg(0) != nil) path = System.arg(0);
 var file = File(path);
+
 file.delete();
-print file.writeText("Hello World"); // expect: true
-print file.readText(); // expect: Hello World
-file.delete();
+
+var err = file.writeText("Hello World").andThen(fun (a) {
+    print "File written"; // expect: File written
+    return file.readText().andThen(fun (text) {
+        print "File read"; // expect: File read
+        print text; // expect: Hello World
+        return file.delete().andThen(fun (c) {
+            print "File deleted"; // expect: File deleted
+        });
+    });
+});
+
+print err; // expect: nil
+print "done"; // expect: done

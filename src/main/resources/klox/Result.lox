@@ -1,0 +1,113 @@
+class Result {
+    init(ok, error) {
+        this.ok = ok;
+        this.error = error;
+    }
+
+    get(index) {
+        if (index == 0 and this.ok != nil) return this.ok.value;
+        else if (index == 1) return this.error;
+        else return nil;
+    }
+
+    orElse(value) {
+        if (this.ok != nil) return this.ok.value;
+        else return value;
+    }
+
+    orFail() {
+        if (this.ok != nil) return this.ok.value;
+        else System.fail(this.error);
+    }
+
+    orFailWith(error) {
+        if (this.ok != nil) return this.ok.value;
+        else System.fail(error);
+    }
+
+    orNil() {
+        if (this.ok != nil) return this.ok.value;
+        else return nil;
+    }
+
+    andThen(function) {
+        if (this.ok != nil) return function(this.ok.value);
+        else return Error(this.error);
+    }
+
+    map(function) {
+        if (this.isOk()) return Ok(function(this.ok.value));
+        else return Error(this.error);
+    }
+
+    mapError(function) {
+        if (this.isError()) return Error(function(this.error));
+        else return Ok(this.ok);
+    }
+
+    isOk() {
+        return this is Ok;
+    }
+
+    isError() {
+        return this is Error;
+    }
+
+    ignoreError() {
+        return this.ok;
+    }
+
+    ignoreOk() {
+        return this.error;
+    }
+
+    orResult(otherResult) {
+        if (this.isOk()) return this; else return otherResult;
+    }
+}
+
+/**
+ * KLox `Error` class which indicates an error occurred.
+ *
+ * Can be used with `is` for error checking e.g.
+ *
+ * fun foo(a, b) {
+ *     if (b == 0) return Error("Cannot divide by zero");
+ *     else return a / b;
+ * }
+ *
+ * var result = foo(1, 0);
+ *
+ * if (result is Error)
+ *    print result.message;
+ * else
+ *    print result;
+ */
+class Error < Result {
+    init(error) {
+        super.init(nil, this);
+        if (error is Error) {
+            this.message = error.message;
+            this.code = error.code;
+        } else {
+            this.message = error;
+            this.code = nil;
+        }
+    }
+
+    toString() {
+        return this.message;
+    }
+}
+
+class Ok < Result {
+    init(ok) {
+        super.init(this, nil);
+        if (ok is Ok) this.value = ok.value;
+        else this.value = ok;
+    }
+
+    toString() {
+        return this.value;
+    }
+}

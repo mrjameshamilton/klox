@@ -1,0 +1,2 @@
+print Ok(1).orResult(Error("Error")) is Ok;
+print Error("Error").orResult(Ok(1)) is Ok;

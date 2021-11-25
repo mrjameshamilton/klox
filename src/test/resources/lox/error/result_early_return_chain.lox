@@ -1,0 +1,24 @@
+class A {
+    a(x) {
+        if (x) return Error("Error a"); else return Ok(B());
+    }
+}
+class B {
+    b(x) {
+        if (x) return Error("Error b"); else return Ok(C());
+    }
+}
+class C {
+    c(x) {
+        if (x) return Error("Error c"); else return Ok("Ok");
+    }
+}
+
+fun foo(x, y, z) {
+    return A().a(x)!?.b(y)!?.c(z)!?;
+}
+
+print foo(true, false, false); // expect: Error a
+print foo(false, true, false); // expect: Error b
+print foo(false, false, true); // expect: Error c
+print foo(false, false, false); // expect: Ok

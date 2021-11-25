@@ -1,0 +1,2 @@
+var err = Error("Error");
+print err.message; // expect: Error

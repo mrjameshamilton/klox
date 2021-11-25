@@ -5,6 +5,7 @@ import eu.jameshamilton.klox.parse.TokenType.AMPERSAND
 import eu.jameshamilton.klox.parse.TokenType.AND
 import eu.jameshamilton.klox.parse.TokenType.BANG
 import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
+import eu.jameshamilton.klox.parse.TokenType.BANG_QUESTION
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CARET
 import eu.jameshamilton.klox.parse.TokenType.CLASS
@@ -478,6 +479,7 @@ class Parser(private val tokens: List<Token>) {
         while (true) expr = when {
             match(LEFT_PAREN) -> finishCall(expr)
             match(DOT) -> GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
+            match(BANG_QUESTION) -> UnaryExpr(previous(), expr)
             else -> break
         }
 

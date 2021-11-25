@@ -455,19 +455,61 @@ class FileOutputStream < OutputStream {
 
 ### Error handling
 
-`Error` a class representing an error state. It can be combined with the `is` instance check to check
-if a function had an error e.g.
+Functions can return a `Result` object of which there are two variants `Ok` and `Error` (inspired by Rust).
 
 ```c
 fun foo(a, b) {
     if (b == 0) return Error("Cannot divide by zero");
-    else return a / b;
+    else return Ok(a / b);
 }
 
-var result = foo(1, 0);
+var (result, error) = foo(1, 0);
 
-if (result is Error)
-   print result.message;
-else
-   print result;
+print result; // expect: nil
+print error; // expect: Cannot divide by zero
+```
+
+`Result` provides convenience functions for working with `Ok` or `Error` results, e.g.
+
+```c
+foo(1, 0).orFail(); // will exit the program with the error message if there is an error.
+foo(1, 0).orNil(); // returns nil if there is an error.
+```
+
+These can be chained e.g.
+
+```c
+var err = file.writeText("Hello World").andThen(fun (x) {
+    print "F ile written"; // expect: File written
+    return file.readText().andThen(fun (text) {
+        print "File read"; // expect: File read
+        print text; // expect: Hello World
+        return file.delete().andThen(fun (x) {
+            print "File deleted"; // expect: File deleted
+        });
+    });
+});
+
+print err; // expect: nil
+```
+
+The `!?` operator can be used with functions that return `Result` to return
+early if there is an error. If the `Result` is an `Error` then the calling 
+function returns early with the `Error` instance. Otherwise, the value of an
+`Ok` result is unwrapped.
+
+```
+fun foo() {
+    var a = doSomething()!?;
+    var b = doAnotherThing()!?;
+    return Ok(a + b);
+}
+```
+
+This allows chaining of potentially error throwing functions:
+
+```
+fun foo(x, y, z) {
+    return A().a(x)!?.b(y)!?.c(z)!?;
+}
 ```

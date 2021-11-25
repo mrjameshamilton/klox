@@ -1,0 +1,9 @@
+fun foo() {
+    return "test";
+}
+
+fun bar() {
+    foo()!?;
+}
+
+bar(); // expect runtime error: !? operator can only be used with functions that return 'Result'.

@@ -4,7 +4,7 @@ file.delete();
 
 var outputStream = FileOutputStream(file);
 
-print outputStream.writeChar("ABC"); // expect: Parameter should be a single character.
+print outputStream.writeChar("ABC").ignoreOk(); // expect: Parameter should be a single character.
 
 outputStream.close();
 

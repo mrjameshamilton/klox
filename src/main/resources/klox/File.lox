@@ -13,17 +13,18 @@ class File {
 
     readText() {
         var inputStream = FileInputStream(this);
-        var c;
+        var result;
         var str = "";
-        while (c = inputStream.readChar()) {
-            if (c is Error) {
+        while (result = inputStream.readChar()) {
+            var (c, err) = result;
+            if (err is Error) {
                 inputStream.close();
-                return c;
+                return err;
             }
             str = str + c;
         }
         inputStream.close();
-        return str;
+        return Ok(str);
     }
 
     writeText(text) {
@@ -31,15 +32,15 @@ class File {
         var length = String.length(text);
 
         for (var i = 0; i < length; i++) {
-            var c = String.charAt(text, i);
-            if (c is Error) {
+            var (c, err) = String.charAt(text, i);
+            if (err is Error) {
                 outputStream.close();
-                return c;
+                return err;
             }
             outputStream.writeChar(c);
         }
         outputStream.close();
 
-        return true;
+        return Ok(true);
     }
 }

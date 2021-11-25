@@ -1,0 +1,5 @@
+
+var result = Ok(0).map(fun (i) { return i + 1; });
+
+print result is Ok; // expect: true
+print result.orNil(); // expect: 1

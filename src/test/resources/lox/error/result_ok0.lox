@@ -1,0 +1,1 @@
+print Ok("Hello").orFail(); // expect: Hello

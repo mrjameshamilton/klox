@@ -43,6 +43,10 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
     val globals = Environment()
 
+    val resultClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Result")) as LoxClass }
+    val errorClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Error")) as LoxClass }
+    val okClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Ok")) as LoxClass }
+
     private val locals = mutableMapOf<Expr, Int>()
 
     private var environment = globals
@@ -118,14 +122,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             IS -> return when {
                 left !is LoxInstance -> false
                 right !is LoxClass -> false
-                else -> {
-                    var klass = left.klass as LoxClass?
-                    while (klass != null) {
-                        if (klass == right) return true
-                        else klass = klass.superClass
-                    }
-                    return false
-                }
+                else -> return kloxIsInstance(left, right)
             }
             COMMA -> return right
             PIPE -> ((left as Double).toInt() or (right as Double).toInt()).toDouble()
@@ -136,6 +133,15 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             GREATER_GREATER_GREATER -> ((left as Double).toInt() ushr (right as Double).toInt()).toDouble()
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
+    }
+
+    private fun kloxIsInstance(kloxInstance: LoxInstance, kloxClass: LoxClass): Boolean {
+        var klass = kloxInstance.klass as LoxClass?
+        while (klass != null) {
+            if (klass == kloxClass) return true
+            else klass = klass.superClass
+        }
+        return false
     }
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr): Any? {
@@ -170,6 +176,16 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                     environment.assign(varExpr.name, newValue)
                     return if (unaryExpr.postfix) right else newValue
                 }
+            }
+            BANG_QUESTION -> {
+                if (right !is LoxInstance || !kloxIsInstance(right, resultClass)) {
+                    throw RuntimeError(unaryExpr.operator, "!? operator can only be used with functions that return 'Result'.")
+                }
+
+                val isError = (right.get(Token(IDENTIFIER, "isError")) as LoxCallable)
+                    .call(this, emptyList()) as Boolean
+
+                return if (isError) throw Return(right) else right.get(Token(IDENTIFIER, "value"))
             }
             else -> null
         }

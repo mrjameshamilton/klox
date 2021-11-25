@@ -42,7 +42,13 @@ class Scanner(private val source: String) {
             '&' -> addToken(AMPERSAND)
             '^' -> addToken(CARET)
             '~' -> addToken(TILDE)
-            '!' -> addToken(if (match('=')) BANG_EQUAL else BANG)
+            '!' -> addToken(
+                when {
+                    match('?') -> BANG_QUESTION
+                    match('=') -> BANG_EQUAL
+                    else -> BANG
+                }
+            )
             '=' -> addToken(if (match('=')) EQUAL_EQUAL else EQUAL)
             '<' -> addToken(if (match('<')) LESS_LESS else if (match('=')) LESS_EQUAL else LESS)
             '>' -> addToken(

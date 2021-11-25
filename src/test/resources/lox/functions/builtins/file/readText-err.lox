@@ -1,0 +1,10 @@
+var path = "src/test/resources/data/text";
+if (System.arg(0) != nil) path = System.arg(0);
+var file = File(path);
+
+var err = file.readText().andThen(fun (text) {
+    print text;
+});
+
+print err is Error; // expect: true
+print err; // expect: src/test/resources/data/text (No such file or directory)

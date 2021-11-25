@@ -5,6 +5,7 @@ import eu.jameshamilton.klox.parse.Checker.ClassType.CLASS
 import eu.jameshamilton.klox.parse.Checker.ClassType.NONE
 import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
 import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.TokenType.BANG_QUESTION
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
 import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
@@ -73,6 +74,11 @@ class Checker : ASTVisitor<Unit> {
                 unaryExpr.operator,
                 "${unaryExpr.operator.lexeme} operand must be a variable."
             )
+            BANG_QUESTION -> if (currentFunction == null) {
+                error(unaryExpr.operator, "Can't use !? in top-level code.")
+            } else if (currentFunction?.flags?.contains(INITIALIZER) == true) {
+                error(unaryExpr.operator, "Can't use !? in an initializer.")
+            } else unaryExpr.right.accept(this)
             else -> {}
         }
     }

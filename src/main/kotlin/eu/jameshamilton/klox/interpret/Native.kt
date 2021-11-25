@@ -26,11 +26,8 @@ fun isKloxInteger(index: Any?): Boolean {
 
 @OptIn(ExperimentalContracts::class)
 fun findNative(interpreter: Interpreter, className: String?, name: String): ((Environment, List<Any?>) -> Any?)? {
-    val errorClass: LoxClass by lazy {
-        interpreter.globals.get(Token(IDENTIFIER, "Error")) as LoxClass
-    }
-
-    fun kloxError(message: String) = errorClass.call(interpreter, listOf(message))
+    fun kloxError(message: String) = interpreter.errorClass.call(interpreter, listOf(message))
+    fun kloxOk(value: Any?) = interpreter.okClass.call(interpreter, listOf(value))
 
     when (className) {
         "Object" -> when (name) {
@@ -160,7 +157,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 "delete" -> return fun(env, _): Any = try {
                     val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
                     val path = file.get(Token(IDENTIFIER, "path")) as String
-                    if (!File(path).delete()) true
+                    if (File(path).delete()) kloxOk(true)
                     else kloxError("Unknown error deleting file")
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error deleting file")
@@ -185,12 +182,12 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
             when (name) {
                 "readChar" -> return fun(env, _): Any? = try {
                     val i = read(env)
-                    if (i == -1) null else i.toChar().toString()
+                    if (i == -1) null else kloxOk(i.toChar().toString())
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error reading character")
                 }
                 "readByte" -> return fun(env, _): Any = try {
-                    read(env)
+                    kloxOk(read(env))
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error reading byte")
                 }
@@ -201,7 +198,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                         inputStream.close()
                         loxInstance.remove(Token(IDENTIFIER, "\$is"))
                     }
-                    true
+                    kloxOk(true)
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error closing file")
                 }
@@ -226,21 +223,21 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                     else -> return kloxError("Parameter should be a number or character")
                 }
 
-                return true
+                return kloxOk(true)
             }
             when (name) {
                 "writeByte" -> return fun (env, args): Any {
                     if (!isKloxInteger(args.first())) return kloxError("Byte should be an integer between 0 and 255.")
                     val i = args.first() as Double
                     if (i > 255 || i < 0) return kloxError("Byte should be an integer between 0 and 255.")
-                    return write(env, i)
+                    return kloxOk(write(env, i))
                 }
                 "writeChar" -> return fun (env, args): Any {
                     if (args.first() !is String) return kloxError("Parameter should be a single character.")
 
                     val str = args.first() as String
                     if (str.length > 1) return kloxError("Parameter should be a single character.")
-                    return write(env, str.first())
+                    return kloxOk(write(env, str.first()))
                 }
                 "close" -> return fun (env, _): Any = try {
                     val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
@@ -249,7 +246,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                         outputStream.close()
                         loxInstance.remove(Token(IDENTIFIER, "\$os"))
                     }
-                    true
+                    kloxOk(true)
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error closing file")
                 }
@@ -264,7 +261,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 if (!isKloxInteger(end)) return kloxError("substr 'end' parameter should be an integer.")
 
                 return try {
-                    stringify(interpreter, str).substring(start.toInt(), end.toInt())
+                    kloxOk(stringify(interpreter, str).substring(start.toInt(), end.toInt()))
                 } catch (e: StringIndexOutOfBoundsException) {
                     kloxError(
                         "String index out of bounds for '$str': begin ${stringify(interpreter, start)}, end ${stringify(interpreter, end)}."
@@ -272,7 +269,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 }
             }
             "toNumber" -> return fun (_, args): Any = try {
-                (args.first() as String).toDouble()
+                kloxOk((args.first() as String).toDouble())
             } catch (e: Exception) {
                 kloxError("Invalid number '${args.first()}'.")
             }

@@ -1,8 +1,6 @@
 package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
-import eu.jameshamilton.klox.compile.Resolver.Companion.variables
-import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import proguard.classfile.AccessConstants.PRIVATE
 import proguard.classfile.ProgramClass
@@ -10,16 +8,17 @@ import proguard.classfile.ProgramMethod
 import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun findNative(mainFunction: FunctionExpr, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
+fun findNative(compiler: Compiler, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
     // if (debug == true) println("findName($className, $functionName)")
-    // TODO deal with native functions that capture variables
-    //      Error is already captured since the default implementation is to return an Error
 
-    val errorClass = mainFunction.variables.single { it.name.lexeme == "Error" } as ClassStmt
+    fun Composer.ok(func: FunctionExpr): Composer {
+        new_(func, compiler.okClass)
+        return this
+    }
 
     fun Composer.error(func: FunctionExpr, message: Composer.() -> Composer): Composer {
         message(this)
-        new_(func, errorClass)
+        new_(func, compiler.errorClass)
         return this
     }
 
@@ -43,6 +42,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
             removekloxfield(name)
             label(end)
             TRUE()
+            ok(func)
         }
         catchAll(tryStart, endTry) {
             error(func) {
@@ -137,6 +137,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                     d2i()
                     invokestatic("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V")
                     TRUE()
+                    ok(func)
                 }
                 catchAll(tryStart, tryEnd) {
                     error(func) {
@@ -227,6 +228,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                     invokevirtual("java/io/File", "delete", "()Z")
                     ifeq(handler)
                     TRUE()
+                    ok(func)
                     areturn()
 
                     label(handler)
@@ -270,6 +272,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                         invokevirtual(targetClass, createReadMethod(targetClass))
                         i2d()
                         box("java/lang/Double")
+                        ok(func)
                     }
                     catchAll(tryStart, tryEnd) {
                         error(func) {
@@ -288,6 +291,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                         i2c()
                         box("java/lang/Character")
                         invokevirtual("java/lang/Character", "toString", "()Ljava/lang/String;")
+                        ok(func)
                         areturn()
 
                         label(nil)
@@ -303,6 +307,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                 }
                 "close" -> return {
                     closestream(INPUT_STREAM, "java/io/InputStream")
+                    ok(func)
                     areturn()
                 }
             }
@@ -346,6 +351,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                         ificmpgt(error)
                         invokevirtual(targetClass, write(targetClass))
                         TRUE()
+                        ok(func)
                     }
                     catchAll(tryStart, tryEnd) {
                         error(func) {
@@ -373,6 +379,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                         invokevirtual("java/lang/String", "charAt", "(I)C")
                         invokevirtual(targetClass, write(targetClass))
                         TRUE()
+                        ok(func)
                     }
                     catchAll(tryStart, tryEnd) {
                         error(func) {
@@ -388,6 +395,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                 }
                 "close" -> return {
                     closestream(OUTPUT_STREAM, "java/io/OutputStream")
+                    ok(func)
                     areturn()
                 }
             }
@@ -414,6 +422,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                     checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
                     unbox("java/lang/Integer")
                     invokevirtual("java/lang/String", "substring", "(II)Ljava/lang/String;")
+                    ok(func)
                 }
                 catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
                     pop()
@@ -442,6 +451,7 @@ fun findNative(mainFunction: FunctionExpr, className: String?, functionName: Str
                     checkcast("java/lang/String")
                     invokestatic("java/lang/Double", "parseDouble", "(Ljava/lang/String;)D")
                     box("java/lang/Double")
+                    ok(func)
                 }
                 catchAll(tryStart, tryEnd) {
                     pop()

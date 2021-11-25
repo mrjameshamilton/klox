@@ -6,12 +6,12 @@ print file; // expect: build/tmp.txt
 
 var outputStream = FileOutputStream(file);
 
-print outputStream.writeByte(65); // expect: true
-print outputStream.writeByte(66); // expect: true
-print outputStream.writeByte(67); // expect: true
+print outputStream.writeByte(65).orFail(); // expect: true
+print outputStream.writeByte(66).orFail(); // expect: true
+print outputStream.writeByte(67).orFail(); // expect: true
 
-print outputStream.close(); // expect: true
+print outputStream.close().orFail(); // expect: true
 
-print file.readText(); // expect: ABC
+print file.readText().orFail(); // expect: ABC
 
 file.delete();

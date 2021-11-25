@@ -1,0 +1,1 @@
+clock()!?; // expect error: Can't use !? in top-level code.

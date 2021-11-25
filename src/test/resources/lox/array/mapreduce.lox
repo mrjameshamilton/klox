@@ -9,5 +9,5 @@ fun add(a, b) {
 
 print array
         .map(String.toNumber)
+        .map(fun (result) { return result.orElse(0); })
         .reduce(0, add); // expect: 6
-
