@@ -215,6 +215,22 @@ var foo = fun (x) {
 print foo(1); // 2
 ```
 
+
+### Early-return operator
+
+The early-return operator `!?` can be used to return from a function if an error is thrown:
+
+```c
+fun foo() {
+    // if bar returns `Error`, then the function will return early with that `Error`.
+    var x = bar()!?;
+    print "Bar success"; // control-flow will only reach this line if bar() returns successfully
+    return Ok(x); 
+}
+
+var (result, error) = foo();
+```
+
 ### comma operator
 
 The comma operator is used to chain multiple expressions together, the left-hand side of the
