@@ -182,7 +182,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
             when (name) {
                 "readChar" -> return fun(env, _): Any? = try {
                     val i = read(env)
-                    if (i == -1) null else kloxOk(i.toChar().toString())
+                    if (i == -1) kloxOk(null) else kloxOk(i.toChar().toString())
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error reading character")
                 }

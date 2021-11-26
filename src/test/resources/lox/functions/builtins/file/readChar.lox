@@ -3,15 +3,9 @@ var file = File("src/test/resources/data/text.txt");
 print file; // expect: src/test/resources/data/text.txt
 
 var inputStream = FileInputStream(file);
-var result;
+var c;
 var str = "";
-while (result = inputStream.readChar()) {
-    var (c, error) = result;
-    if (error is Error) {
-        print error.message;
-        break;
-    }
-
+while (c = inputStream.readChar().orFail()) {
     if (c == "\n") {
         print str;
         str = "";

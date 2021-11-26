@@ -35,9 +35,7 @@ fun nextWord(inputStream) {
     }
 
     // look for a word
-    while (c = inputStream.readChar()) {
-        if (c is Error) System.fail(c);
-
+    while (c = inputStream.readChar().orFail()) {
         if (isAlpha(c)) {
             count(true);
             break;
@@ -47,9 +45,7 @@ fun nextWord(inputStream) {
     }
 
     // count until the next non-word character
-    while (c = inputStream.readChar()) {
-        if (c is Error) System.fail(c);
-
+    while (c = inputStream.readChar().orFail()) {
         count(false);
 
         if (!isAlpha(c)) break;

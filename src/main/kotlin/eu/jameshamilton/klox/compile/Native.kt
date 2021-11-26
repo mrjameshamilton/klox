@@ -297,6 +297,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         label(nil)
                         pop()
                         aconst_null()
+                        ok(func)
                     }
                     catchAll(tryStart, tryEnd) {
                         error(func) {

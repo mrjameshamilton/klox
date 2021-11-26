@@ -13,14 +13,15 @@ class File {
 
     readText() {
         var inputStream = FileInputStream(this);
-        var result;
         var str = "";
-        while (result = inputStream.readChar()) {
-            var (c, err) = result;
+        while (true) {
+            var (c, err) = inputStream.readChar();
+
             if (err is Error) {
                 inputStream.close();
                 return err;
-            }
+            } else if (c == nil) break;
+
             str = str + c;
         }
         inputStream.close();
