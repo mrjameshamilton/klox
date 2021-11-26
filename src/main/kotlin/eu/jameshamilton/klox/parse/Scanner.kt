@@ -49,6 +49,7 @@ class Scanner(private val source: String) {
                     else -> BANG
                 }
             )
+            '?' -> if (match('.')) addToken(QUESTION_DOT)
             '=' -> addToken(if (match('=')) EQUAL_EQUAL else EQUAL)
             '<' -> addToken(if (match('<')) LESS_LESS else if (match('=')) LESS_EQUAL else LESS)
             '>' -> addToken(

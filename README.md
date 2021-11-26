@@ -215,6 +215,19 @@ var foo = fun (x) {
 print foo(1); // 2
 ```
 
+### Null-safe operator
+
+The null-safe operator `?` can be used to chain property accesses without needing to
+explicitly check for null and without the programming exiting if the property is not found:
+
+```c
+var x = foo?.bar?.baz;
+
+// equivalent to:
+
+var x = foo.bar;
+if (x.baz != nil) x = x.baz;
+```
 
 ### Early-return operator
 

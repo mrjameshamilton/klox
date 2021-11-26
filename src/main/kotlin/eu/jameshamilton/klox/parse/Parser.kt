@@ -43,6 +43,7 @@ import eu.jameshamilton.klox.parse.TokenType.PIPE
 import eu.jameshamilton.klox.parse.TokenType.PLUS
 import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
 import eu.jameshamilton.klox.parse.TokenType.PRINT
+import eu.jameshamilton.klox.parse.TokenType.QUESTION_DOT
 import eu.jameshamilton.klox.parse.TokenType.RETURN
 import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACE
 import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACKET
@@ -479,6 +480,7 @@ class Parser(private val tokens: List<Token>) {
         while (true) expr = when {
             match(LEFT_PAREN) -> finishCall(expr)
             match(DOT) -> GetExpr(expr, consume(IDENTIFIER, "Expect property name after '.'."))
+            match(QUESTION_DOT) -> GetExpr(expr, consume(IDENTIFIER, "Expect property name after '?.'."), safeAccess = true)
             match(BANG_QUESTION) -> UnaryExpr(previous(), expr)
             else -> break
         }

@@ -1,0 +1,16 @@
+class Foo {
+    getter { return nil; }
+}
+class Bar { }
+
+var foo = Foo();
+
+print foo?.getter?.test; // expect: nil
+
+class Bar {
+    class foo {
+
+    }
+}
+
+print Bar.foo?.test; // expect: nil

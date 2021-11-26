@@ -196,8 +196,9 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         val arguments = callExpr.arguments.map { evaluate(it) }
 
-        if (callee !is LoxCallable) {
-            throw RuntimeError(callExpr.paren, "Can only call functions and classes.")
+        if (callee !is LoxCallable) when {
+            callExpr.callee is GetExpr && callExpr.callee.safeAccess -> return null
+            else -> throw RuntimeError(callExpr.paren, "Can only call functions and classes.")
         }
 
         if (callee.arity() != arguments.size) {
@@ -209,18 +210,20 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
     override fun visitGetExpr(getExpr: GetExpr): Any? = when (val obj = evaluate(getExpr.obj)) {
         is LoxInstance, is LoxClass -> {
-            val value = if (obj is LoxInstance) {
-                obj.get(getExpr.name)
-            } else if (obj is LoxClass) {
-                val method = obj.findMethod(getExpr.name.lexeme)
-                if (method != null && !method.declaration.flags.contains(STATIC)) {
-                    throw RuntimeError(getExpr.name, "'${method.name}' is not a static class method.")
-                } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
-            } else null
+            val value = when (obj) {
+                is LoxInstance -> obj.get(getExpr.name, safeAccess = getExpr.safeAccess)
+                is LoxClass -> {
+                    val method = obj.findMethod(getExpr.name.lexeme)
+                    if (method != null && !method.declaration.flags.contains(STATIC)) {
+                        throw RuntimeError(getExpr.name, "'${method.name}' is not a static class method.")
+                    } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
+                }
+                else -> null
+            }
 
             if (value is LoxFunction && value.declaration.flags.contains(GETTER)) value.call(this) else value
         }
-        else -> throw RuntimeError(getExpr.name, "Only instances have properties.")
+        else -> if (obj == null && getExpr.safeAccess) null else throw RuntimeError(getExpr.name, "Only instances have properties.")
     }
 
     override fun visitSetExpr(setExpr: SetExpr): Any? {

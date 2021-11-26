@@ -1,0 +1,19 @@
+class Foo {
+    foo() {
+        return nil;
+    }
+
+    bar() {
+        return Foo();
+    }
+
+    baz() {
+        return "baz";
+    }
+}
+
+var foo = Foo();
+
+print foo.bar(); // expect: Foo instance
+print foo.bar()?.foo(); // expect: nil
+

@@ -1,0 +1,16 @@
+class Foo { }
+class Bar { }
+
+var foo = Foo();
+var bar = Bar();
+bar.bar = fun () { return "test"; };
+foo.bar = bar;
+
+print foo?.bar?.bar(); // expect: test
+
+foo.bar = nil;
+print foo?.bar?.bar(); // expect: nil
+
+print foo?.a?.b?.c; // expect: nil
+
+print nil?.a; // expect: nil

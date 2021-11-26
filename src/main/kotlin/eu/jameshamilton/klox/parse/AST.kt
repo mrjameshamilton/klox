@@ -131,7 +131,7 @@ class CallExpr(val callee: Expr, val paren: Token, val arguments: List<Expr> = e
         "<call $callee(${arguments.joinToString(",")})>"
 }
 
-class GetExpr(val obj: Expr, val name: Token) : Expr {
+class GetExpr(val obj: Expr, val name: Token, val safeAccess: Boolean = false) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitGetExpr(this)
 

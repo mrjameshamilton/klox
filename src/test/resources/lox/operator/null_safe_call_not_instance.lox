@@ -1,0 +1,9 @@
+class Foo {
+    baz() {
+        return "baz";
+    }
+}
+
+var foo = Foo();
+
+print foo.baz()?.bar(); // expect runtime error: Only instances have properties.

@@ -68,13 +68,13 @@ class LoxClass(val name: String, val superClass: LoxClass? = null, private val m
 
 class LoxInstance(val klass: LoxClass, private val fields: MutableMap<String, Any?> = HashMap()) {
 
-    fun get(name: Token): Any? {
+    fun get(name: Token, safeAccess: Boolean = false): Any? {
         if (fields.containsKey(name.lexeme)) return fields[name.lexeme]
 
         val method = klass.findMethod(name.lexeme)
         if (method != null) return method.bind(this)
 
-        throw RuntimeError(name, "Undefined property '${name.lexeme}'.")
+        if (safeAccess) return null else throw RuntimeError(name, "Undefined property '${name.lexeme}'.")
     }
 
     fun set(name: Token, value: Any?) {

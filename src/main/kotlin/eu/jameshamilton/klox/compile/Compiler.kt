@@ -658,7 +658,15 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitCallExpr(callExpr: CallExpr): Unit = with(composer) {
             callExpr.callee.accept(this@FunctionCompiler)
+            val (notNull, end) = labels(2)
 
+            if (callExpr.callee is GetExpr && callExpr.callee.safeAccess) {
+                dup()
+                ifnonnull(notNull)
+                goto_(end)
+            }
+
+            label(notNull)
             val (tryStart, tryEnd) = try_ {
                 checkcast(KLOX_CALLABLE)
             }
@@ -680,6 +688,8 @@ class Compiler : Program.Visitor<ClassPool> {
                 invokespecial("java/lang/RuntimeException", "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V")
                 athrow()
             }
+
+            label(end)
         }
 
         override fun visitFunctionStmt(functionStmt: FunctionStmt): Unit =
@@ -764,7 +774,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitGetExpr(getExpr: GetExpr): Unit = with(composer) {
             val (notInstance, notInstanceAndNotClass, notStatic, maybeGetter, end) = labels(5)
-            val (notFound) = labels(1)
+            val (notFound, throwOnlyInstancesHaveProperties) = labels(2)
 
             getExpr.obj.accept(this@FunctionCompiler)
             dup()
@@ -772,7 +782,8 @@ class Compiler : Program.Visitor<ClassPool> {
             ifeq(notInstance)
             checkcast(KLOX_INSTANCE)
             ldc(getExpr.name.lexeme)
-            invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
+            iconst(if (getExpr.safeAccess) 1 else 0)
+            invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;")
             dup()
             instanceof_(KLOX_FUNCTION)
             ifne(maybeGetter)
@@ -801,6 +812,14 @@ class Compiler : Program.Visitor<ClassPool> {
             goto_(end)
 
             label(notInstanceAndNotClass)
+            if (getExpr.safeAccess) {
+                dup()
+                ifnonnull(throwOnlyInstancesHaveProperties)
+                // otherwise, safeAccess permits returning null
+                goto_(end)
+            }
+
+            label(throwOnlyInstancesHaveProperties)
             pop()
             throw_("java/lang/RuntimeException", "Only instances have properties.")
 
@@ -816,13 +835,17 @@ class Compiler : Program.Visitor<ClassPool> {
             }
 
             label(notFound)
-            pop()
-            throw_("java/lang/RuntimeException") {
-                concat(
-                    { ldc("Method '") },
-                    { ldc(getExpr.name.lexeme) },
-                    { ldc("' not found.") }
-                )
+            if (getExpr.safeAccess) {
+                goto_(end)
+            } else {
+                pop()
+                throw_("java/lang/RuntimeException") {
+                    concat(
+                        { ldc("Method '") },
+                        { ldc(getExpr.name.lexeme) },
+                        { ldc("' not found.") }
+                    )
+                }
             }
 
             label(end)
@@ -1272,7 +1295,14 @@ class Compiler : Program.Visitor<ClassPool> {
                     areturn()
                 }
                 .addMethod(PUBLIC, "get", "(Ljava/lang/String;)Ljava/lang/Object;") {
-                    val (bind, checkMethod, end) = labels(3)
+                    aload_0()
+                    aload_1()
+                    iconst_0()
+                    invokevirtual(targetClass.name, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;")
+                    areturn()
+                }
+                .addMethod(PUBLIC, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;") {
+                    val (bind, checkMethod, throwUndefined, end) = labels(4)
                     aload_0()
                     getfield(targetClass.name, "fields", "Ljava/util/Map;")
                     dup()
@@ -1291,6 +1321,11 @@ class Compiler : Program.Visitor<ClassPool> {
                     invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
                     dup()
                     ifnonnull(bind)
+                    iload_2()
+                    ifeq(throwUndefined) // safeAccess allows null
+                    areturn()
+
+                    label(throwUndefined)
                     pop()
                     throw_("java/lang/RuntimeException") {
                         concat(
@@ -1334,27 +1369,27 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
                     val (default) = labels(1)
-                    val (tryStart, tryEnd) = try_ {
-                        aload_0()
-                        ldc("toString")
-                        invokevirtual(targetClass.name, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
-                        dup()
-                        instanceof_(KLOX_FUNCTION)
-                        ifeq(default)
-                        checkcast(KLOX_FUNCTION)
-                        iconst_0()
-                        anewarray("java/lang/Object")
-                        invokeinterface(KLOX_FUNCTION, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
-                        checkcast("java/lang/String")
-                    }
-                    catchAll(tryStart, tryEnd) {
-                        label(default)
-                        pop()
-                        concat(
-                            { aload_0().getfield(targetClass.name, "klass", "L$KLOX_CLASS;") },
-                            { ldc(" instance") }
-                        )
-                    }
+                    aload_0()
+                    ldc("toString")
+                    iconst_1()
+                    invokevirtual(targetClass.name, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;")
+                    dup()
+                    instanceof_(KLOX_FUNCTION)
+                    ifeq(default)
+                    checkcast(KLOX_FUNCTION)
+                    iconst_0()
+                    anewarray("java/lang/Object")
+                    invokeinterface(KLOX_FUNCTION, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+                    stringify()
+                    checkcast("java/lang/String")
+                    areturn()
+
+                    label(default)
+                    pop()
+                    concat(
+                        { aload_0().getfield(targetClass.name, "klass", "L$KLOX_CLASS;") },
+                        { ldc(" instance") }
+                    )
                     areturn()
                 }
                 .programClass
