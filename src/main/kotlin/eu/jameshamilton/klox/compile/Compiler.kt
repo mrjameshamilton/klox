@@ -304,18 +304,17 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
             fun binaryOp(resultType: String, op: Composer.() -> Unit) = with(composer) {
-                val (tryStart, tryEnd) = try_ {
-                    binaryExpr.left.accept(this@FunctionCompiler)
-                    unbox("java/lang/Double")
-                    binaryExpr.right.accept(this@FunctionCompiler)
-                    unbox("java/lang/Double")
-                }
+                binaryExpr.left.accept(this@FunctionCompiler)
+                checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
+                unbox("java/lang/Double")
+
+                binaryExpr.right.accept(this@FunctionCompiler)
+                checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
+                unbox("java/lang/Double")
+
                 op(this)
+
                 box(resultType)
-                catch_(tryStart, tryEnd, "java/lang/ClassCastException") {
-                    pop()
-                    throw_("java/lang/RuntimeException", "Operands must be numbers.")
-                }
             }
 
             fun bitwise(op: Composer.() -> Composer) = binaryOp("java/lang/Double") {
@@ -427,7 +426,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         areturn()
 
                         label(throwLabel)
-                        throw_("java/lang/RuntimeException", "Operands must be two numbers or two strings.")
+                        kloxthrow("Operands must be two numbers or two strings.")
                     }
                 }
                 MINUS -> binaryOp("java/lang/Double") { dsub() }
@@ -508,64 +507,47 @@ class Compiler : Program.Visitor<ClassPool> {
                     label(end)
                 }
                 MINUS -> {
-                    val (tryStart, tryEnd) = try_ {
-                        boxed("java/lang/Double") {
-                            dneg()
-                        }
-                    }
-                    catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
-                        pop()
-                        throw_("java/lang/RuntimeException", "Operand must be a number.")
+                    checktype(unaryExpr.operator, "java/lang/Double", "Operand must be a number.")
+                    boxed("java/lang/Double") {
+                        dneg()
                     }
                 }
                 TILDE -> {
-                    val (tryStart, tryEnd) = try_ {
-                        boxed("java/lang/Double") {
-                            d2i()
-                            ineg()
-                            iconst_1()
-                            isub()
-                            i2d()
-                        }
-                    }
-                    catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
-                        pop()
-                        throw_("java/lang/RuntimeException", "Operand must be an integer.")
+                    checktype(unaryExpr.operator, "java/lang/Integer", "Operand must be an integer.")
+                    boxed("java/lang/Double") {
+                        d2i()
+                        ineg()
+                        iconst_1()
+                        isub()
+                        i2d()
                     }
                 }
                 PLUS_PLUS, MINUS_MINUS -> {
                     val (isNull, end) = labels(2)
                     val varDef = (ungroup(unaryExpr.right) as VariableExpr)
                     if (!varDef.isDefined) {
-                        pop().throw_("java/lang/RuntimeException", "Variable ${varDef.name} is not defined.")
+                        pop()
+                        kloxthrow(unaryExpr.operator, "Variable ${varDef.name} is not defined.")
                     } else {
                         val isIncrement = unaryExpr.operator.type == PLUS_PLUS
-                        val (tryStart, tryEnd) = try_ {
-                            dup()
-                            ifnull(isNull)
+                        dup()
+                        ifnull(isNull)
+                        checktype(unaryExpr.operator, "java/lang/Double", "${unaryExpr.operator.lexeme} operand must be a number.")
 
-                            if (unaryExpr.postfix) dup()
-                            boxed("java/lang/Double") {
-                                dconst_1()
-                                if (isIncrement) dadd() else dsub()
-                            }
-                            if (!unaryExpr.postfix) dup()
+                        if (unaryExpr.postfix) dup()
+                        boxed("java/lang/Double") {
+                            dconst_1()
+                            if (isIncrement) dadd() else dsub()
+                        }
+                        if (!unaryExpr.postfix) dup()
 
-                            store(function, varDef.varDef!!)
-                            goto_(end)
-                        }
-                        catch_(tryStart, tryEnd, "java/lang/RuntimeException") {
-                            pop()
-                            throw_(
-                                "java/lang/RuntimeException",
-                                "${unaryExpr.operator.lexeme} operand must be a number."
-                            )
-                        }
+                        store(function, varDef.varDef!!)
+                        goto_(end)
 
                         label(isNull)
                         pop()
-                        throw_(
-                            "java/lang/RuntimeException",
+                        kloxthrow(
+                            unaryExpr.operator,
                             "${unaryExpr.operator.lexeme} operand is 'nil'."
                         )
 
@@ -594,8 +576,8 @@ class Compiler : Program.Visitor<ClassPool> {
 
                     label(notResult)
                     pop()
-                    throw_(
-                        "java/lang/RuntimeException",
+                    kloxthrow(
+                        unaryExpr.operator,
                         "!? operator can only be used with functions that return 'Result'."
                     )
 
@@ -620,13 +602,13 @@ class Compiler : Program.Visitor<ClassPool> {
             if (variableExpr.isDefined) {
                 load(function, variableExpr.varDef!!)
             } else {
-                throw_("java/lang/RuntimeException", "Undefined variable '${variableExpr.name.lexeme}'.")
+                kloxthrow(variableExpr.name, "Undefined variable '${variableExpr.name.lexeme}'.")
             }
         }
 
         override fun visitAssignExpr(assignExpr: AssignExpr): Unit = with(composer) {
             if (!assignExpr.isDefined) {
-                throw_("java/lang/RuntimeException", "Undefined variable '${assignExpr.name.lexeme}'.")
+                kloxthrow(assignExpr.name, "Undefined variable '${assignExpr.name.lexeme}'.")
             } else {
                 assignExpr.value.accept(this@FunctionCompiler)
                 dup() // assignments leave the value on the stack after storing it
@@ -667,9 +649,7 @@ class Compiler : Program.Visitor<ClassPool> {
             }
 
             label(notNull)
-            val (tryStart, tryEnd) = try_ {
-                checkcast(KLOX_CALLABLE)
-            }
+            checktype(callExpr.paren, KLOX_CALLABLE, "Can only call functions and classes.")
 
             callExpr.arguments.forEach { it.accept(this@FunctionCompiler) }
             invokedynamic(
@@ -677,17 +657,6 @@ class Compiler : Program.Visitor<ClassPool> {
                 "invoke",
                 """(L$KLOX_CALLABLE;${"Ljava/lang/Object;".repeat(callExpr.arguments.size)})Ljava/lang/Object;"""
             )
-
-            // TODO create only one of these handlers per method
-            catch_(tryStart, tryEnd, "java/lang/ClassCastException") {
-                new_("java/lang/RuntimeException")
-                dup_x1()
-                swap()
-                ldc("Can only call functions and classes.")
-                swap()
-                invokespecial("java/lang/RuntimeException", "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V")
-                athrow()
-            }
 
             label(end)
         }
@@ -751,7 +720,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 dup()
                 instanceof_(KLOX_CLASS)
                 ifne(isSuperClass)
-                throw_("java/lang/RuntimeException", "Superclass must be a class.")
+                kloxthrow(classStmt.name, "Superclass must be a class.")
                 label(isSuperClass)
                 invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;L$KLOX_CLASS;)V")
             } else {
@@ -821,10 +790,10 @@ class Compiler : Program.Visitor<ClassPool> {
 
             label(throwOnlyInstancesHaveProperties)
             pop()
-            throw_("java/lang/RuntimeException", "Only instances have properties.")
+            kloxthrow(getExpr.name, "Only instances have properties.")
 
             label(notStatic)
-            throw_("java/lang/RuntimeException") {
+            kloxthrow(getExpr.name) {
                 invokeinterface(KLOX_FUNCTION, "getName", "()Ljava/lang/String;")
                 astore_1()
                 concat(
@@ -839,7 +808,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 goto_(end)
             } else {
                 pop()
-                throw_("java/lang/RuntimeException") {
+                kloxthrow(getExpr.name) {
                     concat(
                         { ldc("Method '") },
                         { ldc(getExpr.name.lexeme) },
@@ -865,7 +834,7 @@ class Compiler : Program.Visitor<ClassPool> {
             goto_(end)
 
             label(notInstance)
-            throw_("java/lang/RuntimeException", "Only instances have fields.")
+            kloxthrow(setExpr.name, "Only instances have fields.")
 
             label(end)
         }
@@ -911,7 +880,7 @@ class Compiler : Program.Visitor<ClassPool> {
             label(superMethodNotFound)
             pop()
 
-            throw_("java/lang/RuntimeException") {
+            kloxthrow(superExpr.name) {
                 concat(
                     { ldc("Undefined property '") },
                     { ldc(superExpr.method.lexeme) },
@@ -1122,7 +1091,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         putfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
+                        kloxthrow("$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC, "isStatic", "()Z") {
@@ -1150,7 +1119,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         getfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        throw_("java/lang/UnsupportedOperationException", "$name cannot be bound.")
+                        kloxthrow("$name cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
@@ -1187,6 +1156,50 @@ class Compiler : Program.Visitor<ClassPool> {
         get() = !flags.contains(ANONYMOUS) && !flags.contains(FunctionFlag.STATIC)
 
     private fun initialize(programClassPool: ClassPool) = with(programClassPool) {
+        addClass(
+            ClassBuilder(
+                CLASS_VERSION_1_8,
+                PUBLIC,
+                KLOX_EXCEPTION,
+                "java/lang/RuntimeException"
+            )
+                .addField(PUBLIC or FINAL, "line", "I")
+                .addMethod(PUBLIC, "<init>", "(Ljava/lang/String;I)V") {
+                    aload_0()
+                    dup()
+                    iload_2()
+                    putfield(targetClass.name, "line", "I")
+                    aload_1()
+                    invokespecial("java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V")
+                    return_()
+                }
+                .addMethod(PUBLIC, "<init>", "(Ljava/lang/String;)V") {
+                    aload_0()
+                    aload_1()
+                    iconst_m1()
+                    invokespecial(targetClass.name, "<init>", "(Ljava/lang/String;I)V")
+                    return_()
+                }
+                .addMethod(PUBLIC, "getMessage", "()Ljava/lang/String;") {
+                    val (hasLine) = labels(1)
+                    aload_0()
+                    getfield(targetClass.name, "line", "I")
+                    ifgt(hasLine)
+                    aload_0().invokespecial(targetClass.superName, "getMessage", "()Ljava/lang/String;")
+                    areturn()
+
+                    label(hasLine)
+                    concat(
+                        { ldc("[line ") },
+                        { aload_0().getfield(targetClass.name, "line", "I").box("java/lang/Integer") },
+                        { ldc("] ") },
+                        { aload_0().invokespecial(targetClass.superName, "getMessage", "()Ljava/lang/String;") },
+                    )
+                    areturn()
+                }
+                .programClass
+        )
+
         addClass(
             ClassBuilder(
                 CLASS_VERSION_1_8,
@@ -1327,7 +1340,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
                     label(throwUndefined)
                     pop()
-                    throw_("java/lang/RuntimeException") {
+                    kloxthrow {
                         concat(
                             { ldc("Undefined property '") },
                             { aload_1() },
@@ -1408,12 +1421,10 @@ class Compiler : Program.Visitor<ClassPool> {
                     return_()
                 }
                 .addMethod(PUBLIC or STATIC or VARARGS, "invoke", "(L$KLOX_CALLABLE;[Ljava/lang/Object;)Ljava/lang/Object;") {
-                    val (nonNull, nonNegativeArity, correctArity) = labels(3)
+                    val (nonNegativeArity, correctArity) = labels(2)
                     aload_0()
-                    ifnonnull(nonNull)
-                    throw_("java/lang/Exception", "Can only call functions and classes.")
+                    checknonnull("Can only call functions and classes.")
 
-                    label(nonNull)
                     aload_0()
                     invokeinterface(KLOX_CALLABLE, "arity", "()I")
                     iconst_m1()
@@ -1435,7 +1446,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     dup()
                     istore(5)
                     ificmpeq(correctArity)
-                    throw_("java/lang/RuntimeException") {
+                    kloxthrow {
                         concat(
                             { ldc("Expected ") },
                             { iload(4).box("java/lang/Integer") },
@@ -1509,7 +1520,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     areturn()
 
                     label(default)
-                    throw_("java/lang/RuntimeException") {
+                    kloxthrow {
                         concat(
                             { ldc("Invalid dynamic method call '") },
                             { aload_1() },
@@ -1528,5 +1539,6 @@ class Compiler : Program.Visitor<ClassPool> {
         const val KLOX_INSTANCE = "klox/KLoxInstance"
         const val KLOX_CAPTURED_VAR = "klox/CapturedVar"
         const val KLOX_INVOKER = "klox/Invoker"
+        const val KLOX_EXCEPTION = "klox/Exception"
     }
 }

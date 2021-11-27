@@ -3,6 +3,7 @@ package eu.jameshamilton.klox.compile
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CALLABLE
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CAPTURED_VAR
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CLASS
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_EXCEPTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
@@ -13,6 +14,7 @@ import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionFlag.INITIALIZER
+import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.PUBLIC
@@ -219,6 +221,27 @@ fun Composer.throw_(type: String, message: Composer.() -> Composer): Composer {
 
 // Custom Klox instructions
 
+fun Composer.kloxthrow(message: String): Composer = kloxthrow(null) { ldc(message) }
+
+fun Composer.kloxthrow(message: Composer.() -> Composer): Composer = kloxthrow(null, message)
+
+fun Composer.kloxthrow(token: Token?, message: String): Composer = kloxthrow(token) { ldc(message) }
+
+fun Composer.kloxthrow(token: Token?, message: Composer.() -> Composer): Composer {
+    message()
+    new_(KLOX_EXCEPTION)
+    dup_x1()
+    swap()
+    if (token != null) {
+        iconst(token.line)
+        invokespecial(KLOX_EXCEPTION, "<init>", "(Ljava/lang/String;I)V")
+    } else {
+        invokespecial(KLOX_EXCEPTION, "<init>", "(Ljava/lang/String;)V")
+    }
+    athrow()
+    return this
+}
+
 /**
  * Checks the type of the object at the top of the stack and throws an exception,
  * with the specified message, if it doesn't match.
@@ -227,7 +250,10 @@ fun Composer.throw_(type: String, message: Composer.() -> Composer): Composer {
  * checking for java/lang/Integer will check that the double is an actual integer.
  */
 fun Composer.checktype(expectedType: String, errorMessage: String): Composer =
-    checktype(expectedType) { ldc(errorMessage) }
+    checktype(null, expectedType) { ldc(errorMessage) }
+
+fun Composer.checktype(token: Token?, expectedType: String, errorMessage: String): Composer =
+    checktype(token, expectedType) { ldc(errorMessage) }
 
 /**
  * Checks the type of the object at the top of the stack and throws an exception,
@@ -236,7 +262,7 @@ fun Composer.checktype(expectedType: String, errorMessage: String): Composer =
  * Takes into account that klox represents all numbers as java/lang/Double;
  * checking for java/lang/Integer will check that the double is an actual integer.
  */
-fun Composer.checktype(expectedType: String, errorMessageComposer: Composer.() -> Composer): Composer {
+fun Composer.checktype(token: Token?, expectedType: String, errorMessageComposer: Composer.() -> Composer): Composer {
     val (notInstance, end) = labels(2)
     dup()
     if (expectedType == "java/lang/Integer") {
@@ -258,10 +284,25 @@ fun Composer.checktype(expectedType: String, errorMessageComposer: Composer.() -
 
     label(notInstance)
     pop()
-    throw_("java/lang/RuntimeException", errorMessageComposer)
+    kloxthrow(token, errorMessageComposer)
 
     label(end)
     checkcast(if (expectedType == "java/lang/Integer") "java/lang/Double" else expectedType)
+    return this
+}
+
+fun Composer.checknonnull(message: String): Composer = checknonnull(null, message)
+
+fun Composer.checknonnull(token: Token?, message: String): Composer = checknonnull(token) { ldc(message) }
+
+fun Composer.checknonnull(token: Token?, message: Composer.() -> Composer): Composer {
+    val (notNull) = labels(1)
+    dup()
+    ifnonnull(notNull)
+    pop()
+    kloxthrow(token, message)
+
+    label(notNull)
     return this
 }
 
