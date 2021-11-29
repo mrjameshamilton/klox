@@ -834,6 +834,7 @@ class Compiler : Program.Visitor<ClassPool> {
             goto_(end)
 
             label(notInstance)
+            pop()
             kloxthrow(setExpr.name, "Only instances have fields.")
 
             label(end)
