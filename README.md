@@ -403,7 +403,12 @@ The static method `Array.copy` can be used to efficiently copy one array to anot
 * `String.length(string): number` returns the length of `string`.
 * `String.substr(string, start, end): string | Error`
 returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
-* `String.toNumber(string): number | Error`
+* `String.toNumber(string): number | Error` converts a string to a number e.g. "5" -> 5.
+
+### Characters
+
+* `Character.toCharCode(c): number` returns the numeric value of `c` e.g. "A" -> 65.
+* `Character.fromCharCode(n): c` returns the character value of `n` e.g. 65 -> "A".
 
 ### Files
 

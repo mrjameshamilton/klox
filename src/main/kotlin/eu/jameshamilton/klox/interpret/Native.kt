@@ -274,6 +274,18 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 kloxError("Invalid number '${args.first()}'.")
             }
         }
+        "Character" -> when (name) {
+            "toCharCode" -> return fun (_, args): Any {
+                val c = args.first()
+                return if (c !is String || c.length != 1) kloxError("Parameter should be a single character.")
+                else kloxOk(c.first().code.toByte().toDouble())
+            }
+            "fromCharCode" -> return fun (_, args): Any {
+                val b = args.first()
+                return if (!isKloxInteger(b)) kloxError("Parameter should be an integer.")
+                else kloxOk(b.toInt().toChar().toString())
+            }
+        }
     }
 
     return null

@@ -1,0 +1,2 @@
+print Character.toNumber("A").orFail(); // expect: 65
+print Character.toNumber("a").orFail(); // expect: 97

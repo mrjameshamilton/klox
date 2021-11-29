@@ -1,0 +1,1 @@
+print Character.toCharCode("ABC").ignoreOk().message; // expect: Parameter should be a single character.

@@ -1,0 +1,2 @@
+print Character.fromCharCode(65).orFail(); // expect: A
+print Character.fromCharCode(97).orFail(); // expect: a

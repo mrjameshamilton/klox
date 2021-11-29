@@ -11,18 +11,19 @@ import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 fun findNative(compiler: Compiler, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
     // if (debug == true) println("findName($className, $functionName)")
 
-    fun Composer.ok(func: FunctionExpr): Composer {
+    fun Composer.kloxOk(): Composer {
         new_(func, compiler.okClass)
         return this
     }
 
-    fun Composer.error(func: FunctionExpr, message: Composer.() -> Composer): Composer {
+    fun Composer.kloxError(message: Composer.() -> Composer): Composer {
         message(this)
         new_(func, compiler.errorClass)
         return this
     }
 
-    fun Composer.error(func: FunctionExpr, message: String): Composer = error(func) { ldc(message) }
+    fun Composer.kloxError(message: String): Composer = kloxError { ldc(message) }
+
 
     fun Composer.closestream(name: String, type: String): Composer {
         val (close, end) = labels(2)
@@ -42,10 +43,10 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
             removekloxfield(name)
             label(end)
             TRUE()
-            ok(func)
+            kloxOk()
         }
         catchAll(tryStart, endTry) {
-            error(func) {
+            kloxError {
                 invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
             }
         }
@@ -137,10 +138,10 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     d2i()
                     invokestatic("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V")
                     TRUE()
-                    ok(func)
+                    kloxOk()
                 }
                 catchAll(tryStart, tryEnd) {
-                    error(func) {
+                    kloxError {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -201,7 +202,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     aconst_null()
                 }
                 catchAll(tryStart, tryEnd) {
-                    error(func) {
+                    kloxError {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -228,15 +229,15 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     invokevirtual("java/io/File", "delete", "()Z")
                     ifeq(handler)
                     TRUE()
-                    ok(func)
+                    kloxOk()
                     areturn()
 
                     label(handler)
-                    error(func, "Unknown error deleting file")
+                    kloxError("Unknown error deleting file")
                     areturn()
                 }
                 catchAll(tryStart, tryEnd) {
-                    error(func) {
+                    kloxError {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -272,10 +273,10 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         invokevirtual(targetClass, createReadMethod(targetClass))
                         i2d()
                         box("java/lang/Double")
-                        ok(func)
+                        kloxOk()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(func) {
+                        kloxError {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -291,16 +292,16 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         i2c()
                         box("java/lang/Character")
                         invokevirtual("java/lang/Character", "toString", "()Ljava/lang/String;")
-                        ok(func)
+                        kloxOk()
                         areturn()
 
                         label(nil)
                         pop()
                         aconst_null()
-                        ok(func)
+                        kloxOk()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(func) {
+                        kloxError {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -308,7 +309,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 }
                 "close" -> return {
                     closestream(INPUT_STREAM, "java/io/InputStream")
-                    ok(func)
+                    kloxOk()
                     areturn()
                 }
             }
@@ -352,10 +353,10 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         ificmpgt(error)
                         invokevirtual(targetClass, write(targetClass))
                         TRUE()
-                        ok(func)
+                        kloxOk()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(func) {
+                        kloxError {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -363,7 +364,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
 
                     label(error)
                     pop()
-                    error(func, "Byte should be an integer between 0 and 255.")
+                    kloxError("Byte should be an integer between 0 and 255.")
                     areturn()
                 }
                 "writeChar" -> return {
@@ -380,10 +381,10 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         invokevirtual("java/lang/String", "charAt", "(I)C")
                         invokevirtual(targetClass, write(targetClass))
                         TRUE()
-                        ok(func)
+                        kloxOk()
                     }
                     catchAll(tryStart, tryEnd) {
-                        error(func) {
+                        kloxError {
                             invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                         }
                     }
@@ -391,12 +392,12 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
 
                     label(error)
                     pop()
-                    error(func, "Parameter should be a single character.")
+                    kloxError("Parameter should be a single character.")
                     areturn()
                 }
                 "close" -> return {
                     closestream(OUTPUT_STREAM, "java/io/OutputStream")
-                    ok(func)
+                    kloxOk()
                     areturn()
                 }
             }
@@ -423,11 +424,11 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     checktype("java/lang/Integer", "substr 'end' parameter should be an integer.")
                     unbox("java/lang/Integer")
                     invokevirtual("java/lang/String", "substring", "(II)Ljava/lang/String;")
-                    ok(func)
+                    kloxOk()
                 }
                 catch_(start, end, "java/lang/StringIndexOutOfBoundsException") {
                     pop()
-                    error(func) {
+                    kloxError {
                         concat(
                             { ldc("String index out of bounds for '") },
                             { aload_1() },
@@ -440,7 +441,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     }
                 }
                 catchAll(start, end) {
-                    error(func) {
+                    kloxError {
                         invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
                     }
                 }
@@ -452,11 +453,11 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     checkcast("java/lang/String")
                     invokestatic("java/lang/Double", "parseDouble", "(Ljava/lang/String;)D")
                     box("java/lang/Double")
-                    ok(func)
+                    kloxOk()
                 }
                 catchAll(tryStart, tryEnd) {
                     pop()
-                    error(func) {
+                    kloxError {
                         concat(
                             { ldc("Invalid number '") },
                             { aload_1() },
@@ -464,6 +465,47 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         )
                     }
                 }
+                areturn()
+            }
+        }
+        "Character" -> when (functionName) {
+            "fromCharCode" -> return {
+                val (tryStart, tryEnd) = try_ {
+                    aload_1()
+                    checktype("java/lang/Integer", "Parameter should be an integer.")
+                    unbox("java/lang/Double")
+                    d2i()
+                    invokestatic("java/lang/Character", "toString", "(I)Ljava/lang/String;")
+                    kloxOk()
+                }
+                catchAll(tryStart, tryEnd) {
+                    kloxError {
+                        invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                    }
+                }
+                areturn()
+            }
+            "toCharCode" -> return {
+                val (error) = labels(1)
+                aload_1()
+                dup()
+                instanceof_("java/lang/String")
+                ifeq(error)
+                checkcast("java/lang/String")
+                dup()
+                invokevirtual("java/lang/String", "length", "()I")
+                iconst_1()
+                ificmpne(error)
+                iconst_0()
+                invokevirtual("java/lang/String", "charAt", "(I)C")
+                i2d()
+                box("java/lang/Double")
+                kloxOk()
+                areturn()
+
+                label(error)
+                pop()
+                kloxError("Parameter should be a single character.")
                 areturn()
             }
         }

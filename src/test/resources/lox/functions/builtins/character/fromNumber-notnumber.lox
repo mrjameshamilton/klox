@@ -1,0 +1,1 @@
+print Character.fromCharCode("asd").ignoreOk().message; // expect: Parameter should be an integer.
