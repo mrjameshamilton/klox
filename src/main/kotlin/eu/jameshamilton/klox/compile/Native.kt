@@ -6,6 +6,7 @@ import proguard.classfile.AccessConstants.PRIVATE
 import proguard.classfile.ProgramClass
 import proguard.classfile.ProgramMethod
 import proguard.classfile.editor.ClassBuilder
+import proguard.classfile.instruction.InstructionUtil.arrayTypeFromInternalType
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
 fun findNative(compiler: Compiler, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
@@ -24,6 +25,15 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
 
     fun Composer.kloxError(message: String): Composer = kloxError { ldc(message) }
 
+    fun Composer.filestream(input: Boolean) = getkloxfield(if (input) "\$is" else "\$os", "java/io/File${if (input) "Input" else "Output"}Stream") {
+        loadkloxinstance()
+        getkloxfield("file", KLOX_INSTANCE)
+        getkloxfield("path", "java/lang/String")
+        new_("java/io/File${if (input) "Input" else "Output"}Stream")
+        dup_x1()
+        swap()
+        invokespecial("java/io/File${if (input) "Input" else "Output"}Stream", "<init>", "(Ljava/lang/String;)V")
+    }
 
     fun Composer.closestream(name: String, type: String): Composer {
         val (close, end) = labels(2)
@@ -245,32 +255,85 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
             }
         }
         "FileInputStream" -> {
-            val INPUT_STREAM = "\$is"
+            fun Composer.fileinputstream() = loadkloxinstance().filestream(input = true)
 
-            fun createReadMethod(targetClass: ProgramClass): ProgramMethod =
+            fun read(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_read", "()I") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "()I") {
-                        loadkloxinstance()
-
-                        getkloxfield(INPUT_STREAM, "java/io/FileInputStream") {
-                            loadkloxinstance()
-                            getkloxfield("file", KLOX_INSTANCE)
-                            getkloxfield("path", "java/lang/String")
-                            new_("java/io/FileInputStream")
-                            dup_x1()
-                            swap()
-                            invokespecial("java/io/FileInputStream", "<init>", "(Ljava/lang/String;)V")
-                        }
-
+                        fileinputstream()
                         invokevirtual("java/io/InputStream", "read", "()I")
                         ireturn()
                     }
 
+            fun readBytes(targetClass: ProgramClass): ProgramMethod =
+                targetClass.findMethod("_read", "([Ljava/lang/Object;II)I") as ProgramMethod?
+                    ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_read", "([Ljava/lang/Object;II)I") {
+                        fileinputstream()
+                        val (array, offset, length, i, tempArray) = listOf(1, 2, 3, 4, 5)
+                        val (startLoop, endLoop) = labels(2)
+
+                        iload(length)
+                        newarray(arrayTypeFromInternalType('B').toInt())
+                        dup()
+                        astore(tempArray)
+
+                        iconst_0()
+                        iload(length)
+                        invokevirtual("java/io/InputStream", "read", "([BII)I")
+
+                        iconst_0()
+                        istore(i)
+
+                        label(startLoop)
+                        iload(i)
+                        iload(length)
+                        ificmpge(endLoop)
+                        aload(array)
+                        iload(i).iload(offset).iadd()
+                        aload(tempArray)
+                        iload(i)
+                        baload()
+                        i2d()
+                        invokestatic("java/lang/Double", "valueOf", "(D)Ljava/lang/Double;")
+                        aastore()
+                        iinc(i, 1)
+                        goto_(startLoop)
+
+                        label(endLoop)
+                        ireturn()
+                    }
+
             when (functionName) {
+                "readBytes" -> return {
+                    val (tryStart, tryEnd) = try_ {
+                        aload_0()
+                        aload_1()
+                        checktype(KLOX_INSTANCE, "'array' parameter should be an 'Array'.")
+                        getkloxfield("\$array", "[Ljava/lang/Object;")
+                        aload_2()
+                        checktype("java/lang/Integer", "'offset' parameter should be an integer.")
+                        unbox("java/lang/Double")
+                        d2i()
+                        aload_3()
+                        checktype("java/lang/Integer", "'length' parameter should be an integer.")
+                        unbox("java/lang/Double")
+                        d2i()
+                        invokevirtual(targetClass, readBytes(targetClass))
+                        i2d()
+                        box("java/lang/Double")
+                        kloxOk()
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        kloxError {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
+                }
                 "readByte" -> return {
                     val (tryStart, tryEnd) = try_ {
                         aload_0()
-                        invokevirtual(targetClass, createReadMethod(targetClass))
+                        invokevirtual(targetClass, read(targetClass))
                         i2d()
                         box("java/lang/Double")
                         kloxOk()
@@ -286,7 +349,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     val (tryStart, tryEnd) = try_ {
                         val (nil) = labels(1)
                         aload_0()
-                        invokevirtual(targetClass, createReadMethod(targetClass))
+                        invokevirtual(targetClass, read(targetClass))
                         dup()
                         iflt(nil)
                         i2c()
@@ -308,36 +371,92 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     areturn()
                 }
                 "close" -> return {
-                    closestream(INPUT_STREAM, "java/io/InputStream")
+                    closestream("\$is", "java/io/InputStream")
                     kloxOk()
                     areturn()
                 }
             }
         }
         "FileOutputStream" -> {
-            val OUTPUT_STREAM = "\$os"
+            fun Composer.fileoutputstream() = loadkloxinstance().filestream(input = false)
 
             fun write(targetClass: ProgramClass): ProgramMethod =
                 targetClass.findMethod("_write", "(I)V") as ProgramMethod?
                     ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_write", "(I)V") {
-                        loadkloxinstance()
-
-                        getkloxfield(OUTPUT_STREAM, "java/io/FileOutputStream") {
-                            loadkloxinstance()
-                            getkloxfield("file", KLOX_INSTANCE)
-                            getkloxfield("path", "java/lang/String")
-                            new_("java/io/FileOutputStream")
-                            dup_x1()
-                            swap()
-                            invokespecial("java/io/FileOutputStream", "<init>", "(Ljava/lang/String;)V")
-                        }
-
+                        fileoutputstream()
                         iload_1()
                         invokevirtual("java/io/OutputStream", "write", "(I)V")
                         return_()
                     }
 
+            fun writeBytes(targetClass: ProgramClass): ProgramMethod =
+                targetClass.findMethod("_write", "([Ljava/lang/Object;II)V") as ProgramMethod?
+                    ?: ClassBuilder(targetClass).addAndReturnMethod(PRIVATE, "_write", "([Ljava/lang/Object;II)V") {
+                        fileoutputstream()
+                        val (array, offset, length, i, tempArray) = listOf(1, 2, 3, 4, 5)
+                        val (startLoop, endLoop) = labels(2)
+
+                        iload(length)
+                        dup().box("java/lang/Integer").printlnpeek("l = ").pop()
+
+                        newarray(arrayTypeFromInternalType('B').toInt())
+                        astore(tempArray)
+
+                        iconst_0()
+                        istore(i)
+
+                        label(startLoop)
+                        iload(i)
+                        iload(length)
+                        ificmpge(endLoop)
+                        aload(tempArray)
+                        iload(i)
+
+                        aload(array)
+                        iload(i).iload(offset).iadd()
+                        aaload()
+                        unbox("java/lang/Double")
+                        d2i()
+                        i2b()
+                        bastore()
+                        iinc(i, 1)
+                        goto_(startLoop)
+
+                        label(endLoop)
+                        aload(tempArray)
+                        iconst_0()
+                        iload(length)
+                        invokevirtual("java/io/FileOutputStream", "write", "([BII)V")
+
+                        return_()
+                    }
+
             when (functionName) {
+                "writeBytes" -> return {
+                    val (tryStart, tryEnd) = try_ {
+                        aload_0()
+                        aload_1()
+                        checktype(KLOX_INSTANCE, "'array' parameter should be an 'Array'.")
+                        getkloxfield("\$array", "[Ljava/lang/Object;")
+                        aload_2()
+                        checktype("java/lang/Integer", "'offset' parameter should be an integer.")
+                        unbox("java/lang/Double")
+                        d2i()
+                        aload_3()
+                        checktype("java/lang/Integer", "'length' parameter should be an integer.")
+                        unbox("java/lang/Double")
+                        d2i()
+                        invokevirtual(targetClass, writeBytes(targetClass))
+                        TRUE()
+                        kloxOk()
+                    }
+                    catchAll(tryStart, tryEnd) {
+                        kloxError {
+                            invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                        }
+                    }
+                    areturn()
+                }
                 "writeByte" -> return {
                     val (error) = labels(1)
                     val (tryStart, tryEnd) = try_ {
@@ -396,7 +515,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                     areturn()
                 }
                 "close" -> return {
-                    closestream(OUTPUT_STREAM, "java/io/OutputStream")
+                    closestream("\$os", "java/io/OutputStream")
                     kloxOk()
                     areturn()
                 }

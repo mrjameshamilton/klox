@@ -165,7 +165,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
             }
         }
         "FileInputStream" -> {
-            fun read(env: Environment): Int {
+            fun getInputStream(env: Environment): InputStream {
                 val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
                 val inputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$is"))) {
                     loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
@@ -177,17 +177,32 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                     inputStream
                 }
 
-                return inputStream.read()
+                return inputStream
             }
             when (name) {
                 "readChar" -> return fun(env, _): Any? = try {
-                    val i = read(env)
+                    val i = getInputStream(env).read()
                     if (i == -1) kloxOk(null) else kloxOk(i.toChar().toString())
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error reading character")
                 }
+                "readBytes" -> return fun(env, args): Any = try {
+                    val arrayParam = args.first()
+                    if (arrayParam !is LoxInstance || !arrayParam.hasField(Token(IDENTIFIER, "\$array"))) {
+                        kloxError("Parameter should be a byte 'Array'.")
+                    } else {
+                        val bytes = arrayParam.get(Token(IDENTIFIER, "\$array")) as Array<*>
+                        val (offset, length) = args.drop(1).map { (it as Double).toInt() }.toList().toTypedArray()
+                        val result = ByteArray(length)
+                        val readCount = getInputStream(env).read(result, 0, length)
+                        System.arraycopy(result.map { it.toDouble() }.toTypedArray(), 0, bytes, offset, length)
+                        kloxOk(readCount.toDouble())
+                    }
+                } catch (e: Exception) {
+                    kloxError(e.message ?: "Unknown error reading character")
+                }
                 "readByte" -> return fun(env, _): Any = try {
-                    kloxOk(read(env))
+                    kloxOk(getInputStream(env).read().toDouble())
                 } catch (e: Exception) {
                     kloxError(e.message ?: "Unknown error reading byte")
                 }
@@ -205,6 +220,8 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
             }
         }
         "FileOutputStream" -> {
+            class ByteArrayOutput(val array: ByteArray, val offset: Int, val length: Int)
+
             fun write(env: Environment, value: Any): Any {
                 val loxInstance = env.get(Token(IDENTIFIER, "this")) as LoxInstance
                 val outputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$os"))) {
@@ -218,6 +235,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 }
 
                 when (value) {
+                    is ByteArrayOutput -> outputStream.write(value.array, value.offset, value.length)
                     is Number -> outputStream.write(value.toInt())
                     is Char -> outputStream.write(value.code)
                     else -> return kloxError("Parameter should be a number or character")
@@ -226,6 +244,31 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 return kloxOk(true)
             }
             when (name) {
+                "writeBytes" -> return fun(env, args): Any = try {
+                    val arrayParam = args.first()
+                    if (arrayParam !is LoxInstance || !arrayParam.hasField(Token(IDENTIFIER, "\$array"))) {
+                        kloxError("Parameter should be an byte 'Array'.")
+                    } else {
+                        val bytes = arrayParam.get(Token(IDENTIFIER, "\$array")) as Array<*>
+                        val (offset, length) = args.drop(1).map { (it as Double).toInt() }.toList().toTypedArray()
+
+                        write(
+                            env,
+                            ByteArrayOutput(
+                                bytes.map {
+                                    when (it) {
+                                        is Double -> it.toInt().toByte()
+                                        null -> 0
+                                        else -> throw RuntimeError(Token(IDENTIFIER, "writeBytes"), "Invalid byte")
+                                    }
+                                }.toByteArray(),
+                                offset, length
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    kloxError(e.message ?: "Unknown error writing byte")
+                }
                 "writeByte" -> return fun (env, args): Any {
                     if (!isKloxInteger(args.first())) return kloxError("Byte should be an integer between 0 and 255.")
                     val i = args.first() as Double

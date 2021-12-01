@@ -7,6 +7,10 @@ class InputStream {
         System.fail(Error("Abstract method 'readByte'"));
     }
 
+    readBytes(array, offset, length) {
+        System.fail(Error("Abstract method 'readBytes'"));
+    }
+
     readChar() {
         System.fail(Error("Abstract method 'readChar'"));
     }
@@ -23,6 +27,10 @@ class FileInputStream < InputStream {
 
     readByte() {
         System.fail(Error("Native implementation for 'readByte' not provided"));
+    }
+
+    readBytes(array, offset, length) {
+        System.fail(Error("Native implementation for 'readBytes' not provided"));
     }
 
     readChar() {
@@ -47,6 +55,10 @@ class OutputStream {
         System.fail("Abstract method 'writeInt'");
     }
 
+    writeBytes(array, offset, length) {
+        System.fail("Abstract method 'writeBytes'");
+    }
+
     close() {
         System.fail("Abstract method 'close");
     }
@@ -68,8 +80,148 @@ class FileOutputStream < OutputStream {
         System.fail(Error("Native implementation for 'writeInt' not provided"));
     }
 
+    writeBytes(array, offset, length) {
+        System.fail(Error("Native implementation for 'writeBytes' not provided"));
+    }
+
     close() {
         System.fail(Error("Native implementation for 'close' not provided"));
+    }
+}
+
+class BufferedOutputStream < OutputStream {
+    init(outputStream) {
+        this.outputStream = outputStream;
+        this.buffer = Array(8192);
+        this.count = 0;
+    }
+
+    writeByte(i) {
+        if (this.count >= this.buffer.length()) this.flushBuffer();
+        this.buffer.set(this.count, i); // TODO can't use [] with getExpr
+        this.count = this.count + 1; // TODO can't use ++ with getExpr
+
+        return Ok(true);
+    }
+
+    writeBytes(array, offset, length) {
+        if (length >= this.buffer.length()) {
+            this.flushBuffer();
+            this.outputStream.writeBytes(array, offset, length);
+            return Ok(true);
+        }
+
+        if (length > this.buffer.length() - this.count) {
+            this.flushBuffer();
+        }
+
+        Array.copy(array, offset, this.buffer, this.count, length);
+        this.count = this.count + length;
+
+        return Ok(true);
+    }
+
+    writeChar(c) {
+        return this.writeByte(Character.toCharCode(c)!?);
+    }
+
+    close() {
+        this.flushBuffer();
+        return this.outputStream.close();
+    }
+
+    flushBuffer() {
+        if (this.count >= 0) {
+            this.outputStream.writeBytes(this.buffer, 0, this.count);
+            this.count = 0;
+        }
+    }
+}
+
+class BufferedInputStream < InputStream {
+    init(inputStream) {
+        this.inputStream = inputStream;
+        this.buffer = Array(8192);
+        this.count = 0;
+        this.position = 0;
+    }
+
+    readChar() {
+        var b = this.readByte()!?;
+        if (b == -1) return Ok(nil);
+        return Character.fromCharCode(b);
+    }
+
+    readByte() {
+        if (this.position >= this.count) {
+            this.fill()!?;
+
+            if (this.position >= this.count) {
+                return Ok(-1);
+            }
+        }
+        var buffer = this.buffer;
+        var b = buffer.get(this.position);
+        this.position = this.position + 1;
+        return Ok(b);
+    }
+
+    /**
+    * Reads a number of bytes from the stream into the given array.
+    *
+    * @returns Ok(number) | Error(string) the number of bytes read, or an error message
+    */
+    readBytes(array, offset, length) {
+        if ((offset | length | (offset + length) | (array.length() - (offset + length))) < 0) {
+            return Error("Out of bounds");
+        } else if (length == 0) return Ok(0);
+
+        // returns -1 if EOF is reached or Error
+        fun readBytes(array, offset, length) {
+            var available = this.count - this.position;
+            if (available <= 0) {
+                if (length >= this.buffer.length()) {
+                    return this.inputStream.readBytes(array, offset, length)!?;
+                }
+                this.fill()!?;
+                available = this.count - this.position;
+                if (available <= 0) return -1;
+            }
+            var cnt;
+            if (available < length) cnt = available; else cnt = length;
+            Array.copy(this.buffer, this.position, array, offset, cnt);
+            this.position = this.position + cnt;
+            return cnt;
+        }
+
+        var n = 0;
+        while (true) {
+            var read = readBytes(array, offset + n, length - n);
+            if (read is Error) return read;
+
+            if (read <= 0) {
+                if (n == 0) return Ok(read); else return Ok(n);
+            }
+
+            n = n + read;
+            if (n >= length) return Ok(n);
+        }
+    }
+
+    /**
+    * @returns Ok(true) | Error
+    */
+    fill() {
+        if (this.position >= this.buffer.length()) this.position = 0;
+        this.count = this.position;
+        var n = this.inputStream.readBytes(this.buffer, this.position, this.buffer.length() - this.position)!?;
+        if (n > 0) this.count = n + this.position;
+
+        return Ok(true);
+    }
+
+    close() {
+        return this.inputStream.close();
     }
 }
 

@@ -12,32 +12,30 @@ class File {
     }
 
     readText() {
-        var inputStream = FileInputStream(this);
+        var inputStream = BufferedInputStream(FileInputStream(this));
         var str = "";
         while (true) {
-            var (c, err) = inputStream.readChar();
-
-            if (err is Error) {
+            var c = inputStream.readChar().mapError(fun (e) {
                 inputStream.close();
-                return err;
-            } else if (c == nil) break;
+                return e;
+            })!?;
 
-            str = str + c;
+            if (c == nil) break; else str = str + c;
         }
         inputStream.close();
         return Ok(str);
     }
 
     writeText(text) {
-        var outputStream = FileOutputStream(this);
+        var outputStream = BufferedOutputStream(FileOutputStream(this));
         var length = String.length(text);
 
         for (var i = 0; i < length; i++) {
-            var (c, err) = String.charAt(text, i);
-            if (err is Error) {
+            var c = String.charAt(text, i).mapError(fun (e) {
                 outputStream.close();
-                return err;
-            }
+                return e;
+            })!?;
+
             outputStream.writeChar(c);
         }
         outputStream.close();

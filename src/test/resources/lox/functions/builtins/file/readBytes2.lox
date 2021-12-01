@@ -1,0 +1,18 @@
+var file = File("build/tmp.txt");
+
+print file; // expect: build/tmp.txt
+
+file.delete();
+
+print file.writeText("ABC"); // expect: true
+
+var inputStream = FileInputStream(file);
+var array = Array(3);
+print inputStream.readBytes(array, 2, 1).orFail(); // expect: 1
+print inputStream.close().orFail(); // expect: true
+var (a, b, c) = array;
+print a; // expect: nil
+print b; // expect: nil
+print c; // expect: 65
+file.delete();
+print "done"; // expect: done

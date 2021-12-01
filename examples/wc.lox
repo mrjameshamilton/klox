@@ -23,7 +23,7 @@ fun isAlpha(c) {
 var chars = 0;
 var words = 0;
 var lines = 0;
-var inputStream = FileInputStream(file);
+var inputStream = BufferedInputStream(FileInputStream(file));
 
 fun nextWord(inputStream) {
     var c;
