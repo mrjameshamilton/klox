@@ -445,7 +445,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             is LoxInstance -> {
                 try {
                     val toString = value.get(Token(IDENTIFIER, "toString"))
-                    if (toString is LoxFunction) toString.call(interpreter, emptyList()) as String
+                    if (toString is LoxFunction) stringify(interpreter, toString.call(interpreter, emptyList()))
                     else value.toString()
                 } catch (e: Exception) {
                     value.toString()
