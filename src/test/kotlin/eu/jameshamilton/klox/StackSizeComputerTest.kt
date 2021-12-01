@@ -146,13 +146,13 @@ class StackSizeComputerTest : FunSpec({
         program.statementAccept(StackSizeComputer()).sum() shouldBe 0
     }
 
-    test("Setting a field value should produce an empty stack") {
+    test("Setting a field value should not produce an empty stack") {
         val program = """
             class Foo { } 
             foo.test = 1;
         """.parse()
 
-        program.statementAccept(StackSizeComputer()).sum() shouldBe 0
+        program.statementAccept(StackSizeComputer()).sum() shouldBe 1
     }
 
     test("An assignment should produce a non-empty stack") {
