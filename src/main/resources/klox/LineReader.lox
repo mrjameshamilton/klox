@@ -1,0 +1,39 @@
+class LineReader {
+    init(inputStream) {
+        this.inputStream = inputStream;
+        this.count = 0;
+    }
+
+    readLine() {
+        var c;
+        var line = "";
+        var inputStream = this.inputStream;
+
+        while (c = inputStream.readChar()!?) {
+            if (c == "\n" or c == "\r") {
+                if (c == "\r") {
+                    c = inputStream.readChar()!?;
+                    if (c == nil) {
+                        break;
+                    } else if (c != "\n") {
+                        line = line + c;
+                        continue;
+                    } // else "\r\n" fall-through
+                }
+
+                this.count = this.count + 1;
+                var result = Ok(line);
+                line = "";
+                return result;
+            }
+
+            line = line + c;
+        }
+
+        return Ok(nil);
+    }
+
+    close() {
+        this.inputStream.close();
+    }
+}
