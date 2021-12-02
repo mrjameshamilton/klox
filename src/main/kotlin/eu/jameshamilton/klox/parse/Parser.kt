@@ -148,9 +148,7 @@ class Parser(private val tokens: List<Token>) {
             val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
             optional(SEMICOLON)
             singleExprBody
-        }
-        else
-        {
+        } else {
             consume(LEFT_BRACE, "Expect '{' before function body.")
             block()
         }
