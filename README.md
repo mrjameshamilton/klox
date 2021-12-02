@@ -215,6 +215,14 @@ var foo = fun (x) {
 print foo(1); // 2
 ```
 
+### Single-expression functions
+
+```
+fun foo() = 1;
+fun bar() = 2 // optional ;
+fun baz() = foo() + bar()
+```
+
 ### Null-safe operator
 
 The null-safe operator `?` can be used to chain property accesses without needing to

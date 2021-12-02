@@ -144,9 +144,18 @@ class Parser(private val tokens: List<Token>) {
             throw error(peek(), "Expect ')' after parameters.")
         }
 
-        consume(LEFT_BRACE, "Expect '{' before function body.")
+        val body: List<Stmt> = if (match(EQUAL)) {
+            val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
+            optional(SEMICOLON)
+            singleExprBody
+        }
+        else
+        {
+            consume(LEFT_BRACE, "Expect '{' before function body.")
+            block()
+        }
 
-        return FunctionExpr(flags, parameters, block())
+        return FunctionExpr(flags, parameters, body)
     }
 
     private fun varDeclaration(): Stmt {
@@ -584,6 +593,9 @@ class Parser(private val tokens: List<Token>) {
 
         return ArrayExpr(elements.toList())
     }
+
+    private fun optional(type: TokenType): Token? =
+        if (check(type)) advance() else null
 
     private fun consume(type: TokenType, message: String): Token {
         if (check(type)) return advance()

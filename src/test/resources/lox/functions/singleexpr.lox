@@ -1,0 +1,9 @@
+fun foo() = 1;
+print foo(); // expect: 1
+
+// optional ;
+fun bar() = 2
+print bar(); // expect: 2
+
+fun baz() = foo() + bar()
+print baz(); // expect: 3
