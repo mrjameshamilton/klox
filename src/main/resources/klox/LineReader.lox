@@ -30,7 +30,11 @@ class LineReader {
             line = line + c;
         }
 
-        return Ok(nil);
+        if (String.length(line) > 0) {
+            return Ok(line);
+        } else {
+            return Ok(nil);
+        }
     }
 
     close() {
