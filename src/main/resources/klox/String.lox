@@ -50,8 +50,30 @@ class String {
         return result;
     }
 
+    class charCodeAt(str, index) {
+        return Character.toCharCode(String.charAt(str, index)!?);
+    }
+
     class toNumber(str) {
         System.fail(Error("Native implementation for 'toNumber' not provided."));
+    }
+
+    class toByteArray(str) {
+        var length = String.length(str);
+        var result = Array(length);
+        for (var i = 0; i < length; i++) {
+            result[i] = String.charCodeAt(str, i).orElse(0);
+        }
+        return result;
+    }
+
+    class fromByteArray(array) {
+        var length = array.length();
+        var result = "";
+        for (var i = 0; i < length; i++) {
+            result = result + Character.fromCharCode(array[i]);
+        }
+        return result;
     }
 }
 

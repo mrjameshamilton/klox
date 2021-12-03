@@ -1,0 +1,5 @@
+var array = String.toByteArray("ABC").orFail();
+var (a, b, c) = array;
+print a; // expect: 65
+print b; // expect: 66
+print c; // expect: 67
