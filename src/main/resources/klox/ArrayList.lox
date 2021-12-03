@@ -27,6 +27,18 @@ class ArrayList {
         return oldValue;
     }
 
+    forEach(function) {
+        for (var i = 0; i < this.size; i++) {
+            function(this.array.get(i));
+        }
+    }
+
+    forEachIndexed(function) {
+        for (var i = 0; i < this.size; i++) {
+            function(i, this.array.get(i));
+        }
+    }
+
     clear() {
         this.size = 0;
         this.array = nil;
