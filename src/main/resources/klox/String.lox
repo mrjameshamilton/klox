@@ -30,6 +30,26 @@ class String {
         return result;
     }
 
+    class split(str, separator) {
+        var result = ArrayList();
+        var length = String.length(str);
+        var separatorLength = String.length(separator);
+        var start = 0;
+        var pos = String.indexOf(str, separator, 0);
+
+        while (pos >= start) {
+            if (pos > start) {
+                result.add(String.substr(str, start, pos).orElse(""));
+            }
+            start = pos + separatorLength;
+            pos = String.indexOf(str, separator, start);
+        }
+
+        if (start < length) result.add(String.substr(str, start, length).orElse(""));
+
+        return result;
+    }
+
     class toNumber(str) {
         System.fail(Error("Native implementation for 'toNumber' not provided."));
     }

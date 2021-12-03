@@ -1,0 +1,10 @@
+
+var (a, b) = String.split("a b", " ");
+print a; // expect: a
+print b; // expect: b
+
+print String.split("", " ").length(); // expect: 0
+
+print String.split("a ", " ").length(); // expect: 1
+
+print String.split("a b c", " ").reduce("", fun (a, b) = a + b); // expect: 3
