@@ -1,0 +1,1 @@
+print Number.parseBinaryString("1010").orFail(); // expect: 10

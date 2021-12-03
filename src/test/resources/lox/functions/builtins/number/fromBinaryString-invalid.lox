@@ -1,0 +1,1 @@
+print Number.parseBinaryString("1234").error.message; // expect: Invalid binary string.
