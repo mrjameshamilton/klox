@@ -1,64 +1,7 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.parse.FunctionFlag.*
-import eu.jameshamilton.klox.parse.TokenType.AMPERSAND
-import eu.jameshamilton.klox.parse.TokenType.AND
-import eu.jameshamilton.klox.parse.TokenType.BANG
-import eu.jameshamilton.klox.parse.TokenType.BANG_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.BANG_QUESTION
-import eu.jameshamilton.klox.parse.TokenType.BREAK
-import eu.jameshamilton.klox.parse.TokenType.CARET
-import eu.jameshamilton.klox.parse.TokenType.CLASS
-import eu.jameshamilton.klox.parse.TokenType.COLON
-import eu.jameshamilton.klox.parse.TokenType.COMMA
-import eu.jameshamilton.klox.parse.TokenType.CONTINUE
-import eu.jameshamilton.klox.parse.TokenType.DOT
-import eu.jameshamilton.klox.parse.TokenType.ELSE
-import eu.jameshamilton.klox.parse.TokenType.EOF
-import eu.jameshamilton.klox.parse.TokenType.EQUAL
-import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.FALSE
-import eu.jameshamilton.klox.parse.TokenType.FOR
-import eu.jameshamilton.klox.parse.TokenType.FUN
-import eu.jameshamilton.klox.parse.TokenType.GREATER
-import eu.jameshamilton.klox.parse.TokenType.GREATER_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.GREATER_GREATER
-import eu.jameshamilton.klox.parse.TokenType.GREATER_GREATER_GREATER
-import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
-import eu.jameshamilton.klox.parse.TokenType.IF
-import eu.jameshamilton.klox.parse.TokenType.IS
-import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACE
-import eu.jameshamilton.klox.parse.TokenType.LEFT_BRACKET
-import eu.jameshamilton.klox.parse.TokenType.LEFT_PAREN
-import eu.jameshamilton.klox.parse.TokenType.LESS
-import eu.jameshamilton.klox.parse.TokenType.LESS_EQUAL
-import eu.jameshamilton.klox.parse.TokenType.LESS_LESS
-import eu.jameshamilton.klox.parse.TokenType.MINUS
-import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
-import eu.jameshamilton.klox.parse.TokenType.NIL
-import eu.jameshamilton.klox.parse.TokenType.NUMBER
-import eu.jameshamilton.klox.parse.TokenType.OR
-import eu.jameshamilton.klox.parse.TokenType.PERCENT
-import eu.jameshamilton.klox.parse.TokenType.PIPE
-import eu.jameshamilton.klox.parse.TokenType.PLUS
-import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
-import eu.jameshamilton.klox.parse.TokenType.PRINT
-import eu.jameshamilton.klox.parse.TokenType.QUESTION_DOT
-import eu.jameshamilton.klox.parse.TokenType.RETURN
-import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACE
-import eu.jameshamilton.klox.parse.TokenType.RIGHT_BRACKET
-import eu.jameshamilton.klox.parse.TokenType.RIGHT_PAREN
-import eu.jameshamilton.klox.parse.TokenType.SEMICOLON
-import eu.jameshamilton.klox.parse.TokenType.SLASH
-import eu.jameshamilton.klox.parse.TokenType.STAR
-import eu.jameshamilton.klox.parse.TokenType.STRING
-import eu.jameshamilton.klox.parse.TokenType.SUPER
-import eu.jameshamilton.klox.parse.TokenType.THIS
-import eu.jameshamilton.klox.parse.TokenType.TILDE
-import eu.jameshamilton.klox.parse.TokenType.TRUE
-import eu.jameshamilton.klox.parse.TokenType.UNDERSCORE
-import eu.jameshamilton.klox.parse.TokenType.VAR
-import eu.jameshamilton.klox.parse.TokenType.WHILE
+import eu.jameshamilton.klox.parse.TokenType.*
 import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
@@ -433,8 +376,18 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun factor(): Expr {
-        var expr = prefix()
+        var expr = exponent()
         while (match(SLASH, STAR, PERCENT)) {
+            val op = previous()
+            val right = exponent()
+            expr = BinaryExpr(expr, op, right)
+        }
+        return expr
+    }
+
+    private fun exponent(): Expr {
+        var expr = prefix()
+        while (match(STAR_STAR)) {
             val op = previous()
             val right = prefix()
             expr = BinaryExpr(expr, op, right)

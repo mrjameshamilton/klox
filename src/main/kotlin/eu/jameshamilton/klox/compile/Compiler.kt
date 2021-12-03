@@ -432,6 +432,9 @@ class Compiler : Program.Visitor<ClassPool> {
                 MINUS -> binaryOp("java/lang/Double") { dsub() }
                 SLASH -> binaryOp("java/lang/Double") { ddiv() }
                 STAR -> binaryOp("java/lang/Double") { dmul() }
+                STAR_STAR -> binaryOp("java/lang/Double") {
+                    invokestatic("java/lang/Math", "pow", "(DD)D")
+                }
                 PERCENT -> binaryOp("java/lang/Double") { drem() }
                 GREATER -> comparison { dcmpl(); ifle(it) }
                 GREATER_EQUAL -> comparison { dcmpl(); iflt(it) }

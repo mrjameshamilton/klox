@@ -35,7 +35,7 @@ class Scanner(private val source: String) {
             '+' -> addToken(if (match('+')) PLUS_PLUS else PLUS)
             ':' -> addToken(COLON)
             ';' -> addToken(SEMICOLON)
-            '*' -> addToken(STAR)
+            '*' -> addToken(if (match('*')) STAR_STAR else STAR)
             '%' -> addToken(PERCENT)
             '_' -> addToken(UNDERSCORE)
             '|' -> addToken(PIPE)

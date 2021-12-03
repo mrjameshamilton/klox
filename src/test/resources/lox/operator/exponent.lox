@@ -1,0 +1,11 @@
+print 0 ** 0; // expect: 1
+print 1 ** 1; // expect: 1
+print 3 ** 2; // expect: 9
+fun area(r) = Math.PI * r ** 2;
+print area(3); // expect: 28.274333882308138
+
+// higher precedence than multiplication, division, addition, and subtraction
+print 4*3**2 == 4* (3 ** 2); // expect: true
+print 1+3**2 == 1 + (3**2); // expect: true
+print 5/2**3 == 5 / (2**3); // expect: true
+print 3/10**3*7 == 3 / (10**3) * 7; // expect: true

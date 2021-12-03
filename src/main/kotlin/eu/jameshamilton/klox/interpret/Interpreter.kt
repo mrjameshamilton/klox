@@ -36,6 +36,7 @@ import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.runtimeError
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.math.pow
 import eu.jameshamilton.klox.parse.Expr.Visitor as ExprVisitor
 import eu.jameshamilton.klox.parse.Stmt.Visitor as StmtVisitor
 
@@ -84,7 +85,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         val right = evaluate(binaryExpr.right)
 
         when (binaryExpr.operator.type) {
-            MINUS, SLASH, STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
+            MINUS, SLASH, STAR, STAR_STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
                 checkNumberOperands(binaryExpr.operator, left, right)
             else -> { }
         }
@@ -102,6 +103,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 return left as Double / right
             }
             STAR -> (left as Double) * (right as Double)
+            STAR_STAR -> (left as Double).pow(right as Double)
             PERCENT -> (left as Double) % (right as Double)
             GREATER -> (left as Double) > (right as Double)
             GREATER_EQUAL -> (left as Double) >= (right as Double)
