@@ -170,7 +170,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 val inputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$is"))) {
                     loxInstance.get(Token(IDENTIFIER, "\$is")) as InputStream
                 } else {
-                    val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
+                    val file = loxInstance.get(Token(IDENTIFIER, "file")) as LoxInstance
                     val path = file.get(Token(IDENTIFIER, "path")) as String
                     val inputStream = FileInputStream(path)
                     loxInstance.set(Token(IDENTIFIER, "\$is"), inputStream)
@@ -227,7 +227,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 val outputStream = if (loxInstance.hasField(Token(IDENTIFIER, "\$os"))) {
                     loxInstance.get(Token(IDENTIFIER, "\$os")) as OutputStream
                 } else {
-                    val file = env.get(Token(IDENTIFIER, "file")) as LoxInstance
+                    val file = loxInstance.get(Token(IDENTIFIER, "file")) as LoxInstance
                     val path = file.get(Token(IDENTIFIER, "path")) as String
                     val outputStream = FileOutputStream(path)
                     loxInstance.set(Token(IDENTIFIER, "\$os"), outputStream)
