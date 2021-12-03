@@ -1,0 +1,16 @@
+class Pair {
+    init(first, second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    get(index) {
+        if (index == 0) {
+            return this.first;
+        } else if (index == 1) {
+            return this.second;
+        } else {
+            return nil;
+        }
+    }
+}
