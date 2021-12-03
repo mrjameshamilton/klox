@@ -1,0 +1,99 @@
+class ArrayList {
+    init() {
+        this.size = 0;
+    }
+
+    add(element) {
+        this.ensureCapacity(this.size + 1);
+        this.array.set(this.size, element);
+        this.size = this.size + 1;
+    }
+
+    addAll(elements) {
+        this.ensureCapacity(this.size + elements.length());
+        for (var i = 0; i < elements.length(); i++) {
+            this.add(elements[i]);
+        }
+    }
+
+    get(i) = this.array.get(i)
+    set(i, value) {
+        if (i < 0 or i >= this.size) {
+            return Error("Index out of bounds");
+        }
+
+        var oldValue = this.array.get(i);
+        this.array.set(i, value);
+        return oldValue;
+    }
+
+    clear() {
+        this.size = 0;
+        this.array = nil;
+    }
+
+    length() = this.size
+
+    map(function) {
+        var length = this.length();
+        var result = Array(length);
+        for (var i = 0; i < length; i++) {
+            result.set(i, function(this.get(i)));
+        }
+        return result;
+    }
+
+    reduce(initial, function) {
+        var length = this.length();
+        var result = initial;
+        for (var i = 0; i < length; i++) {
+            result = function(result, this.get(i));
+        }
+        return result;
+    }
+
+    filter(function) {
+        var length = this.length();
+        var result = ArrayList();
+        var resultLength = 0;
+
+        for (var i = 0; i < length; i++) {
+            var value = this.get(i);
+            if (function(value)) result.add(value);
+        }
+
+        return result;
+    }
+
+    remove(i) {
+        if (i < 0 or i >= this.size) {
+            return Error("Index out of bounds");
+        }
+
+        var newArray = Array(this.array.length());
+        Array.copy(this.array, 0, newArray, 0, i);
+        Array.copy(this.array, i + 1, newArray, i, this.size - i - 1);
+        this.size = this.size - 1;
+        this.array = newArray;
+    }
+
+    ensureCapacity(n) {
+        if (this?.array == nil) this.array = Array(10);
+
+        if (n >= this.array.length()) {
+            var newArray = Array(n * 2);
+            Array.copy(this.array, 0, newArray, 0, this.size);
+            this.array = newArray;
+        }
+    }
+
+    trimToSize() {
+        var newArray = Array(this.size);
+        Array.copy(this.array, 0, newArray, 0, this.size);
+        this.array = newArray;
+    }
+
+    toString() {
+        return "ArrayList(" + this.size + ")";
+    }
+}

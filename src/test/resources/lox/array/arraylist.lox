@@ -1,0 +1,29 @@
+var list = ArrayList();
+list.add(1);
+list.add(2);
+list.add(3);
+
+print list.length(); // expect: 3
+print list.reduce(0, fun (a, b) = a + b); // expect: 6
+
+list.remove(1);
+print list.length(); // expect: 2
+print list.reduce(0, fun (a, b) = a + b); // expect: 4
+
+for (var i = 0; i < 30; i++) {
+    list.add(i);
+}
+
+print list.length(); // expect: 32
+
+print list.filter(fun (a) = a % 2 == 0).length(); // expect: 15
+
+print list[0] = "test"; // expect: 1
+print list[0]; // expect: test
+
+list.clear();
+print list.length(); // expect: 0
+
+list.addAll(["A", "B", "C"]);
+print list.length(); // expect: 3
+print list.reduce("", fun (a, b) = a + b); // expect: ABC
