@@ -261,10 +261,14 @@ expression is evaluated & its result discarded then right-hand side is evaluated
 print "foo", "bar"; // prints bar
 ```
 
-### modulo operator
+### modulo operator, power operator
 
 ```c
 print 5 % 2; // prints 1
+```
+
+```c
+print 3 ** 2; // prints 9
 ```
 
 ### bitwise operators
