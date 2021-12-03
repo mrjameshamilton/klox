@@ -1,8 +1,11 @@
-print String.indexOf("Hello", "h"); // expect: -1
-print String.indexOf("hello", "h"); // expect: 0
-print String.indexOf("hello", "l"); // expect: 2
-print String.indexOf("hello", "lo"); // expect: 3
-print String.indexOf("hello", "x"); // expect: -1
-print String.indexOf("hello", "hello"); // expect: 0
-print String.indexOf("hello", 1); // expect: -1
-print String.indexOf("hello", true); // expect: -1
+print String.indexOf("Hello", "h", 0); // expect: -1
+print String.indexOf("hello", "h", 0); // expect: 0
+print String.indexOf("hello", "l", 0); // expect: 2
+print String.indexOf("hello", "lo", 0); // expect: 3
+print String.indexOf("hello", "x", 0); // expect: -1
+print String.indexOf("hello", "hello", 0); // expect: 0
+print String.indexOf("hello", 1, 0); // expect: -1
+print String.indexOf("hello", true, 0); // expect: -1
+print String.indexOf("hello", " ", 0); // expect: -1
+print String.indexOf("", " ", 0); // expect: -1
+print String.indexOf("hello", "l", 3); // expect: 3

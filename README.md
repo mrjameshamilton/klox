@@ -410,6 +410,7 @@ The static method `Array.copy` can be used to efficiently copy one array to anot
 
 * `String.length(string): number` returns the length of `string`.
 * `String.substr(string, start, end): string | Error`
+* `String.indexOf(string, substring, start): number`
 returns the substring of `string` between `start` (inclusive) and `end` (exclusive). Returns an `Error` on failure.
 * `String.toNumber(string): number | Error` converts a string to a number e.g. "5" -> 5.
 

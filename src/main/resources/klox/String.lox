@@ -12,12 +12,14 @@ class String {
         return String.substr(str, index, index + 1);
     }
 
-    class indexOf(str, search) {
+    class indexOf(str, search, start) {
+        if (start == nil) start = 0;
+
         var result = -1;
         var length = String.length(str);
         var searchLength = String.length(search);
 
-        for (var i = 0; i < length; i++) {
+        for (var i = start; i < length; i++) {
             var end = i + searchLength;
             if (end > length) end = length;
             if (String.substr(str, i, end).orElse(-1) == search) {
