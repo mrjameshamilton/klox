@@ -19,6 +19,12 @@ class Array {
         System.fail(Error("Native implementation for 'copy' not provided."));
     }
 
+    fill(value) {
+        for (var i = 0; i < this.length(); i++) {
+            this.set(i, value);
+        }
+    }
+
     map(function) {
         var length = this.length();
         var result = Array(length);

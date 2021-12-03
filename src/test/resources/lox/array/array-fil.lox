@@ -1,0 +1,6 @@
+var array = Array(3);
+array.fill("test");
+
+print array[0]; // expect: test
+print array[1]; // expect: test
+print array[2]; // expect: test
