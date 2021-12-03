@@ -13,4 +13,8 @@ class Pair {
             return nil;
         }
     }
+
+    toString() {
+        return "Pair(" + this.first + ", " + this.second + ")";
+    }
 }
