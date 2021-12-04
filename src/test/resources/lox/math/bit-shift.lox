@@ -13,4 +13,4 @@ print 32 >> 4; // expect: 2
 print 32 >> 5; // expect: 1
 
 print -255 >> 1; // expect: -128
-print -255 >>> 1; // expect: 2.14748352E9
+print -255 >>> 1; // expect: 2147483520

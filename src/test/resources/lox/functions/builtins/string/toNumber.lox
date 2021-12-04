@@ -33,9 +33,9 @@ print String.toNumber("3.3.3"); // expect: Invalid number '3.3.3'.
 
 print String.toNumber("+1").orFail(); // expect: 1
 
-print String.toNumber("1E10").orFail(); // expect: 1.0E10
-print String.toNumber("1e10").orFail(); // expect: 1.0E10
-print String.toNumber("1E+10").orFail(); // expect: 1.0E10
+print String.toNumber("1E10").orFail(); // expect: 10000000000
+print String.toNumber("1e10").orFail(); // expect: 10000000000
+print String.toNumber("1E+10").orFail(); // expect: 10000000000
 print String.toNumber("1e-1").orFail(); // expect: 0.1
 print String.toNumber("1E5").orFail(); // expect: 100000
 print String.toNumber("1E-2").orFail(); // expect: 0.01

@@ -10,4 +10,4 @@ for (var i = 0; i < size; i = i + 1) {
     sum = sum + array.get(i);
 }
 
-print sum; // expect: 4.99995E9
+print sum; // expect: 4999950000

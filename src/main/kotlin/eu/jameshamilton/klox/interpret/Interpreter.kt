@@ -35,6 +35,10 @@ import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.runtimeError
+import java.lang.Double.doubleToRawLongBits
+import java.math.BigDecimal
+import kotlin.Double.Companion.NEGATIVE_INFINITY
+import kotlin.Double.Companion.POSITIVE_INFINITY
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.pow
@@ -453,18 +457,20 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         fun stringify(interpreter: Interpreter, value: Any?): String = when (value) {
             null -> "nil"
-            is Double -> {
-                val text = value.toString()
-                if (text.endsWith(".0")) text.substring(0, text.length - 2) else text
-            }
-            is LoxInstance -> {
-                try {
-                    val toString = value.get(Token(IDENTIFIER, "toString"))
-                    if (toString is LoxFunction) stringify(interpreter, toString.call(interpreter, emptyList()))
-                    else value.toString()
-                } catch (e: Exception) {
-                    value.toString()
+            is Double ->
+                when {
+                    value == 0 && doubleToRawLongBits(value) == Long.MIN_VALUE -> "-0"
+                    value == NEGATIVE_INFINITY -> "-Infinity"
+                    value == POSITIVE_INFINITY -> "+Infinity"
+                    value.isNaN() -> "NaN"
+                    else -> BigDecimal.valueOf(value).stripTrailingZeros().toPlainString()
                 }
+            is LoxInstance -> try {
+                val toString = value.get(Token(IDENTIFIER, "toString"))
+                if (toString is LoxFunction) stringify(interpreter, toString.call(interpreter, emptyList()))
+                else value.toString()
+            } catch (e: Exception) {
+                value.toString()
             }
             else -> value.toString()
         }
