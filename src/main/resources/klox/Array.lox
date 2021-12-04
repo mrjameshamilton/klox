@@ -142,6 +142,8 @@ class Array {
         }
     }
 
+    iterator() = ArrayIterator(this)
+
     toString() {
         return "Array(" + this.length() + ")";
     }

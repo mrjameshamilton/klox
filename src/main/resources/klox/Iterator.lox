@@ -1,0 +1,30 @@
+class Iterator {
+    next() {
+        System.fail("Abstract method");
+    }
+
+    hasNext() {
+        System.fail("Abstract method");
+    }
+}
+
+class ArrayIterator < Iterator {
+    init(array) {
+        this.array = array;
+        this.index = 0;
+    }
+
+    hasNext() {
+        return this.index < this.array.length();
+    }
+
+    next() {
+        if (this.index >= this.array.length()) {
+            return nil;
+        }
+
+        var result = this.array.get(this.index);
+        this.index = this.index + 1;
+        return result;
+    }
+}

@@ -105,6 +105,8 @@ class ArrayList {
         this.array = newArray;
     }
 
+    iterator() = ArrayIterator(this)
+
     toString() {
         return "ArrayList(" + this.size + ")";
     }
