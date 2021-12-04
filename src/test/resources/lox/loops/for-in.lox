@@ -1,0 +1,7 @@
+for (var x in [1,2,3]) {
+    print x;
+}
+
+// expect: 1
+// expect: 2
+// expect: 3

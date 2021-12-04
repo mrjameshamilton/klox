@@ -192,5 +192,5 @@ class Checker : ASTVisitor<Unit> {
 
     override fun visitArrayExpr(arrayExpr: ArrayExpr) = arrayExpr.elements.forEach { it.accept(this) }
 
-    override fun visitMultiStmt(multiStmt: MultiStmt) = multiStmt.statements.forEach { it.accept(this) }
+    override fun visitMultiVarStmt(multiVarStmt: MultiVarStmt) = multiVarStmt.statements.forEach { it.accept(this) }
 }

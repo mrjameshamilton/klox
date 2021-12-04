@@ -23,7 +23,11 @@ class Parser(private val tokens: List<Token>) {
                 consume(FUN, "")
                 return function(flags = FunctionFlag.empty(), initializer = ::FunctionStmt)
             }
-            if (match(VAR)) return varDeclaration()
+            if (match(VAR)) {
+                val varDeclaration = varDeclaration()
+                consume(SEMICOLON, "Expect ';' after variable declaration.")
+                return varDeclaration
+            }
             return statement()
         } catch (error: ParseError) {
             synchronize()
@@ -99,7 +103,13 @@ class Parser(private val tokens: List<Token>) {
         return FunctionExpr(flags, parameters, body)
     }
 
-    private fun varDeclaration(): Stmt {
+    // for-in loops are desugared to do-while loops:
+    // This helper class is used to keep track of the iterator variable and
+    // the variable(s) used in the declaration.
+    private class ForInVarStmt(val iteratorExpr: Expr, val isDestructuring: Boolean, val varStmts: List<VarStmt>) :
+        MultiVarStmt(varStmts)
+
+    private fun varDeclaration(): MultiVarStmt {
         if (match(LEFT_PAREN)) {
             // destructuring declaration e.g. var (a, b) = [1, 2];
             // syntactic sugar for
@@ -115,41 +125,51 @@ class Parser(private val tokens: List<Token>) {
 
             consume(RIGHT_PAREN, "Expect ')' after variable list.")
 
-            if (match(EQUAL)) {
-                val tmp = Token(IDENTIFIER, nameFactory.next())
-
-                val variables: Array<Stmt> = names.mapIndexed { index, name ->
-                    if (name.type != UNDERSCORE) {
-                        VarStmt(
-                            name,
-                            CallExpr(
-                                GetExpr(VariableExpr(tmp), Token(IDENTIFIER, "get")),
-                                Token(LEFT_PAREN, ")"),
-                                listOf(LiteralExpr(index.toDouble()))
-                            )
-                        )
-                    } else null
-                }.filterNotNull().toTypedArray()
-
-                val declaration = MultiStmt(
-                    VarStmt(tmp, expression()),
-                    *variables,
-                    ExprStmt(AssignExpr(tmp, LiteralExpr(null)))
+            if (match(IN)) {
+                return ForInVarStmt(
+                    expression(allowCommaExpr = false),
+                    isDestructuring = true,
+                    names.map { VarStmt(it) }
                 )
+            } else if (match(EQUAL)) {
+                val tempForDestructure = Token(IDENTIFIER, nameFactory.next())
 
-                consume(SEMICOLON, "Expect ';' after variable declaration.")
+                val variables: List<VarStmt> = names.mapIndexed { index, name ->
+                    VarStmt(
+                        name,
+                        if (name.type != UNDERSCORE) CallExpr(
+                            GetExpr(VariableExpr(tempForDestructure), Token(IDENTIFIER, "get")),
+                            Token(LEFT_PAREN, ")"),
+                            listOf(LiteralExpr(index.toDouble()))
+                        ) else null
+                    )
+                }
 
-                return declaration
+                return MultiVarStmt(listOf(VarStmt(tempForDestructure, expression())) + variables)
             } else throw error(peek(), "Expect '=' with destructuring declaration.")
         } else {
-            val varStmts = mutableListOf<Stmt>()
+            val varStmts = mutableListOf<VarStmt>()
             do {
                 val name = consume(IDENTIFIER, "Expect variable name.")
-                val initializer = if (match(EQUAL)) expression(allowCommaExpr = false) else null
+                val initializer = when {
+                    match(EQUAL) -> expression(allowCommaExpr = false)
+                    match(IN) -> {
+                        if (varStmts.isNotEmpty()) {
+                            throw error(previous(), "Only a single variable declaration is allow in for-in loops.")
+                        }
+
+                        return ForInVarStmt(
+                            expression(allowCommaExpr = false),
+                            isDestructuring = false,
+                            listOf(VarStmt(name))
+                        )
+                    }
+                    else -> null
+                }
                 varStmts.add(VarStmt(name, initializer))
             } while (match(COMMA))
-            consume(SEMICOLON, "Expect ';' after variable declaration.")
-            return MultiStmt(*varStmts.toTypedArray())
+
+            return MultiVarStmt(varStmts)
         }
     }
 
@@ -224,7 +244,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun forStatement(): Stmt {
-        // desugar for loops to while loops
+        // desugar for(-in) loops to while loops
 
         consume(LEFT_PAREN, "Expect '(' after 'for'.")
 
@@ -232,27 +252,113 @@ class Parser(private val tokens: List<Token>) {
         else if (match(VAR)) varDeclaration()
         else expressionStmt()
 
-        val condition = if (!check(SEMICOLON)) expression(); else LiteralExpr(true)
+        if (initializer is ForInVarStmt) {
+            consume(RIGHT_PAREN, "Expect ')' after for clauses.")
 
-        consume(SEMICOLON, "Expect ';' after loop condition.")
+            val iterator = VarStmt(
+                Token(IDENTIFIER, nameFactory.next()),
+                CallExpr(
+                    GetExpr(initializer.iteratorExpr, Token(IDENTIFIER, "iterator")),
+                    Token(LEFT_PAREN, ")"),
+                    listOf()
+                )
+            )
 
-        val increment = if (!check(RIGHT_PAREN)) expression(); else null
+            val condition = BinaryExpr(
+                CallExpr(
+                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "hasNext")),
+                    Token(LEFT_PAREN, "("),
+                    listOf()
+                ),
+                Token(EQUAL_EQUAL, "=="),
+                LiteralExpr(true)
+            )
 
-        consume(RIGHT_PAREN, "Expect ')' after for clauses.")
+            var body = statement()
 
-        var body = statement()
+            // Wrap the body in a new body that contains the variable initialization
+            body = if (initializer.isDestructuring) {
+                /*
+                 for (var (a, b) = [1, 2, 3]) { ... }
+                     is desugared to
+                 {
+                     var iterator = [1, 2, 3].iterator()
+                     var tempIteratorNext, a, b;
+                     do {
+                         tempIteratorNext = iterator.next();
+                         a = tempIteratorNext.get(0);
+                         b = tempIteratorNext.get(1);
+                         ...
+                     } while (iterator.hasNext())
+                 }
+                 */
+                val tempIteratorNext = VarStmt(Token(IDENTIFIER, nameFactory.next()))
+                val assignments = mutableListOf<Expr>()
 
-        if (increment != null) {
-            body = BlockStmt(listOf(body, ExprStmt(increment)))
+                assignments.add(
+                    AssignExpr(
+                        tempIteratorNext.name,
+                        CallExpr(
+                            GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next")),
+                            Token(LEFT_PAREN, "("),
+                            listOf()
+                        )
+                    )
+                )
+
+                for ((index, varStmt) in initializer.varStmts.withIndex()) {
+                    if (varStmt.name.type != UNDERSCORE) {
+                        assignments.add(
+                            AssignExpr(
+                                varStmt.name,
+                                CallExpr(
+                                    GetExpr(VariableExpr(tempIteratorNext.name), Token(IDENTIFIER, "get")),
+                                    Token(LEFT_PAREN, ")"),
+                                    listOf(LiteralExpr(index.toDouble()))
+                                )
+                            )
+                        )
+                    }
+                }
+
+                BlockStmt(listOf(tempIteratorNext) + assignments.map { ExprStmt(it) } + listOf(body))
+            } else {
+                BlockStmt(
+                    listOf(
+                        ExprStmt(
+                            AssignExpr(
+                                // assume only one
+                                initializer.varStmts.first().name,
+                                CallExpr(
+                                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next")),
+                                    Token(LEFT_PAREN, "("),
+                                    listOf()
+                                ),
+                            )
+                        ),
+                        body
+                    )
+                )
+            }
+
+            return BlockStmt(listOf(iterator, initializer, DoWhileStmt(condition, body)))
+        } else {
+            if (initializer is MultiVarStmt || initializer is VarStmt) {
+                consume(SEMICOLON, "Expect ';' after variable declaration.")
+            }
+
+            val condition = if (!check(SEMICOLON)) expression(); else LiteralExpr(true)
+            consume(SEMICOLON, "Expect ';' after loop condition.")
+            val increment: Expr? = if (!check(RIGHT_PAREN)) expression(); else null
+            consume(RIGHT_PAREN, "Expect ')' after for clauses.")
+
+            var body = statement()
+            if (increment != null) body = BlockStmt(listOf(body, ExprStmt(increment)))
+            body = WhileStmt(condition, body)
+            if (initializer != null) body = BlockStmt(listOf(initializer, body))
+
+            return body
         }
-
-        body = WhileStmt(condition, body)
-
-        if (initializer != null) {
-            body = BlockStmt(listOf(initializer, body))
-        }
-
-        return body
     }
 
     private fun breakStatement(): Stmt {

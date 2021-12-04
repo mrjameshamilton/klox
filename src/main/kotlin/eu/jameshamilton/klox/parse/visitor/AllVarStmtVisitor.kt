@@ -8,7 +8,7 @@ import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.IfStmt
-import eu.jameshamilton.klox.parse.MultiStmt
+import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.Stmt
@@ -45,5 +45,5 @@ class AllVarStmtVisitor(private val visitor: VarStmt.Visitor<Unit>) : Stmt.Visit
 
     override fun visitClassStmt(classStmt: ClassStmt) = Unit
 
-    override fun visitMultiStmt(multiStmt: MultiStmt) = multiStmt.statements.forEach { it.accept(this) }
+    override fun visitMultiVarStmt(multiVarStmt: MultiVarStmt) = multiVarStmt.statements.forEach { it.accept(this) }
 }

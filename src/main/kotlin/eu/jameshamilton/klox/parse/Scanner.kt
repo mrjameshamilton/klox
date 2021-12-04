@@ -175,7 +175,8 @@ class Scanner(private val source: String) {
             "do" to DO,
             "break" to BREAK,
             "continue" to CONTINUE,
-            "is" to IS
+            "is" to IS,
+            "in" to IN
         )
     }
 }

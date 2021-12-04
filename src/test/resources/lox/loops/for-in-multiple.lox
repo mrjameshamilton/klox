@@ -1,0 +1,4 @@
+for (var x, y in [1, 2, 3]) {
+    print x, y;
+}
+// expect runtime error: Only a single variable declaration is allow in for-in loops.

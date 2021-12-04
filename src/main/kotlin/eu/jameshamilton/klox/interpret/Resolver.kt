@@ -19,7 +19,7 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
-import eu.jameshamilton.klox.parse.MultiStmt
+import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
 import eu.jameshamilton.klox.parse.ReturnStmt
@@ -138,8 +138,8 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
     override fun visitContinueStmt(continueStmt: ContinueStmt) {
     }
 
-    override fun visitMultiStmt(multiStmt: MultiStmt) {
-        multiStmt.statements.forEach { it.accept(this) }
+    override fun visitMultiVarStmt(multiVarStmt: MultiVarStmt) {
+        multiVarStmt.statements.forEach { it.accept(this) }
     }
 
     override fun visitBinaryExpr(binaryExpr: BinaryExpr) {

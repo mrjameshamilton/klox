@@ -114,6 +114,7 @@ do {
 } while (false);
 ```
 
+
 ### Arrays
 
 Arrays can be created with the `[]` syntax
@@ -193,6 +194,36 @@ Underscore can be used to ignore a value:
 
 ```c
 var (_, bar) = ["foo", "bar"];
+```
+
+### For-in loops
+
+A class implementing a method `iterator` that returns an `Iterator` object can be used as a for-in loop.
+`Array` and `ArrayList` are examples of classes that implement this method.
+
+```c
+for (var x in [1, 2, 3]) {
+    print x;
+}
+```
+
+You can also use destructuring declarations with for-in loops:
+
+```c
+for (var (a, b) in [[1, 2], [3, 4]]) {
+    print a + " " + b;
+}
+// 1 2
+// 3 4
+```
+
+The `Iterator` class is defined as the following:
+
+```c
+class Iterator {
+    hasNext(): boolean
+    next(): value | nil
+}
 ```
 
 ### Multiple declarations in the same statement

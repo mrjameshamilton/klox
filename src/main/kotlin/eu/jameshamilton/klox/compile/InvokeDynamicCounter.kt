@@ -17,7 +17,7 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
-import eu.jameshamilton.klox.parse.MultiStmt
+import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.SetExpr
@@ -98,5 +98,5 @@ class InvokeDynamicCounter : ExprVisitor<Int>, StmtVisitor<Int> {
 
     override fun visitArrayExpr(arrayExpr: ArrayExpr): Int = arrayExpr.elements.sumOf { it.accept(this) }
 
-    override fun visitMultiStmt(multiStmt: MultiStmt): Int = multiStmt.statements.sumOf { it.accept(this) }
+    override fun visitMultiVarStmt(multiVarStmt: MultiVarStmt): Int = multiVarStmt.statements.sumOf { it.accept(this) }
 }

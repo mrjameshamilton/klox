@@ -210,7 +210,7 @@ interface Stmt {
         FunctionStmt.Visitor<R>,
         ReturnStmt.Visitor<R>,
         ClassStmt.Visitor<R>,
-        MultiStmt.Visitor<R>
+        MultiVarStmt.Visitor<R>
 }
 
 class ExprStmt(val expression: Expr) : Stmt {
@@ -298,12 +298,18 @@ class ContinueStmt : Stmt {
     }
 }
 
-class MultiStmt(vararg val statements: Stmt) : Stmt {
+open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
+    val statements: List<VarStmt>
+
+    init {
+        this.statements = statements.filterNot { it.name.type == UNDERSCORE }
+    }
+
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
-        visitor.visitMultiStmt(this)
+        visitor.visitMultiVarStmt(this)
 
     interface Visitor<R> {
-        fun visitMultiStmt(multiStmt: MultiStmt): R
+        fun visitMultiVarStmt(multiVarStmt: MultiVarStmt): R
     }
 }
 

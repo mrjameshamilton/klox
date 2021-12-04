@@ -1,0 +1,7 @@
+for (var (a, b, c) in [[1,2,3], [4,5,6], [7,8,9]]) {
+    print a + " " + b + " " + c;
+}
+
+// expect: 1 2 3
+// expect: 4 5 6
+// expect: 7 8 9
