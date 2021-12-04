@@ -172,6 +172,7 @@ class Scanner(private val source: String) {
             "true" to TRUE,
             "var" to VAR,
             "while" to WHILE,
+            "do" to DO,
             "break" to BREAK,
             "continue" to CONTINUE,
             "is" to IS

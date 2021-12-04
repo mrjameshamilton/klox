@@ -49,6 +49,13 @@ class Checker : ASTVisitor<Unit> {
         inLoop = false
     }
 
+    override fun visitDoWhileStmt(whileStmt: DoWhileStmt) {
+        inLoop = true
+        whileStmt.body.accept(this)
+        inLoop = false
+        whileStmt.condition.accept(this)
+    }
+
     override fun visitBreakStmt(breakStmt: BreakStmt) {
         if (!inLoop) {
             error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops.")

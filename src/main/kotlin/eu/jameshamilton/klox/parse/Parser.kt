@@ -158,6 +158,7 @@ class Parser(private val tokens: List<Token>) {
         if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
         if (match(RETURN)) return returnStatement()
+        if (match(DO)) return doWhileStatement()
         if (match(WHILE)) return whileStatement()
         if (match(BREAK)) return breakStatement()
         if (match(CONTINUE)) return continueStatement()
@@ -208,6 +209,18 @@ class Parser(private val tokens: List<Token>) {
         consume(RIGHT_PAREN, "Expect ')' after 'while' condition.")
 
         return WhileStmt(condition, body = statement())
+    }
+
+    private fun doWhileStatement(): DoWhileStmt {
+        consume(LEFT_BRACE, "Expect '{' before 'do'.")
+        val body = BlockStmt(block())
+        consume(WHILE, "Expect 'while' after do-block.")
+        consume(LEFT_PAREN, "Expect '(' after 'while'.")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expect ')' after 'while' condition.")
+        consume(SEMICOLON, "Expect ';' after do-while condition.")
+
+        return DoWhileStmt(condition, body)
     }
 
     private fun forStatement(): Stmt {

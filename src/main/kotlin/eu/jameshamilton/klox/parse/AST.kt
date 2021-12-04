@@ -204,6 +204,7 @@ interface Stmt {
         BlockStmt.Visitor<R>,
         IfStmt.Visitor<R>,
         WhileStmt.Visitor<R>,
+        DoWhileStmt.Visitor<R>,
         BreakStmt.Visitor<R>,
         ContinueStmt.Visitor<R>,
         FunctionStmt.Visitor<R>,
@@ -267,6 +268,15 @@ class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
 
     interface Visitor<R> {
         fun visitWhileStmt(whileStmt: WhileStmt): R
+    }
+}
+
+class DoWhileStmt(val condition: Expr, val body: Stmt) : Stmt {
+    override fun <R> accept(visitor: Stmt.Visitor<R>): R =
+        visitor.visitDoWhileStmt(this)
+
+    interface Visitor<R> {
+        fun visitDoWhileStmt(whileStmt: DoWhileStmt): R
     }
 }
 

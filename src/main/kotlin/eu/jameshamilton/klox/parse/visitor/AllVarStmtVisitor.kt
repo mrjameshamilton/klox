@@ -4,6 +4,7 @@ import eu.jameshamilton.klox.parse.BlockStmt
 import eu.jameshamilton.klox.parse.BreakStmt
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.IfStmt
@@ -30,6 +31,8 @@ class AllVarStmtVisitor(private val visitor: VarStmt.Visitor<Unit>) : Stmt.Visit
     override fun visitBlockStmt(block: BlockStmt) = block.stmts.forEach { it.accept(this) }
 
     override fun visitWhileStmt(whileStmt: WhileStmt) = whileStmt.body.accept(this)
+
+    override fun visitDoWhileStmt(whileStmt: DoWhileStmt) = whileStmt.body.accept(this)
 
     override fun visitBreakStmt(breakStmt: BreakStmt) = Unit
 

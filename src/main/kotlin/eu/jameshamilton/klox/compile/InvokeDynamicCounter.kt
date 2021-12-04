@@ -8,6 +8,7 @@ import eu.jameshamilton.klox.parse.BreakStmt
 import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
@@ -79,6 +80,9 @@ class InvokeDynamicCounter : ExprVisitor<Int>, StmtVisitor<Int> {
 
     override fun visitWhileStmt(whileStmt: WhileStmt): Int =
         whileStmt.condition.accept(this) + whileStmt.body.accept(this)
+
+    override fun visitDoWhileStmt(whileStmt: DoWhileStmt): Int =
+        whileStmt.body.accept(this) + whileStmt.condition.accept(this)
 
     override fun visitBreakStmt(breakStmt: BreakStmt): Int = 0
 

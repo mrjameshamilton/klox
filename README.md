@@ -106,6 +106,14 @@ Employee("John", "Smith").greet();
 
 ## `klox` features
 
+### Do-while loops
+
+```c
+do {
+    print "Do-while loop";
+} while (false);
+```
+
 ### Arrays
 
 Arrays can be created with the `[]` syntax

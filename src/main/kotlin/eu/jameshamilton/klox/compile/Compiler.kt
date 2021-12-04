@@ -22,6 +22,7 @@ import eu.jameshamilton.klox.parse.BreakStmt
 import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -288,6 +289,18 @@ class Compiler : Program.Visitor<ClassPool> {
             label(loopBody)
             whileStmt.body.accept(this@FunctionCompiler)
             goto_(conditionLabel)
+            label(endLabel)
+        }
+
+        override fun visitDoWhileStmt(whileStmt: DoWhileStmt): Unit = with(composer) {
+            val (conditionLabel, loopBody, endLabel) = labels(3)
+            currentLoopContinueLabel = conditionLabel
+            currentLoopBreakLabel = endLabel
+            label(loopBody)
+            whileStmt.body.accept(this@FunctionCompiler)
+            label(conditionLabel)
+            whileStmt.condition.accept(this@FunctionCompiler)
+            iftruthy(loopBody)
             label(endLabel)
         }
 

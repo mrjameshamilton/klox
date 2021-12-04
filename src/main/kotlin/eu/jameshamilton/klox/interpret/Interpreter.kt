@@ -9,6 +9,7 @@ import eu.jameshamilton.klox.parse.BreakStmt
 import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -347,6 +348,18 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 continue
             }
         }
+    }
+
+    override fun visitDoWhileStmt(whileStmt: DoWhileStmt) {
+        do {
+            try {
+                execute(whileStmt.body)
+            } catch (ignored: Break) {
+                break
+            } catch (ignored: Continue) {
+                continue
+            }
+        } while (isTruthy(evaluate(whileStmt.condition)))
     }
 
     override fun visitBreakStmt(breakStmt: BreakStmt) =

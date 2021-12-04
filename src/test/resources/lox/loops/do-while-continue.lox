@@ -1,0 +1,12 @@
+var i = 0;
+do {
+    if (i == 2) {
+        i = 10;
+        continue;
+    }
+    print i++;
+} while (i < 3);
+
+// expect: 0
+// expect: 1
+print i; // expect: 10

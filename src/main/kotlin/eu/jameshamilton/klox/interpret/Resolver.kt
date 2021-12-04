@@ -9,6 +9,7 @@ import eu.jameshamilton.klox.parse.BreakStmt
 import eu.jameshamilton.klox.parse.CallExpr
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.ContinueStmt
+import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -124,6 +125,11 @@ class Resolver(private val interpreter: Interpreter) : ASTVisitor<Unit> {
     override fun visitWhileStmt(whileStmt: WhileStmt) {
         resolve(whileStmt.condition)
         resolve(whileStmt.body)
+    }
+
+    override fun visitDoWhileStmt(whileStmt: DoWhileStmt) {
+        resolve(whileStmt.body)
+        resolve(whileStmt.condition)
     }
 
     override fun visitBreakStmt(breakStmt: BreakStmt) {
