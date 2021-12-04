@@ -275,13 +275,13 @@ class Compiler : Program.Visitor<ClassPool> {
             label(endLabel)
         }
 
-        private lateinit var currentLoopBodyLabel: Label
-        private lateinit var currentLoopEndLabel: Label
+        private lateinit var currentLoopContinueLabel: Label
+        private lateinit var currentLoopBreakLabel: Label
 
         override fun visitWhileStmt(whileStmt: WhileStmt): Unit = with(composer) {
             val (conditionLabel, loopBody, endLabel) = labels(3)
-            currentLoopBodyLabel = loopBody
-            currentLoopEndLabel = endLabel
+            currentLoopContinueLabel = conditionLabel
+            currentLoopBreakLabel = endLabel
             label(conditionLabel)
             whileStmt.condition.accept(this@FunctionCompiler)
             ifnontruthy(endLabel)
@@ -292,11 +292,11 @@ class Compiler : Program.Visitor<ClassPool> {
         }
 
         override fun visitBreakStmt(breakStmt: BreakStmt): Unit = with(composer) {
-            goto_(currentLoopEndLabel)
+            goto_(currentLoopBreakLabel)
         }
 
         override fun visitContinueStmt(continueStmt: ContinueStmt): Unit = with(composer) {
-            goto_(currentLoopBodyLabel)
+            goto_(currentLoopContinueLabel)
         }
 
         override fun visitMultiStmt(multiStmt: MultiStmt) =
