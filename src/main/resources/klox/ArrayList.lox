@@ -45,19 +45,15 @@ class ArrayList {
     }
 
     length() = this.size
+    first() = this.get(0)
+    last() = this.get(this.size - 1)
 
-    map(function) {
-        var length = this.length();
-        var result = ArrayList(length);
-        for (var i = 0; i < length; i++) {
-            result.set(i, function(this.get(i)));
-        }
-        return result;
-    }
+    map(function) = this.mapIndexed(fun (i, e) = function(e))
 
     mapIndexed(function) {
         var length = this.length();
         var result = ArrayList();
+        result.size = length;
         result.ensureCapacity(length);
         for (var i = 0; i < length; i++) {
             result.set(i, function(i, this.get(i)));
@@ -66,6 +62,10 @@ class ArrayList {
     }
 
     withIndex() = this.mapIndexed(fun (i, e) = Pair(i, e))
+
+    count(function) = this.reduce(0, fun (acc, e) {
+        if (function(e)) return acc + 1; else return acc;
+    })
 
     reduce(initial, function) {
         var length = this.length();
@@ -94,17 +94,63 @@ class ArrayList {
             return Error("Index out of bounds");
         }
 
-        var newArray = Array(this.array.length());
+        var newArray = Array(this.size - 1);
         Array.copy(this.array, 0, newArray, 0, i);
         Array.copy(this.array, i + 1, newArray, i, this.size - i - 1);
         this.size = this.size - 1;
         this.array = newArray;
     }
 
-    ensureCapacity(n) {
-        if (this?.array == nil) this.array = Array(10);
+    removeIf(function) {
+        var length = this.length();
+        var toRemove = Array(length);
+        var toRemoveLength = 0;
+        for (var i = 0; i < length; i++) {
+            if (function(this.get(i)))  {
+                toRemove[i] = true;
+                toRemoveLength = toRemoveLength + 1;
+            }
+        }
 
-        if (n >= this.array.length()) {
+        if (toRemoveLength > 0) {
+            var newSize = this.size - toRemoveLength;
+
+            fun nextKept(n) {
+                for (var i = n; i < length; i++) {
+                    if (toRemove[i] == nil) return i;
+                }
+            }
+
+            // Shift kept elements together
+            for (var i = 0, j = 0; i < length and j < newSize; i++, j++) {
+                this.array.set(j, this.array.get(i = nextKept(i)));
+            }
+
+            // Nullify trailing elements
+            for (var k = newSize; k < this.size; k++) {
+                this.array.set(k, nil);
+            }
+
+            this.size = newSize;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    clone() {
+        var result = ArrayList();
+        result.size = this.size;
+        result.ensureCapacity(this.size);
+        Array.copy(this.array, 0, result.array, 0, this.size);
+        return result;
+    }
+
+    ensureCapacity(n) {
+        if (this?.array == nil) this.array = Array(n);
+
+        if (n > this.array.length()) {
             var newArray = Array(n * 2);
             Array.copy(this.array, 0, newArray, 0, this.size);
             this.array = newArray;
@@ -118,6 +164,12 @@ class ArrayList {
     }
 
     iterator() = ArrayIterator(this)
+
+    toArray() {
+        var result = Array(this.size);
+        Array.copy(this.array, 0, result, 0, this.size);
+        return result;
+    }
 
     toString() {
         return "ArrayList(" + this.size + ")";

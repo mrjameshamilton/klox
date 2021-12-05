@@ -1,0 +1,7 @@
+for (var (i, x) in [1, 2, 3].withIndex()) {
+    print i + " = " + x;
+}
+
+// expect: 0 = 1
+// expect: 1 = 2
+// expect: 2 = 3

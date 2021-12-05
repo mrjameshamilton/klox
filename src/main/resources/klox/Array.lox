@@ -25,14 +25,10 @@ class Array {
         }
     }
 
-    map(function) {
-        var length = this.length();
-        var result = Array(length);
-        for (var i = 0; i < length; i++) {
-            result.set(i, function(this.get(i)));
-        }
-        return result;
-    }
+    first() = this.get(0)
+    last() = this.get(this.length() - 1)
+
+    map(function) = this.mapIndexed(fun (i, e) = function(e))
 
     mapIndexed(function) {
         var length = this.length();
@@ -44,6 +40,10 @@ class Array {
     }
 
     withIndex() = this.mapIndexed(fun (i, e) = Pair(i, e))
+
+    count(function) = this.reduce(0, fun (acc, e) {
+        if (function(e)) return acc + 1; else return acc;
+    })
 
     reduce(initial, function) {
         var length = this.length();
@@ -154,6 +154,12 @@ class Array {
     }
 
     iterator() = ArrayIterator(this)
+
+    toList() {
+        var result = ArrayList();
+        result.addAll(this);
+        return result;
+    }
 
     toString() {
         return "Array(" + this.length() + ")";
