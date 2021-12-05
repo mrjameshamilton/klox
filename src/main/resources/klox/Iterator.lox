@@ -28,3 +28,64 @@ class ArrayIterator < Iterator {
         return result;
     }
 }
+
+class IntRange {
+    init(start, end, step) {
+        this.start = start;
+        this.end = end;
+        this.step = step;
+        this.current = start;
+    }
+
+    iterator() {
+        class IntRange < Iterator {
+            init(start, end, step) {
+                this.start = start;
+                this.end = end;
+                this.step = step;
+                this.current = start;
+            }
+
+            hasNext() = this.current <= this.end
+
+            next() {
+                var result = this.current;
+                this.current = this.current + this.step;
+                return result;
+            }
+        }
+
+        return IntRange(this.start, this.end, this.step);
+    }
+}
+
+class CharRange {
+    init(start, end, step) {
+        // TODO: error handling in constructors?
+        this.start = Character.toCharCode(String.charAt(start, 0).orElse(0)).orElse(0);
+        this.end = Character.toCharCode(String.charAt(end, 0).orElse(0)).orElse(0);
+        this.step = step;
+        this.current = this.start;
+    }
+
+    iterator() {
+        class CharRange < Iterator {
+            init(start, end, step) {
+                this.start = start;
+                this.end = end;
+                this.step = step;
+                this.current = start;
+            }
+
+            hasNext() = this.current <= this.end
+
+            next() {
+                var result = this.current;
+                this.current = this.current + this.step;
+                return Character.fromCharCode(result);
+            }
+        }
+
+        return CharRange(this.start, this.end, this.step);
+    }
+}

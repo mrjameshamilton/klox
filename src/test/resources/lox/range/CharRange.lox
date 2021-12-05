@@ -1,0 +1,8 @@
+for (var c in CharRange("A", "C", 1)) {
+    print c;
+}
+
+// expect: A
+// expect: B
+// expect: C
+
