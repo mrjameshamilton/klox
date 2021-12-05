@@ -90,7 +90,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         val right = evaluate(binaryExpr.right)
 
         when (binaryExpr.operator.type) {
-            MINUS, SLASH, STAR, STAR_STAR, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
+            MINUS, SLASH, STAR, STAR_STAR, GREATER, GREATER_GREATER, LESS_LESS, GREATER_GREATER_GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
                 checkNumberOperands(binaryExpr.operator, left, right)
             else -> { }
         }
