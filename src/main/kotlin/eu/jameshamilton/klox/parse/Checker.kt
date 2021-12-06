@@ -1,6 +1,7 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.error
+import eu.jameshamilton.klox.interpret.isKloxInteger
 import eu.jameshamilton.klox.parse.Checker.ClassType.CLASS
 import eu.jameshamilton.klox.parse.Checker.ClassType.NONE
 import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
@@ -10,6 +11,8 @@ import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
 import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
 import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
+import eu.jameshamilton.klox.parse.TokenType.TILDE
+import kotlin.contracts.ExperimentalContracts
 
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
@@ -73,6 +76,7 @@ class Checker : ASTVisitor<Unit> {
         binaryExpr.right.accept(this)
     }
 
+    @OptIn(ExperimentalContracts::class)
     override fun visitUnaryExpr(unaryExpr: UnaryExpr) {
         unaryExpr.right.accept(this)
 
@@ -86,6 +90,9 @@ class Checker : ASTVisitor<Unit> {
             } else if (currentFunction?.flags?.contains(INITIALIZER) == true) {
                 error(unaryExpr.operator, "Can't use !? in an initializer.")
             } else unaryExpr.right.accept(this)
+            TILDE -> if (unaryExpr.right is LiteralExpr && !isKloxInteger(unaryExpr.right.value)) {
+                error(unaryExpr.operator, "Can't use ~ on a non-integer value.")
+            }
             else -> {}
         }
     }
