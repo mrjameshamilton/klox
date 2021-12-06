@@ -28,6 +28,7 @@ import eu.jameshamilton.klox.parse.Stmt
 import eu.jameshamilton.klox.parse.SuperExpr
 import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
+import eu.jameshamilton.klox.parse.TokenType.DOT_DOT
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarAccess
@@ -232,6 +233,14 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
         resolve(binaryExpr.left)
         resolve(binaryExpr.right)
+        // TODO do this after resolving?
+        when (binaryExpr.operator.type) {
+            DOT_DOT -> {
+                currentFunction.capture(mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>().single { it.name.lexeme == "Number" })
+                currentFunction.capture(mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>().single { it.name.lexeme == "Character" })
+            }
+            else -> {}
+        }
     }
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr) = resolve(unaryExpr.right)
