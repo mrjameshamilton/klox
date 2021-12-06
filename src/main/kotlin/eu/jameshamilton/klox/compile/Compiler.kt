@@ -98,13 +98,13 @@ class Compiler : Program.Visitor<ClassPool> {
 
         Resolver().execute(mainFunction)
 
-        val globals = mainFunction.functionExpr.variables
-        arrayClass = globals.single { it.name.lexeme == "Array" } as ClassStmt
-        resultClass = globals.single { it.name.lexeme == "Result" } as ClassStmt
-        errorClass = globals.single { it.name.lexeme == "Error" } as ClassStmt
-        okClass = globals.single { it.name.lexeme == "Ok" } as ClassStmt
-        numberClass = globals.single { it.name.lexeme == "Number" } as ClassStmt
-        characterClass = globals.single { it.name.lexeme == "Character" } as ClassStmt
+        val globalClasses = mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>()
+        arrayClass = globalClasses.single { it.name.lexeme == "Array" }
+        resultClass = globalClasses.single { it.name.lexeme == "Result" }
+        errorClass = globalClasses.single { it.name.lexeme == "Error" }
+        okClass = globalClasses.single { it.name.lexeme == "Ok" }
+        numberClass = globalClasses.single { it.name.lexeme == "Number" }
+        characterClass = globalClasses.single { it.name.lexeme == "Character" }
 
         if (hadError) return ClassPool()
 
