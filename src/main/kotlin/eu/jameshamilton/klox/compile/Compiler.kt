@@ -317,13 +317,21 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
             fun binaryOp(resultType: String, op: Composer.() -> Unit) = with(composer) {
-                binaryExpr.left.accept(this@FunctionCompiler)
-                checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
-                unbox("java/lang/Double")
+                if (binaryExpr.left is LiteralExpr && binaryExpr.left.value is Double) {
+                    ldc2_w(binaryExpr.left.value)
+                } else {
+                    binaryExpr.left.accept(this@FunctionCompiler)
+                    checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
+                    unbox("java/lang/Double")
+                }
 
-                binaryExpr.right.accept(this@FunctionCompiler)
-                checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
-                unbox("java/lang/Double")
+                if (binaryExpr.right is LiteralExpr && binaryExpr.right.value is Double) {
+                    ldc2_w(binaryExpr.right.value)
+                } else {
+                    binaryExpr.right.accept(this@FunctionCompiler)
+                    checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
+                    unbox("java/lang/Double")
+                }
 
                 op(this)
 
