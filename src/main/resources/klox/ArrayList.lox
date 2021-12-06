@@ -105,6 +105,7 @@ class ArrayList {
         var length = this.length();
         var toRemove = Array(length);
         var toRemoveLength = 0;
+        // TODO: use a bitset here
         for (var i = 0; i < length; i++) {
             if (function(this.get(i)))  {
                 toRemove[i] = true;
