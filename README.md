@@ -226,6 +226,30 @@ class Iterator {
 }
 ```
 
+### Range operator `..`
+
+The range operator invokes `leftHandSide.rangeTo(rightHandSide)` on an object, which should return an `Range` object. Numbers
+and characters are built-in types that work with `..` but custom classes can also implement `rangeTo`.
+
+```c
+for (var x in 0..10) { // equivilant: for (var x in NumberRange(0, 10))
+    print x;
+}
+
+for (var c in "A".."Z") { // equivilant: for (var c in CharacterRange(0, 10))
+    print c;
+}
+
+class Foo {
+    rangeTo(x) = NumberRange(0, x)
+}
+
+var foo = Foo();
+for (var x in foo..10) {
+    print x;
+}
+```
+
 ### Multiple declarations in the same statement
 
 ```c

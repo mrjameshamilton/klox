@@ -1,5 +1,12 @@
-for (var i in NumberRange(0, 10)) {
-    print i;
+class Foo {
+    rangeTo(end) {
+        return NumberRange(0, end);
+    }
+}
+
+var foo = Foo();
+for (var x in foo..10) {
+    print x;
 }
 
 // expect: 0

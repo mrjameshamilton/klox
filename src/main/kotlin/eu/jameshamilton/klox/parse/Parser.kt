@@ -473,14 +473,24 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun shift(): Expr {
-        var expr = term()
+        var expr = range()
 
         while (match(GREATER_GREATER, GREATER_GREATER_GREATER, LESS_LESS)) {
             val op = previous()
-            val right = term()
+            val right = range()
             expr = BinaryExpr(expr, op, right)
         }
 
+        return expr
+    }
+
+    private fun range(): Expr {
+        var expr = term()
+        while (match(DOT_DOT)) {
+            val op = previous()
+            val right = factor()
+            expr = BinaryExpr(expr, op, right)
+        }
         return expr
     }
 

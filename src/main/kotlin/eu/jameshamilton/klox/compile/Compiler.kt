@@ -9,6 +9,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.isDefined
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaClassName
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
+import eu.jameshamilton.klox.compile.Resolver.Companion.nextSlot
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
@@ -81,6 +82,8 @@ class Compiler : Program.Visitor<ClassPool> {
     lateinit var resultClass: ClassStmt
     lateinit var errorClass: ClassStmt
     lateinit var okClass: ClassStmt
+    lateinit var numberClass: ClassStmt
+    lateinit var characterClass: ClassStmt
 
     fun compile(program: Program): ClassPool {
         initialize(programClassPool)
@@ -100,6 +103,8 @@ class Compiler : Program.Visitor<ClassPool> {
         resultClass = globals.single { it.name.lexeme == "Result" } as ClassStmt
         errorClass = globals.single { it.name.lexeme == "Error" } as ClassStmt
         okClass = globals.single { it.name.lexeme == "Ok" } as ClassStmt
+        numberClass = globals.single { it.name.lexeme == "Number" } as ClassStmt
+        characterClass = globals.single { it.name.lexeme == "Character" } as ClassStmt
 
         if (hadError) return ClassPool()
 
@@ -513,6 +518,76 @@ class Compiler : Program.Visitor<ClassPool> {
                 LESS_LESS -> bitwise { ishl() }
                 GREATER_GREATER -> bitwise { ishr() }
                 GREATER_GREATER_GREATER -> bitwise { iushr() }
+                DOT_DOT -> with(composer) {
+                    when {
+                        binaryExpr.left is LiteralExpr && binaryExpr.left.value is Double &&
+                            binaryExpr.right is LiteralExpr && binaryExpr.right.value is Double -> {
+                            load(function, numberClass)
+                            kloxfindmethod("rangeTo")
+                            ldc2_w(binaryExpr.right.value)
+                            box("java/lang/Double")
+                            ldc2_w(binaryExpr.left.value)
+                            box("java/lang/Double")
+                            kloxinvoke(numberOfParams = 2)
+                        }
+                        binaryExpr.left is LiteralExpr && binaryExpr.left.value is String &&
+                            binaryExpr.right is LiteralExpr && binaryExpr.right.value is String -> {
+                            load(function, characterClass)
+                            kloxfindmethod("rangeTo")
+                            ldc(binaryExpr.right.value.first().toString())
+                            ldc(binaryExpr.left.value.first().toString())
+                            kloxinvoke(numberOfParams = 2)
+                        }
+                        else -> {
+                            // temporarily use the next two available slots for left and right
+                            val (left, right) = listOf(function.nextSlot, function.nextSlot + 1)
+                            binaryExpr.right.accept(this@FunctionCompiler)
+                            astore(right)
+                            binaryExpr.left.accept(this@FunctionCompiler)
+                            astore(left)
+
+                            val (maybeString, other, end) = labels(3)
+
+                            aload(right)
+                            instanceof_("java/lang/Double")
+                            ifeq(maybeString)
+                            aload(left)
+                            instanceof_("java/lang/Double")
+                            ifeq(maybeString)
+
+                            load(function, numberClass)
+                            kloxfindmethod("rangeTo")
+                            aload(right)
+                            aload(left)
+                            kloxinvoke(numberOfParams = 2)
+                            goto_(end)
+
+                            label(maybeString)
+                            aload(right)
+                            instanceof_("java/lang/String")
+                            ifeq(other)
+                            aload(left)
+                            instanceof_("java/lang/String")
+                            ifeq(other)
+
+                            load(function, characterClass)
+                            kloxfindmethod("rangeTo")
+                            aload(right)
+                            aload(left)
+                            kloxinvoke(numberOfParams = 2)
+                            goto_(end)
+
+                            label(other)
+                            aload(left)
+                            checktype(KLOX_INSTANCE, "Expect an instance of a class that implements 'rangeTo'.")
+                            getkloxfield("rangeTo", KLOX_CALLABLE)
+                            aload(right)
+                            kloxinvoke(numberOfParams = 1)
+
+                            label(end)
+                        }
+                    }
+                }
                 else -> {}
             }
         }

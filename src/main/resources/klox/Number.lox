@@ -22,4 +22,6 @@ class Number {
         }
         return s;
     }
+
+    class rangeTo(from, to) = NumberRange(from, to)
 }

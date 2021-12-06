@@ -1,4 +1,4 @@
-for (var c in CharacterRange("A", "C")) {
+for (var c in "A".."C") {
     print c;
 }
 

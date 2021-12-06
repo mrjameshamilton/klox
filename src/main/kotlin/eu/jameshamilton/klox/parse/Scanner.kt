@@ -30,7 +30,7 @@ class Scanner(private val source: String) {
             '[' -> addToken(LEFT_BRACKET)
             ']' -> addToken(RIGHT_BRACKET)
             ',' -> addToken(COMMA)
-            '.' -> addToken(DOT)
+            '.' -> addToken(if (match('.')) DOT_DOT else DOT)
             '-' -> addToken(if (match('-')) MINUS_MINUS else MINUS)
             '+' -> addToken(if (match('+')) PLUS_PLUS else PLUS)
             ':' -> addToken(COLON)

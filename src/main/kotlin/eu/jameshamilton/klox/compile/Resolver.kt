@@ -371,7 +371,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         private val slotsInFunctions = WeakHashMap<FunctionExpr, MutableMap<VarDef, Int>>()
         private val FunctionExpr.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
-        private val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
+        val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
 
         fun FunctionExpr.slot(varDef: VarDef): Int = slots.getOrDefault(varDef, -1)
 

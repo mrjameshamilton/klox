@@ -6,4 +6,6 @@ class Character {
     class fromCharCode(n) {
         System.fail(Error("Native implementation for 'fromCharCode' not provided."));
     }
+
+    class rangeTo(start, end) = CharacterRange(start, end)
 }

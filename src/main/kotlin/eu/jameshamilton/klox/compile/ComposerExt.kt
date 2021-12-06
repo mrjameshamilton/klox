@@ -564,6 +564,18 @@ fun Composer.getkloxfield(name: String, expectedType: String, newValueComposer: 
     return this
 }
 
+fun Composer.kloxfindmethod(name: String): Composer {
+    ldc(name)
+    invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
+    return this
+}
+
+fun Composer.kloxinvoke(numberOfParams: Int = 0): Composer {
+    packarray(numberOfParams)
+    invokeinterface(KLOX_CALLABLE, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
+    return this
+}
+
 fun Composer.setkloxfield(name: String): Composer {
     ldc(name)
     swap()

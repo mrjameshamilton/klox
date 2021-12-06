@@ -1,4 +1,5 @@
-for (var i in NumberRange(0, 10)) {
+var start = 0, end = 10;
+for (var i in start..end) {
     print i;
 }
 

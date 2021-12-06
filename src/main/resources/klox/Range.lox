@@ -1,0 +1,72 @@
+class Range {
+    init(start, end) {
+        this.start = start;
+        this.current = start;
+        this.end = end;
+        this.step_ = 1;
+    }
+
+    step(step) {
+        this.step_ = step;
+        return this;
+    }
+
+    iterator() {
+        System.fail(Error("Abstract method 'iterator' not implemented"));
+    }
+}
+
+class NumberRange < Range {
+
+    iterator() {
+        class NumberRangeIterator < Iterator {
+            init(start, end, step) {
+                this.start = start;
+                this.end = end;
+                this.step = step;
+                this.current = start;
+            }
+
+            hasNext() = this.current <= this.end
+
+            next() {
+                var result = this.current;
+                this.current = this.current + this.step;
+                return result;
+            }
+        }
+
+        return NumberRangeIterator(this.start, this.end, this.step_);
+    }
+}
+
+class CharacterRange < Range {
+    init(start, end) {
+        // TODO: error handling in constructors?
+        super.init(
+            Character.toCharCode(String.charAt(start, 0).orElse(0)).orElse(0),
+            Character.toCharCode(String.charAt(end, 0).orElse(0)).orElse(0)
+        );
+    }
+
+    iterator() {
+        class CharRangeIterator < Iterator {
+            init(start, end, step) {
+                this.start = start;
+                this.end = end;
+                this.step = step;
+                this.current = start;
+            }
+
+            hasNext() = this.current <= this.end
+
+            next() {
+                var result = this.current;
+                this.current = this.current + this.step;
+                return Character.fromCharCode(result);
+            }
+        }
+
+        return CharRangeIterator(this.start, this.end, this.step_);
+    }
+}

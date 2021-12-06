@@ -52,6 +52,8 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     val resultClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Result")) as LoxClass }
     val errorClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Error")) as LoxClass }
     val okClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Ok")) as LoxClass }
+    val numberClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Number")) as LoxClass }
+    val characterClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Character")) as LoxClass }
 
     private val locals = mutableMapOf<Expr, Int>()
 
@@ -138,6 +140,15 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             LESS_LESS -> ((left as Double).toInt() shl (right as Double).toInt()).toDouble()
             GREATER_GREATER -> ((left as Double).toInt() shr (right as Double).toInt()).toDouble()
             GREATER_GREATER_GREATER -> ((left as Double).toInt() ushr (right as Double).toInt()).toDouble()
+            DOT_DOT -> return when {
+                // TODO better errors
+                // TODO numbers and strings for now call a static method
+                left is Double && right is Double -> numberClass.findMethod("rangeTo")?.call(this, listOf(left, right))
+                left is String && right is String -> characterClass.findMethod("rangeTo")?.call(this, listOf(left.first().toString(), right.first().toString()))
+                // Otherwise, call an instance method "left.rangeTo(right)"
+                left is LoxInstance -> (left.get(Token(IDENTIFIER, "rangeTo")) as LoxFunction).call(this, listOf(right))
+                else -> throw RuntimeError(binaryExpr.operator, "Left operand must implement 'rangeTo'.")
+            }
             else -> throw RuntimeError(binaryExpr.operator, "Not implemented")
         }
     }
@@ -230,7 +241,9 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
             if (value is LoxFunction && value.declaration.flags.contains(GETTER)) value.call(this) else value
         }
-        else -> if (obj == null && getExpr.safeAccess) null else throw RuntimeError(getExpr.name, "Only instances have properties.")
+        else -> if (obj == null && getExpr.safeAccess) null else {
+            throw RuntimeError(getExpr.name, "Only instances have properties.")
+        }
     }
 
     override fun visitSetExpr(setExpr: SetExpr): Any? {
