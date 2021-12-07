@@ -234,13 +234,17 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
         resolve(binaryExpr.left)
         resolve(binaryExpr.right)
+
         // TODO do this after resolving?
-        when (binaryExpr.operator.type) {
-            DOT_DOT -> {
-                currentFunction.capture(mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>().single { it.name.lexeme == "Number" })
-                currentFunction.capture(mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>().single { it.name.lexeme == "Character" })
+        if (!currentFunction.isMain) {
+            val globalClasses = mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>()
+            when (binaryExpr.operator.type) {
+                DOT_DOT -> {
+                    currentFunction.capture(globalClasses.single { it.name.lexeme == "Number" })
+                    currentFunction.capture(globalClasses.single { it.name.lexeme == "Character" })
+                }
+                else -> {}
             }
-            else -> {}
         }
     }
 
