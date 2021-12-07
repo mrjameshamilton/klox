@@ -37,6 +37,12 @@ tasks.withType<KotlinCompile> {
     kotlinOptions.freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
 }
 
+tasks.withType<Test> {
+    minHeapSize = "512m"
+    maxHeapSize = "2048m"
+    jvmArgs = listOf("-XX:MaxPermSize=512m")
+}
+
 application {
     mainClass.set("eu.jameshamilton.klox.MainKt")
 }
