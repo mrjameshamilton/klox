@@ -67,6 +67,18 @@ class ArrayList {
         if (function(e)) return acc + 1; else return acc;
     })
 
+    contains(value) = this.indexOf(value) != -1
+
+    indexOf(value) {
+        var length = this.length();
+        for (var i = 0; i < length; i++) {
+            if (this.get(i) == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     reduce(initial, function) {
         var length = this.length();
         var result = initial;

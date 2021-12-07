@@ -45,6 +45,18 @@ class Array {
         if (function(e)) return acc + 1; else return acc;
     })
 
+    contains(value) = this.indexOf(value) != -1
+
+    indexOf(value) {
+        var index = -1;
+        for (var (i, element) in this.withIndex()) {
+            if (this.get(i) == value) {
+                return i;
+            }
+        }
+        return index;
+    }
+
     reduce(initial, function) {
         var length = this.length();
         var result = initial;
