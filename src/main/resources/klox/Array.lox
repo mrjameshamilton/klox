@@ -84,6 +84,8 @@ class Array {
         return shrunkResult;
     }
 
+    filterNot(function) = this.filter(fun (e) = !function(e))
+
     slice(start, stop, step) {
         // Slice implementation based on cpython implementation.
 

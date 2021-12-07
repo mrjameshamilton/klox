@@ -101,6 +101,8 @@ class ArrayList {
         return result;
     }
 
+    filterNot(function) = this.filter(fun (e) = !function(e))
+
     remove(i) {
         if (i < 0 or i >= this.size) {
             return Error("Index out of bounds");
