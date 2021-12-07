@@ -56,6 +56,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     private val FunctionExpr.isMain: Boolean get() = this == mainFunction.functionExpr
 
     fun execute(mainFunction: FunctionStmt) {
+        clearMaps()
         this.mainFunction = mainFunction
         mainFunction.accept(this)
 
@@ -332,7 +333,21 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     override fun visitThisExpr(thisExpr: ThisExpr) = resolveLocal(thisExpr)
 
+    private fun clearMaps() {
+        lateInits.clear()
+        superThisAccessDepths.clear()
+        varUseMap.clear()
+        captures.clear()
+        definedIns.clear()
+        functionDepths.clear()
+        slotsInFunctions.clear()
+        javaFieldNames.clear()
+        javaClassNames.clear()
+    }
+
     companion object {
+        // TODO move these to AST nodes classes?
+
         // AST decorations for variable definition and usage.
 
         private val lateInits = mutableSetOf<VarDef>()
