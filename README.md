@@ -286,6 +286,14 @@ fun bar() = 2 // optional ;
 fun baz() = foo() + bar()
 ```
 
+### Classes without bodies
+
+```
+class Foo
+class Bar < Foo
+print Bar is Foo;
+```
+
 ### Null-safe operator
 
 The null-safe operator `?` can be used to chain property accesses without needing to

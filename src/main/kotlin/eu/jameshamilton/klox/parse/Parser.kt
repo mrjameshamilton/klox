@@ -44,23 +44,23 @@ class Parser(private val tokens: List<Token>) {
             VariableExpr(Token(IDENTIFIER, "Object", previous().line))
         } else null // Only Object has no superclass
 
-        consume(LEFT_BRACE, "Expect '{' before class body.")
-
         val methods = mutableListOf<FunctionStmt>()
         val classStmt = ClassStmt(className, superClass, methods)
-        while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            val flags = FunctionFlag.empty()
-            flags.add(METHOD)
-            if (match(CLASS)) flags.add(STATIC)
-            methods.add(
-                function(flags) { name, body ->
-                    if (name.lexeme == "init") flags.add(INITIALIZER)
-                    FunctionStmt(name, body, classStmt)
-                }
-            )
-        }
 
-        consume(RIGHT_BRACE, "Expect '}' after class body.")
+        if (match(LEFT_BRACE)) {
+            while (!check(RIGHT_BRACE) && !isAtEnd()) {
+                val flags = FunctionFlag.empty()
+                flags.add(METHOD)
+                if (match(CLASS)) flags.add(STATIC)
+                methods.add(
+                    function(flags) { name, body ->
+                        if (name.lexeme == "init") flags.add(INITIALIZER)
+                        FunctionStmt(name, body, classStmt)
+                    }
+                )
+            }
+            consume(RIGHT_BRACE, "Expect '}' after class body.")
+        }
 
         return classStmt
     }
