@@ -308,8 +308,15 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         beginScope()
 
-        define(THIS)
-        classStmt.superClass?.let { define(SUPER) }
+        define(object : VarDef {
+            override val name: Token get() = Token(IDENTIFIER, "this", "this", classStmt.name.line)
+        })
+
+        classStmt.superClass?.let {
+            define(object : VarDef {
+                override val name: Token get() = Token(IDENTIFIER, "super", "super", classStmt.name.line)
+            })
+        }
 
         classStmt.methods.forEach {
             resolveFunction(it.functionExpr, "${classStmt.name.lexeme}\$${it.name.lexeme}")
@@ -418,13 +425,5 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         val ClassStmt.javaClassName: String
             get() = javaClassNames.getOrDefault(this, this.name.lexeme)
-
-        private val THIS = object : VarDef {
-            override val name: Token get() = Token(IDENTIFIER, "this")
-        }
-
-        private val SUPER = object : VarDef {
-            override val name: Token get() = Token(IDENTIFIER, "super")
-        }
     }
 }

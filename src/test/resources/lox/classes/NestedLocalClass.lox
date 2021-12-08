@@ -1,0 +1,15 @@
+class Foo {
+    name() = "Foo"
+    foo() {
+        class Bar {
+            name() = "Bar"
+            toString() = this.name()
+        }
+        return Bar().toString();
+    }
+
+    toString() = this.name()
+}
+
+print Foo(); // expect: Foo
+print Foo().foo(); // expect: Bar
