@@ -3,14 +3,16 @@ package eu.jameshamilton.klox.interpret
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionFlag.INITIALIZER
+import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.Token
+import java.util.EnumSet
 
 interface LoxCallable {
     fun arity(): Int = 0
     fun call(interpreter: Interpreter, arguments: List<Any?> = emptyList()): Any?
 }
 
-open class LoxFunction(val classStmt: ClassStmt? = null, val name: String, val declaration: FunctionExpr, private val closure: Environment) : LoxCallable {
+open class LoxFunction(val classStmt: ClassStmt? = null, val modifiers: EnumSet<ModifierFlag>, val name: String, val declaration: FunctionExpr, private val closure: Environment) : LoxCallable {
 
     override fun arity(): Int = declaration.params.size
 
@@ -38,7 +40,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val name: String, val d
     fun bind(instance: LoxInstance): LoxFunction {
         val environment = Environment(closure)
         environment.define("this", instance)
-        return LoxFunction(classStmt, name, declaration, environment)
+        return LoxFunction(classStmt, modifiers, name, declaration, environment)
     }
 
     override fun toString(): String = "<fn $name>"

@@ -21,6 +21,8 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.ModifierFlag
+import eu.jameshamilton.klox.parse.ModifierFlag.STATIC
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
@@ -233,7 +235,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 is LoxInstance -> obj.get(getExpr.name, safeAccess = getExpr.safeAccess)
                 is LoxClass -> {
                     val method = obj.findMethod(getExpr.name.lexeme)
-                    if (method != null && !method.declaration.flags.contains(STATIC)) {
+                    if (method != null && !method.modifiers.contains(STATIC)) {
                         throw RuntimeError(getExpr.name, "'${method.name}' is not a static class method.")
                     } else method ?: throw RuntimeError(getExpr.name, "Method '${getExpr.name.lexeme}' not found.")
                 }
@@ -261,12 +263,12 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         environment.define(
             functionStmt.name.lexeme,
-            LoxFunction(classStmt = null, functionStmt.name.lexeme, functionStmt.functionExpr, environment)
+            LoxFunction(classStmt = null, functionStmt.modifiers, functionStmt.name.lexeme, functionStmt.functionExpr, environment)
         )
     }
 
     override fun visitFunctionExpr(functionExpr: FunctionExpr): LoxFunction {
-        return LoxFunction(classStmt = null, "anon", functionExpr, environment)
+        return LoxFunction(classStmt = null, ModifierFlag.empty(), "anon", functionExpr, environment)
     }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr): Any? =
@@ -441,7 +443,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         val methods = mutableMapOf<String, LoxFunction>()
         classStmt.methods.forEach {
-            methods[it.name.lexeme] = LoxFunction(classStmt, it.name.lexeme, it.functionExpr, environment)
+            methods[it.name.lexeme] = LoxFunction(classStmt, it.modifiers, it.name.lexeme, it.functionExpr, environment)
         }
 
         val klass = LoxClass(classStmt.name.lexeme, superClass as LoxClass?, methods)

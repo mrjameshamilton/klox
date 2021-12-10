@@ -6,6 +6,7 @@ import eu.jameshamilton.klox.parse.Checker.ClassType.CLASS
 import eu.jameshamilton.klox.parse.Checker.ClassType.NONE
 import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
 import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.ModifierFlag.STATIC
 import eu.jameshamilton.klox.parse.TokenType.BANG_QUESTION
 import eu.jameshamilton.klox.parse.TokenType.BREAK
 import eu.jameshamilton.klox.parse.TokenType.CONTINUE
@@ -17,6 +18,7 @@ import kotlin.contracts.ExperimentalContracts
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
     private var currentFunction: FunctionExpr? = null
+    private var currentFunctionStmt: FunctionStmt? = null
     private var currentClassType = NONE
 
     override fun visitProgram(program: Program) {
@@ -120,7 +122,10 @@ class Checker : ASTVisitor<Unit> {
     }
 
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
+        val enclosingFunctionStmt = currentFunctionStmt
+        currentFunctionStmt = functionStmt
         resolveFunction(functionStmt.functionExpr)
+        currentFunctionStmt = enclosingFunctionStmt
     }
 
     override fun visitFunctionExpr(functionExpr: FunctionExpr) {
@@ -155,7 +160,7 @@ class Checker : ASTVisitor<Unit> {
 
             classStmt.superClass.accept(this)
         }
-        classStmt.methods.forEach { resolveFunction(it.functionExpr) }
+        classStmt.methods.forEach { it.accept(this) }
         currentClassType = enclosingClass
     }
 
@@ -180,13 +185,15 @@ class Checker : ASTVisitor<Unit> {
             error(superExpr.name, "Can't use 'super' outside of a class.")
         } else if (currentClassType != SUBCLASS) {
             error(superExpr.name, "Can't use 'super' in a class with no superclass.")
+        } else if (currentFunctionStmt?.modifiers?.contains(STATIC) == true) {
+            error(superExpr.name, "Can't use 'super' in a static method.")
         }
     }
 
     override fun visitThisExpr(thisExpr: ThisExpr) {
         if (currentClassType == NONE) {
             error(thisExpr.name, "Can't use 'this' outside of a class.")
-        } else if (currentFunction?.flags?.contains(STATIC) == true) {
+        } else if (currentFunctionStmt?.modifiers?.contains(STATIC) == true) {
             error(thisExpr.name, "Can't use 'this' in a static method.")
         }
     }

@@ -18,10 +18,17 @@ class Parser(private val tokens: List<Token>) {
 
     private fun declaration(): Stmt? {
         try {
+            val modifiers = ModifierFlag.empty()
             if (match(CLASS)) return classDeclaration()
             if (check(FUN, IDENTIFIER)) {
                 consume(FUN, "")
-                return function(flags = FunctionFlag.empty(), initializer = ::FunctionStmt)
+                return function(flags = FunctionFlag.empty()) { name, body ->
+                    FunctionStmt(
+                        name,
+                        modifiers,
+                        body
+                    )
+                }
             }
             if (match(VAR)) {
                 val varDeclaration = varDeclaration()
@@ -62,6 +69,7 @@ class Parser(private val tokens: List<Token>) {
         initParameters?.run {
             methods += FunctionStmt(
                 Token(IDENTIFIER, "init"),
+                ModifierFlag.empty(),
                 FunctionExpr(
                     flags = EnumSet.of(INITIALIZER),
                     params = this,
@@ -81,19 +89,20 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(LEFT_BRACE)) {
             while (!check(RIGHT_BRACE) && !isAtEnd()) {
-                val flags = FunctionFlag.empty()
-                flags.add(METHOD)
-                if (match(CLASS)) flags.add(STATIC)
+                val modifierFlags = ModifierFlag.empty()
+                val functionFlags = FunctionFlag.empty()
+                functionFlags.add(METHOD)
+                if (match(CLASS)) modifierFlags.add(ModifierFlag.STATIC)
                 methods.add(
-                    function(flags) { name, body ->
+                    function(functionFlags) { name, body ->
                         if (name.lexeme == "init") {
                             if (methods.count { it.name.lexeme == "init" } > 0) {
                                 throw error(name, "A class can only have one initializer.")
                             }
 
-                            flags.add(INITIALIZER)
+                            functionFlags.add(INITIALIZER)
                         }
-                        FunctionStmt(name, body, classStmt)
+                        FunctionStmt(name, modifierFlags, body, classStmt)
                     }
                 )
             }

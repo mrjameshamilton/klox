@@ -313,8 +313,15 @@ open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
     }
 }
 
+enum class ModifierFlag {
+    STATIC;
+
+    companion object {
+        fun empty(): EnumSet<ModifierFlag> = noneOf(ModifierFlag::class.java)
+    }
+}
+
 enum class FunctionFlag {
-    STATIC,
     ANONYMOUS,
     GETTER,
     INITIALIZER,
@@ -325,7 +332,12 @@ enum class FunctionFlag {
     }
 }
 
-open class FunctionStmt(override val name: Token, val functionExpr: FunctionExpr, var classStmt: ClassStmt? = null) : Stmt, VarDef {
+open class FunctionStmt(
+    override val name: Token,
+    val modifiers: EnumSet<ModifierFlag>,
+    val functionExpr: FunctionExpr,
+    var classStmt: ClassStmt? = null
+) : Stmt, VarDef {
 
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)

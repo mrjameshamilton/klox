@@ -1,0 +1,8 @@
+class Bar(foo)
+class Foo < Bar(1) {
+    class bar() {
+        super.foo = 1;
+    }
+}
+
+print Foo.bar(); // expect runtime error: Can't use 'super' in a static method.
