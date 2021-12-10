@@ -300,6 +300,11 @@ print Bar is Foo;
 class Foo(x)
 var foo = Foo(1);
 print foo.x; // 1
+
+class Base(foo)
+class Bar(x) < Base(x)
+var bar = Bar(1);
+print bar.foo; // 1
 ```
 
 ### Null-safe operator

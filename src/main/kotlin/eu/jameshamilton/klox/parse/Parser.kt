@@ -37,43 +37,45 @@ class Parser(private val tokens: List<Token>) {
 
     private fun classDeclaration(): Stmt {
         val className = consume(IDENTIFIER, "Expect class name.")
-        var initFunctionExpr: FunctionExpr? = null
-        val methods = mutableListOf<FunctionStmt>()
+        val initParameters = if (check(LEFT_PAREN)) functionParameters(FunctionFlag.empty()) else null
 
-        if (check(LEFT_PAREN)) {
-            with(functionParameters(FunctionFlag.empty())) {
-                initFunctionExpr = FunctionExpr(
+        var superConstructorCall: Expr? = null
+        val superClass = if (match(LESS)) {
+            consume(IDENTIFIER, "Expect superclass name.")
+            val tempSuper = VariableExpr(previous())
+            if (match(LEFT_PAREN)) {
+                superConstructorCall = finishCall(
+                    SuperExpr(
+                        Token(IDENTIFIER, "super", previous().line),
+                        Token(IDENTIFIER, "init", previous().line)
+                    )
+                )
+            }
+            tempSuper
+        } else if (className.lexeme != "Object") {
+            VariableExpr(Token(IDENTIFIER, "Object", previous().line))
+        } else null // Only Object has no superclass
+
+        val methods = mutableListOf<FunctionStmt>()
+        val classStmt = ClassStmt(className, superClass, methods)
+
+        initParameters?.run {
+            methods += FunctionStmt(
+                Token(IDENTIFIER, "init"),
+                FunctionExpr(
                     flags = EnumSet.of(INITIALIZER),
                     params = this,
-                    body = this.map {
-                        ExprStmt(
+                    body = (
+                        listOfNotNull(superConstructorCall) + map {
                             SetExpr(
                                 ThisExpr(Token(IDENTIFIER, "this")),
                                 it.name,
                                 VariableExpr(it.name),
                             )
-                        )
-                    }
-                )
-            }
-        }
-
-        val superClass = if (match(LESS)) {
-            consume(IDENTIFIER, "Expect superclass name.")
-            VariableExpr(previous())
-        } else if (className.lexeme != "Object") {
-            VariableExpr(Token(IDENTIFIER, "Object", previous().line))
-        } else null // Only Object has no superclass
-
-        val classStmt = ClassStmt(className, superClass, methods)
-
-        initFunctionExpr?.let {
-            methods.add(
-                FunctionStmt(
-                    Token(IDENTIFIER, "init"),
-                    it,
-                    classStmt
-                )
+                        }
+                        ).map { ExprStmt(it) }
+                ),
+                classStmt
             )
         }
 
@@ -125,7 +127,8 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun functionBody(parameters: List<Parameter>, flags: EnumSet<FunctionFlag>): FunctionExpr = FunctionExpr(
-        flags, parameters, body = if (match(EQUAL)) {
+        flags, parameters,
+        body = if (match(EQUAL)) {
             val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
             optional(SEMICOLON)
             singleExprBody

@@ -1,0 +1,7 @@
+class Bar(foo)
+class Foo(bar, baz) < Bar("STRING")
+
+var foo = Foo("bar", "baz");
+print foo.foo; // expect: STRING
+print foo.bar; // expect: bar
+print foo.baz; // expect: baz

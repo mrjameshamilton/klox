@@ -1,8 +1,4 @@
-class Pair {
-    init(first, second) {
-        this.first = first;
-        this.second = second;
-    }
+class Pair(first, second) {
 
     get(index) {
         if (index == 0) {

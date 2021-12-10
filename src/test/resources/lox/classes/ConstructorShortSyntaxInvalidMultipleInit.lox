@@ -1,0 +1,9 @@
+class Foo(bar, baz) {
+    // TODO: support multiple constructors.
+    init() {
+
+    }
+}
+
+var foo = Foo("foo", "bar");
+// expect error: A class can only have one initializer.

@@ -810,7 +810,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
         override fun visitClassStmt(classStmt: ClassStmt): Unit = with(composer) {
             val clazz = create(classStmt)
-            val (isSuperClass) = labels(1)
+            val (isSuperClass, end) = labels(2)
             new_(clazz)
             dup()
             aload_0()
@@ -821,6 +821,29 @@ class Compiler : Program.Visitor<ClassPool> {
                 ifne(isSuperClass)
                 kloxthrow(classStmt.name, "Superclass must be a class.")
                 label(isSuperClass)
+
+                if (classStmt.methods.singleOrNull { it.name.lexeme == "init" }?.let { SuperConstructorCallCounter().count(it.functionExpr) } == 0) {
+                    // check that the constructor calls the super constructor if it exists
+                    dup()
+                    kloxfindmethod("init") // super.init()
+                    ifnull(end) // no constructor, no problem
+                    dup()
+                    invokeinterface(KLOX_CALLABLE, "arity", "()I")
+                    ifeq(end) // no-arg constructor, no problem // TODO: call no-arg constructor by default?
+                    kloxthrow(classStmt.name) {
+                        invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
+                        val temp = function.nextSlot.also {
+                            astore(it)
+                        }
+                        concat(
+                            { ldc("'${classStmt.name.lexeme}' does not call superclass '") },
+                            { aload(temp) },
+                            { ldc("' constructor.") }
+                        )
+                    }
+                }
+
+                label(end)
                 invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;L$KLOX_CLASS;)V")
             } else {
                 invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;)V")

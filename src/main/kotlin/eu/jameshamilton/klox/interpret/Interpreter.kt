@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.interpret
 
+import eu.jameshamilton.klox.compile.SuperConstructorCallCounter
 import eu.jameshamilton.klox.error
 import eu.jameshamilton.klox.parse.ArrayExpr
 import eu.jameshamilton.klox.parse.AssignExpr
@@ -418,6 +419,17 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         if (classStmt.superClass != null && superClass !is LoxClass) {
             throw RuntimeError(classStmt.superClass.name, "Superclass must be a class.")
+        } else if (superClass is LoxClass) {
+            classStmt.methods.singleOrNull { it.name.lexeme == "init" }?.let {
+                superClass.findMethod("init")?.run {
+                    if (arity() > 0 && SuperConstructorCallCounter().count(it.functionExpr) == 0) {
+                        throw RuntimeError(
+                            classStmt.name,
+                            "'${classStmt.name.lexeme}' does not call superclass '${superClass.name}' constructor."
+                        )
+                    }
+                }
+            }
         }
 
         environment.define(classStmt.name.lexeme)

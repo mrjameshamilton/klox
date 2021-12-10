@@ -1,0 +1,5 @@
+class Bar(foo)
+class Foo(bar, baz) < Bar
+
+var foo = Foo("foo", "bar");
+// expect runtime error: 'Foo' does not call superclass 'Bar' constructor.

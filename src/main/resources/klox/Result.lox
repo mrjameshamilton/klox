@@ -1,9 +1,4 @@
-class Result {
-    init(ok, error) {
-        this.ok = ok;
-        this.error = error;
-    }
-
+class Result(ok, error) {
     get(index) {
         if (index == 0) return this?.ok?.value;
         else if (index == 1) return this.error;
