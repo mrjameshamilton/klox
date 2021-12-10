@@ -1,7 +1,7 @@
 class Bar(foo)
 class Foo < Bar(1) {
     class bar() {
-        super.foo = 1;
+        print super.foo;
     }
 }
 
