@@ -60,7 +60,7 @@ class Parser(private val tokens: List<Token>) {
                 )
             }
             consume(RIGHT_BRACE, "Expect '}' after class body.")
-        }
+        } else optional(SEMICOLON)
 
         return classStmt
     }
