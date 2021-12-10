@@ -325,7 +325,7 @@ enum class FunctionFlag {
     }
 }
 
-open class FunctionStmt(override val name: Token, val functionExpr: FunctionExpr, val classStmt: ClassStmt? = null) : Stmt, VarDef {
+open class FunctionStmt(override val name: Token, val functionExpr: FunctionExpr, var classStmt: ClassStmt? = null) : Stmt, VarDef {
 
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)

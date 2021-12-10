@@ -294,6 +294,14 @@ class Bar < Foo
 print Bar is Foo;
 ```
 
+### Class header inline initializers
+
+```
+class Foo(x)
+var foo = Foo(1);
+print foo.x; // 1
+```
+
 ### Null-safe operator
 
 The null-safe operator `?` can be used to chain property accesses without needing to

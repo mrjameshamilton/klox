@@ -37,6 +37,27 @@ class Parser(private val tokens: List<Token>) {
 
     private fun classDeclaration(): Stmt {
         val className = consume(IDENTIFIER, "Expect class name.")
+        var initFunctionExpr: FunctionExpr? = null
+        val methods = mutableListOf<FunctionStmt>()
+
+        if (check(LEFT_PAREN)) {
+            with(functionParameters(FunctionFlag.empty())) {
+                initFunctionExpr = FunctionExpr(
+                    flags = EnumSet.of(INITIALIZER),
+                    params = this,
+                    body = this.map {
+                        ExprStmt(
+                            SetExpr(
+                                ThisExpr(Token(IDENTIFIER, "this")),
+                                it.name,
+                                VariableExpr(it.name),
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
         val superClass = if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.")
             VariableExpr(previous())
@@ -44,8 +65,17 @@ class Parser(private val tokens: List<Token>) {
             VariableExpr(Token(IDENTIFIER, "Object", previous().line))
         } else null // Only Object has no superclass
 
-        val methods = mutableListOf<FunctionStmt>()
         val classStmt = ClassStmt(className, superClass, methods)
+
+        initFunctionExpr?.let {
+            methods.add(
+                FunctionStmt(
+                    Token(IDENTIFIER, "init"),
+                    it,
+                    classStmt
+                )
+            )
+        }
 
         if (match(LEFT_BRACE)) {
             while (!check(RIGHT_BRACE) && !isAtEnd()) {
@@ -54,7 +84,13 @@ class Parser(private val tokens: List<Token>) {
                 if (match(CLASS)) flags.add(STATIC)
                 methods.add(
                     function(flags) { name, body ->
-                        if (name.lexeme == "init") flags.add(INITIALIZER)
+                        if (name.lexeme == "init") {
+                            if (methods.count { it.name.lexeme == "init" } > 0) {
+                                throw error(name, "A class can only have one initializer.")
+                            }
+
+                            flags.add(INITIALIZER)
+                        }
                         FunctionStmt(name, body, classStmt)
                     }
                 )
@@ -66,10 +102,10 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun function(flags: EnumSet<FunctionFlag>, initializer: (Token, FunctionExpr) -> FunctionStmt): FunctionStmt =
-        initializer(consume(IDENTIFIER, "Expect function name."), functionBody(flags))
+        initializer(consume(IDENTIFIER, "Expect function name."), functionBody(functionParameters(flags), flags))
 
-    private fun functionBody(flags: EnumSet<FunctionFlag>): FunctionExpr {
-        val parameters = if (check(LEFT_PAREN)) {
+    private fun functionParameters(flags: EnumSet<FunctionFlag>): List<Parameter> = when {
+        check(LEFT_PAREN) -> {
             val parameters = mutableListOf<Parameter>()
             consume(LEFT_PAREN, "Expected '(' after function name")
             if (!check(RIGHT_PAREN)) {
@@ -82,16 +118,14 @@ class Parser(private val tokens: List<Token>) {
             }
             consume(RIGHT_PAREN, "Expect ')' after parameters.")
             parameters
-        } else if (flags.contains(METHOD)) {
-            flags.add(GETTER)
-            emptyList()
-        } else if (flags.contains(ANONYMOUS)) {
-            throw error(peek(), "Named function not allowed here.")
-        } else {
-            throw error(peek(), "Expect ')' after parameters.")
         }
+        flags.contains(METHOD) -> emptyList<Parameter>().also { flags.add(GETTER) }
+        flags.contains(ANONYMOUS) -> throw error(peek(), "Named function not allowed here.")
+        else -> throw error(peek(), "Expect ')' after parameters.")
+    }
 
-        val body: List<Stmt> = if (match(EQUAL)) {
+    private fun functionBody(parameters: List<Parameter>, flags: EnumSet<FunctionFlag>): FunctionExpr = FunctionExpr(
+        flags, parameters, body = if (match(EQUAL)) {
             val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
             optional(SEMICOLON)
             singleExprBody
@@ -99,9 +133,7 @@ class Parser(private val tokens: List<Token>) {
             consume(LEFT_BRACE, "Expect '{' before function body.")
             block()
         }
-
-        return FunctionExpr(flags, parameters, body)
-    }
+    )
 
     // for-in loops are desugared to do-while loops:
     // This helper class is used to keep track of the iterator variable and
@@ -652,7 +684,10 @@ class Parser(private val tokens: List<Token>) {
         }
         match(THIS) -> ThisExpr(previous())
         match(IDENTIFIER) -> VariableExpr(previous())
-        match(FUN) -> functionBody(EnumSet.of(ANONYMOUS))
+        match(FUN) -> {
+            val flags = EnumSet.of(ANONYMOUS)
+            functionBody(functionParameters(flags), flags)
+        }
         match(LEFT_PAREN) -> {
             val expr = expression()
             consume(RIGHT_PAREN, "Expect ')' after expression.")

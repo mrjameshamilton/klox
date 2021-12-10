@@ -1,0 +1,5 @@
+class Foo(bar, baz)
+
+var foo = Foo("bar", "baz");
+print foo.bar; // expect: bar
+print foo.baz; // expect: baz
