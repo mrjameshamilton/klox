@@ -5,6 +5,8 @@ class Object {
     }
 
     equals(other) {
+        if (other == nil) return false;
+
         return this.hashCode() == other.hashCode();
     }
 
