@@ -21,6 +21,10 @@ class System {
         print error;
         System.exit(code);
     }
+
+    class arraycopy(src, srcPos, dest, destPos, length) {
+        System.fail(Error("Native implementation for 'arraycopy' not provided."));
+    }
 }
 
 // Alias clock function for compatibility with lox.

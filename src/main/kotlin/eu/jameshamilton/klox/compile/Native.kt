@@ -126,37 +126,6 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 box("java/lang/Double")
                 areturn()
             }
-            "copy" -> return {
-                val (tryStart, tryEnd) = try_ {
-                    aload_1()
-                    checkcast(KLOX_INSTANCE)
-                    getkloxfield("\$array", "[Ljava/lang/Object;")
-                    aload_2()
-                    checktype("java/lang/Integer", "Source position must be a positive integer.")
-                    unbox("java/lang/Double")
-                    d2i()
-                    aload_3()
-                    checkcast(KLOX_INSTANCE)
-                    getkloxfield("\$array", "[Ljava/lang/Object;")
-                    aload(4)
-                    checktype("java/lang/Integer", "Source position must be a positive integer.")
-                    unbox("java/lang/Double")
-                    d2i()
-                    aload(5)
-                    checktype("java/lang/Integer", "Source position must be a positive integer.")
-                    unbox("java/lang/Double")
-                    d2i()
-                    invokestatic("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V")
-                    TRUE()
-                    kloxOk()
-                }
-                catchAll(tryStart, tryEnd) {
-                    kloxError {
-                        invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
-                    }
-                }
-                areturn()
-            }
         }
         "Math" -> {
             val math = fun Composer.(composer: Composer.() -> Composer) {
@@ -224,6 +193,37 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 unbox("java/lang/Integer")
                 invokestatic("java/lang/System", "exit", "(I)V")
                 aconst_null()
+                areturn()
+            }
+            "arraycopy" -> return {
+                val (tryStart, tryEnd) = try_ {
+                    aload_1()
+                    checkcast(KLOX_INSTANCE)
+                    getkloxfield("\$array", "[Ljava/lang/Object;")
+                    aload_2()
+                    checktype("java/lang/Integer", "Source position must be a positive integer.")
+                    unbox("java/lang/Double")
+                    d2i()
+                    aload_3()
+                    checkcast(KLOX_INSTANCE)
+                    getkloxfield("\$array", "[Ljava/lang/Object;")
+                    aload(4)
+                    checktype("java/lang/Integer", "Source position must be a positive integer.")
+                    unbox("java/lang/Double")
+                    d2i()
+                    aload(5)
+                    checktype("java/lang/Integer", "Source position must be a positive integer.")
+                    unbox("java/lang/Double")
+                    d2i()
+                    invokestatic("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V")
+                    TRUE()
+                    kloxOk()
+                }
+                catchAll(tryStart, tryEnd) {
+                    kloxError {
+                        invokevirtual("java/lang/Throwable", "getMessage", "()Ljava/lang/String;")
+                    }
+                }
                 areturn()
             }
         }

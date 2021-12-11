@@ -15,10 +15,6 @@ class Array {
         System.fail(Error("Native implementation for 'length' not provided."));
     }
 
-    class copy(src, srcPos, dest, destPos, length) {
-        System.fail(Error("Native implementation for 'copy' not provided."));
-    }
-
     fill(value) {
         for (var i = 0; i < this.length(); i++) {
             this.set(i, value);
@@ -80,7 +76,7 @@ class Array {
         }
 
         var shrunkResult = Array(resultLength);
-        Array.copy(result, 0, shrunkResult, 0, resultLength);
+        System.arraycopy(result, 0, shrunkResult, 0, resultLength);
         return shrunkResult;
     }
 
@@ -91,7 +87,7 @@ class Array {
 
         if (((start == nil and stop == nil) or (start == 0 and stop == this.length())) and (step == 1 or step == nil)) {
             var result = Array(this.length());
-            Array.copy(this, 0, result, 0, this.length());
+            System.arraycopy(this, 0, result, 0, this.length());
             return result;
         }
 

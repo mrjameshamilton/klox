@@ -480,7 +480,6 @@ class Array {
     filter(function);
     forEach(function);
     forEachIndexed(function);
-    class copy(src, srcPos, dest, destPos, length);
 }
 
 var array = Array(2);
@@ -490,13 +489,14 @@ print array.get(0); // foo
 print array.length(); // 2
 ```
 
-The static method `Array.copy` can be used to efficiently copy one array to another.
+The static method `System.arraycopy` can be used to efficiently copy one array to another.
 
 ### System
 
 * `System.arg(number): string | nil` returns the nth argument passed to the program or nil if the argument is out of range.
 * `System.exit(code)` exits the program with the given exit code.
 * `System.fail(message)` exits the program with a non-zero exit code and the given message.
+* `System.arraycopy(src, srcPos, dest, destPos, length)`
 
 ### Strings
 

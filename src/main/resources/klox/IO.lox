@@ -115,7 +115,7 @@ class BufferedOutputStream < OutputStream {
             this.flushBuffer();
         }
 
-        Array.copy(array, offset, this.buffer, this.count, length);
+        System.arraycopy(array, offset, this.buffer, this.count, length);
         this.count = this.count + length;
 
         return Ok(true);
@@ -189,7 +189,7 @@ class BufferedInputStream < InputStream {
             }
             var cnt;
             if (available < length) cnt = available; else cnt = length;
-            Array.copy(this.buffer, this.position, array, offset, cnt);
+            System.arraycopy(this.buffer, this.position, array, offset, cnt);
             this.position = this.position + cnt;
             return cnt;
         }

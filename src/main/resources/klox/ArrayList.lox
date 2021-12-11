@@ -109,8 +109,8 @@ class ArrayList {
         }
 
         var newArray = Array(this.size - 1);
-        Array.copy(this.array, 0, newArray, 0, i);
-        Array.copy(this.array, i + 1, newArray, i, this.size - i - 1);
+        System.arraycopy(this.array, 0, newArray, 0, i);
+        System.arraycopy(this.array, i + 1, newArray, i, this.size - i - 1);
         this.size = this.size - 1;
         this.array = newArray;
     }
@@ -154,11 +154,11 @@ class ArrayList {
         return false;
     }
 
-    clone() {
+    copy() {
         var result = ArrayList();
         result.size = this.size;
         result.ensureCapacity(this.size);
-        Array.copy(this.array, 0, result.array, 0, this.size);
+        System.arraycopy(this.array, 0, result.array, 0, this.size);
         return result;
     }
 
@@ -167,14 +167,14 @@ class ArrayList {
 
         if (n > this.array.length()) {
             var newArray = Array(n * 2);
-            Array.copy(this.array, 0, newArray, 0, this.size);
+            System.arraycopy(this.array, 0, newArray, 0, this.size);
             this.array = newArray;
         }
     }
 
     trimToSize() {
         var newArray = Array(this.size);
-        Array.copy(this.array, 0, newArray, 0, this.size);
+        System.arraycopy(this.array, 0, newArray, 0, this.size);
         this.array = newArray;
     }
 
@@ -182,7 +182,7 @@ class ArrayList {
 
     toArray() {
         var result = Array(this.size);
-        Array.copy(this.array, 0, result, 0, this.size);
+        System.arraycopy(this.array, 0, result, 0, this.size);
         return result;
     }
 
