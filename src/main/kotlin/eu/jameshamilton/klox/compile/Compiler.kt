@@ -36,7 +36,6 @@ import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
-import eu.jameshamilton.klox.parse.ModifierFlag.*
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
@@ -366,11 +365,27 @@ class Compiler : Program.Visitor<ClassPool> {
             }
 
             fun equalequal(resultComposer: (Composer.() -> Unit)? = null) = with(composer) {
-                val (notNaN, notNaNPop, end) = labels(3)
+                val (notInstance, notNaN, notNaNPop, end) = labels(4)
                 binaryExpr.left.accept(this@FunctionCompiler)
                 dup()
                 binaryExpr.right.accept(this@FunctionCompiler)
                 dup()
+
+                // A, A, B, B
+                dup() // leave the 4 on the stack for the subsequent checks
+                instanceof_(KLOX_INSTANCE)
+                ifeq(notInstance)
+                pop() // pop second A
+                checkcast(KLOX_INSTANCE)
+                getkloxfield("equals", KLOX_CALLABLE)
+                swap() // swap the equals method and the parameter B
+                kloxinvoke(1)
+                unbox("java/lang/Boolean")
+                swap() // swap and pop the second B
+                pop()
+                goto_(end)
+
+                label(notInstance)
                 // A, A, B, B
                 instanceof_("java/lang/Double")
                 ifeq(notNaNPop)

@@ -447,6 +447,10 @@ class Greeter {
 print Greeter("James"); // Hello James
 ```
 
+### `equals` method
+
+The root class `Object` implements `equals(other)` which returns `true` if the two objects are the same instance.
+The `==` operator calls `obj.equals(other)` if `obj` is an instance of `Object`.
 
 ## Klox standard library
 

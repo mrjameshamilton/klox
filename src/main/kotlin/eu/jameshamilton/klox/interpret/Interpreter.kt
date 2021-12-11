@@ -334,6 +334,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     private fun isEqual(a: Any?, b: Any?): Boolean =
         if (a == null && b == null) true
         else when {
+            a is LoxInstance -> (a.get(Token(IDENTIFIER, "equals")) as LoxFunction).call(this, listOf(b)) as Boolean
             a is Double && b is Double && a.isNaN() && b.isNaN() -> false
             else -> a?.equals(b) ?: false
         }
