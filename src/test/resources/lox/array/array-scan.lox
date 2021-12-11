@@ -1,0 +1,11 @@
+["a", "b", "c", "d"]
+    .scan("s", fun(acc, s) = acc + s)
+    .forEach(fun (s) {
+        print s;
+    });
+
+// expect: s
+// expect: sa
+// expect: sab
+// expect: sabc
+// expect: sabcd

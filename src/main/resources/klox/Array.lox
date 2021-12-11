@@ -63,6 +63,16 @@ class Array {
         return result;
     }
 
+    scan(initial, function) = this.scanIndexed(initial, fun (i, acc, e) = function(acc, e))
+
+    scanIndexed(initial, function) {
+        var acc = initial;
+        return [initial].add(this.mapIndexed(fun (i, e) {
+            acc = function(i, acc, e);
+            return acc;
+        }));
+    }
+
     add(other) {
         var result = Array(this.length() + other.length());
         System.arraycopy(this, 0, result, 0, this.length());
