@@ -249,15 +249,20 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         FunctionExpr(
                             EnumSet.of(METHOD),
                             emptyList(),
-                            listOf(ReturnStmt(Token(RETURN, "return"), CallExpr(
-                                VariableExpr(classStmt.name), Token(IDENTIFIER, "("),
-                                parameters.map {
-                                    GetExpr(
-                                        ThisExpr(Token(IDENTIFIER, "this")),
-                                        it.name,
+                            listOf(
+                                ReturnStmt(
+                                    Token(RETURN, "return"),
+                                    CallExpr(
+                                        VariableExpr(classStmt.name), Token(IDENTIFIER, "("),
+                                        parameters.map {
+                                            GetExpr(
+                                                ThisExpr(Token(IDENTIFIER, "this")),
+                                                it.name,
+                                            )
+                                        }
                                     )
-                                }
-                            )))
+                                )
+                            )
                         ),
                         classStmt
                     )
