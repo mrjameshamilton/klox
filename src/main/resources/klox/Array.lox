@@ -19,6 +19,7 @@ class Array {
         for (var i = 0; i < this.length(); i++) {
             this.set(i, value);
         }
+        return this;
     }
 
     first() = this.get(0)
