@@ -63,6 +63,13 @@ class Array {
         return result;
     }
 
+    add(other) {
+        var result = Array(this.length() + other.length());
+        System.arraycopy(this, 0, result, 0, this.length());
+        System.arraycopy(other, 0, result, this.length(), other.length());
+        return result;
+    }
+
     filter(function) {
         var length = this.length();
         var result = Array(length);
