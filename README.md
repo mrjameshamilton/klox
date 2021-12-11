@@ -307,6 +307,15 @@ var bar = Bar(1);
 print bar.foo; // 1
 ```
 
+### Data classes
+
+Data classes implement boilerplate code for `get`, `equals`, `hashCode` and `toString`:
+
+```
+data class Foo(x)
+print Foo(1); // Foo(x = 1)
+```
+
 ### Null-safe operator
 
 The null-safe operator `?` can be used to chain property accesses without needing to

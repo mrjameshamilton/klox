@@ -1,7 +1,10 @@
 package eu.jameshamilton.klox.parse
 
 import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.Scanner.Companion.MODIFIER_KEYWORDS
 import eu.jameshamilton.klox.parse.TokenType.*
+import eu.jameshamilton.klox.parse.visitor.AllClassStmtVisitor
+import eu.jameshamilton.klox.parse.visitor.DataClassInitializer
 import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
@@ -13,13 +16,18 @@ class Parser(private val tokens: List<Token>) {
         while (!isAtEnd()) {
             declaration()?.let { statements.add(it) }
         }
-        return Program(statements)
+        return Program(statements).also {
+            it.statementAccept(AllClassStmtVisitor(DataClassInitializer()))
+        }
     }
 
     private fun declaration(): Stmt? {
         try {
             val modifiers = ModifierFlag.empty()
-            if (match(CLASS)) return classDeclaration()
+            while (MODIFIER_KEYWORDS.containsKey(peek().lexeme)) {
+                modifiers.add(MODIFIER_KEYWORDS[advance().lexeme])
+            }
+            if (match(CLASS)) return classDeclaration(modifiers)
             if (check(FUN, IDENTIFIER)) {
                 consume(FUN, "")
                 return function(flags = FunctionFlag.empty()) { name, body ->
@@ -42,7 +50,7 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    private fun classDeclaration(): Stmt {
+    private fun classDeclaration(modifiers: EnumSet<ModifierFlag>): Stmt {
         val className = consume(IDENTIFIER, "Expect class name.")
         val initParameters = if (check(LEFT_PAREN)) functionParameters(FunctionFlag.empty()) else null
 
@@ -64,7 +72,7 @@ class Parser(private val tokens: List<Token>) {
         } else null // Only Object has no superclass
 
         val methods = mutableListOf<FunctionStmt>()
-        val classStmt = ClassStmt(className, superClass, methods)
+        val classStmt = ClassStmt(modifiers, className, superClass, methods)
 
         initParameters?.run {
             methods += FunctionStmt(

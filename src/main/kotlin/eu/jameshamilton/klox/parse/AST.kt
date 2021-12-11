@@ -314,7 +314,8 @@ open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
 }
 
 enum class ModifierFlag {
-    STATIC;
+    STATIC,
+    DATA_CLASS;
 
     companion object {
         fun empty(): EnumSet<ModifierFlag> = noneOf(ModifierFlag::class.java)
@@ -358,13 +359,18 @@ class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
     }
 }
 
-class ClassStmt(override val name: Token, val superClass: VariableExpr?, val methods: List<FunctionStmt> = emptyList()) :
+class ClassStmt(
+    val modifiers: EnumSet<ModifierFlag>,
+    override val name: Token,
+    val superClass: VariableExpr?,
+    val methods: MutableList<FunctionStmt> = mutableListOf()
+) :
     Stmt,
     VarDef {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitClassStmt(this)
 
-    override fun toString(): String = "<class ${name.lexeme}>"
+    override fun toString(): String = "<class[$modifiers] ${name.lexeme}>"
 
     interface Visitor<R> {
         fun visitClassStmt(classStmt: ClassStmt): R

@@ -1,0 +1,5 @@
+data class Foo(foo, bar) {
+    toString() = "custom toString"
+}
+
+print Foo("hello", "world"); // expect: custom toString

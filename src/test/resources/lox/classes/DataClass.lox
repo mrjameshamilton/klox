@@ -1,0 +1,3 @@
+data class Foo(foo, bar)
+
+print Foo("hello", "world"); // expect: Foo(foo = hello, bar = world)

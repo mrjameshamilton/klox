@@ -178,5 +178,10 @@ class Scanner(private val source: String) {
             "is" to IS,
             "in" to IN
         )
+
+        val MODIFIER_KEYWORDS = mapOf(
+            "static" to ModifierFlag.STATIC,
+            "data" to ModifierFlag.DATA_CLASS,
+        )
     }
 }

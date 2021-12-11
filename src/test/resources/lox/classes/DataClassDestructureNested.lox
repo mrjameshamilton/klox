@@ -1,0 +1,7 @@
+data class Bar(bar)
+data class Foo(foo, bar)
+
+var (hello, world) = Foo(Bar("hello"), "world");
+
+print hello; // expect: Bar(bar = hello)
+print world; // expect: world

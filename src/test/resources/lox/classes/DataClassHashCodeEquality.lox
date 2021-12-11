@@ -1,0 +1,7 @@
+data class Foo(foo, bar)
+
+print Foo(1, 2).hashCode() == Foo(1, 2).hashCode(); // expect: true
+print Foo(2, 1).hashCode() == Foo(1, 2).hashCode(); // expect: false
+
+// TODO: strings, booleans in data classes
+//print Foo("test", "test").hashCode() == Foo("test", "test").hashCode();

@@ -1,0 +1,7 @@
+data class Foo(foo, bar)
+
+
+var foo = Foo("hello", "world");
+var bar = foo.copy();
+print bar; // expect: Foo(foo = hello, bar = world)
+print foo == bar; // expect: true

@@ -15,6 +15,8 @@ import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
 import eu.jameshamilton.klox.parse.TokenType.TILDE
 import kotlin.contracts.ExperimentalContracts
 
+// TODO: validate modifiers
+// TODO: check data classes
 class Checker : ASTVisitor<Unit> {
     private var inLoop = false
     private var currentFunction: FunctionExpr? = null
