@@ -316,6 +316,21 @@ data class Foo(x)
 print Foo(1); // Foo(x = 1)
 ```
 
+### Operator overloading
+
+The following binary operators can be overloaded by declaring a method with a particular name:
+
+| Operator | Method |
+|----------|--------|
+| `+`      | plus(other)   |
+| `-`      | minus(other)  |
+| `/`      | div(other)    |
+| `*`      | times(other)  |
+| `%`      | rem(other)    |
+| `==`     | equals(other) |
+| `..`     | rangeTo(other) |
+
+
 ### Null-safe operator
 
 The null-safe operator `?` can be used to chain property accesses without needing to
