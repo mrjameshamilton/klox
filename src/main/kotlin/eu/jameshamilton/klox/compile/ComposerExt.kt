@@ -533,9 +533,12 @@ fun Composer.loadkloxinstance(): Composer {
 /**
  * Assuming a Klox instance is on the stack, get a field from it.
  */
-fun Composer.getkloxfield(name: String, expectedType: String): Composer {
+fun Composer.getkloxfield(name: String, expectedType: String, safeAccess: Boolean = false): Composer {
     ldc(name)
-    invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
+    if (safeAccess) {
+        iconst_1()
+        invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;")
+    } else invokevirtual(KLOX_INSTANCE, "get", "(Ljava/lang/String;)Ljava/lang/Object;")
     checkcast(expectedType)
     return this
 }

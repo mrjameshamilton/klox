@@ -1,0 +1,2 @@
+class Foo
+print Foo() - 1; // expect runtime error: 'Foo' does not have an operator method 'sub'.

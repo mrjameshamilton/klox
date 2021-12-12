@@ -1,0 +1,5 @@
+data class Foo(x) {
+    minus(y) = this.x - y
+}
+
+print Foo(2) - 1; // expect: 1

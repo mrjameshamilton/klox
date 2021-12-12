@@ -1,0 +1,5 @@
+data class Foo(x) {
+    times(y) = this.x * y
+}
+
+print Foo(2) * 2; // expect: 4

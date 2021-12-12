@@ -323,11 +323,120 @@ class Compiler : Program.Visitor<ClassPool> {
             multiVarStmt.statements.forEach { it.accept(this) }
 
         override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
+            // `plus` assumes that left is already on the stack
+            fun Composer.plus() = binaryExpr.right.accept(this@FunctionCompiler).also {
+                helper("Main", "add", stackInputSize = 2, stackResultSize = 1) {
+                    val (addDoubleString, throwLabel, addNumeric, addStringify) = labels(4)
+                    aload_0()
+                    instanceof_("java/lang/Double")
+                    ifne(addDoubleString)
+                    aload_0()
+                    instanceof_("java/lang/String")
+                    ifne(addDoubleString)
+                    aload_0()
+                    instanceof_(KLOX_INSTANCE)
+                    ifeq(throwLabel)
+
+                    label(addDoubleString)
+                    aload_1()
+                    instanceof_("java/lang/Double")
+                    ifne(addNumeric)
+                    aload_1()
+                    instanceof_("java/lang/String")
+                    ifne(addNumeric)
+                    aload_1()
+                    instanceof_(KLOX_INSTANCE)
+                    ifeq(throwLabel)
+
+                    label(addNumeric)
+                    aload_0()
+                    instanceof_("java/lang/Double")
+                    ifeq(addStringify)
+                    aload_1()
+                    instanceof_("java/lang/Double")
+                    ifeq(addStringify)
+                    aload_0()
+                    unbox("java/lang/Double")
+                    aload_1()
+                    unbox("java/lang/Double")
+                    dadd()
+                    box("java/lang/Double")
+                    areturn()
+
+                    label(addStringify)
+                    concat(
+                        { aload_0().stringify() },
+                        { aload_1().stringify() }
+                    )
+                    areturn()
+
+                    label(throwLabel)
+                    kloxthrow("Operands must be two numbers or two strings.")
+                }
+            }
+
+            fun Composer.tryoverloaded(isOverloadedJumpTo: Label) = binaryExpr.left.accept(this@FunctionCompiler).also {
+                if (binaryExpr.isOverloadable && binaryExpr.left !is LiteralExpr) {
+                    val (notInstance, methodDoesNotExist) = labels(2)
+                    dup() // left
+                    // L, L
+                    instanceof_(KLOX_INSTANCE)
+                    ifeq(notInstance)
+                    checkcast(KLOX_INSTANCE)
+                    // L
+                    dup()
+                    // L, L
+                    getkloxfield(binaryExpr.overloadMethodName, KLOX_FUNCTION, safeAccess = true)
+
+                    dup()
+                    // L, OP, OP
+                    ifnull(methodDoesNotExist)
+
+                    binaryExpr.right.accept(this@FunctionCompiler)
+                    kloxinvoke(numberOfParams = 1)
+                    if (binaryExpr.operator.type == BANG_EQUAL) {
+                        boxed("java/lang/Boolean") {
+                            iconst_1()
+                            ixor()
+                        }
+                    }
+                    swap().pop() // swap and pop L
+                    goto_(isOverloadedJumpTo)
+
+                    label(methodDoesNotExist)
+                    if (binaryExpr.operator.type == PLUS) {
+                        // instances can have toString called on them with +.
+                        pop() // pop OP
+                        // L
+                        plus()
+                        // L + R
+                        goto_(isOverloadedJumpTo)
+                    } else {
+                        pop() // pop OP
+                        // L
+                        kloxthrow(binaryExpr.operator) {
+                            concat(
+                                { ldc("'") },
+                                {
+                                    swap() // the ' and the L (klox instance)
+                                    invokevirtual(KLOX_INSTANCE, "getKlass", "()L$KLOX_CLASS;")
+                                    invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
+                                },
+                                { ldc("' does not have an operator method '${binaryExpr.overloadMethodName}'.") }
+                            )
+                        }
+                    }
+                    label(notInstance)
+                }
+            }
+
             fun binaryOp(resultType: String, op: Composer.() -> Unit) = with(composer) {
+                val (end) = labels(1)
                 if (binaryExpr.left is LiteralExpr && binaryExpr.left.value is Double) {
                     ldc2_w(binaryExpr.left.value)
                 } else {
-                    binaryExpr.left.accept(this@FunctionCompiler)
+                    tryoverloaded(isOverloadedJumpTo = end)
+                    // not overloaded, left is still on the stack
                     checktype(binaryExpr.operator, "java/lang/Double", "Operands must be numbers.")
                     unbox("java/lang/Double")
                 }
@@ -341,8 +450,9 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
 
                 op(this)
-
                 box(resultType)
+
+                label(end)
             }
 
             fun bitwise(op: Composer.() -> Composer) = binaryOp("java/lang/Double") {
@@ -365,27 +475,13 @@ class Compiler : Program.Visitor<ClassPool> {
             }
 
             fun equalequal(resultComposer: (Composer.() -> Unit)? = null) = with(composer) {
-                val (notInstance, notNaN, notNaNPop, end) = labels(4)
-                binaryExpr.left.accept(this@FunctionCompiler)
+                val (notNaN, notNaNPop, result, end) = labels(4)
+                tryoverloaded(isOverloadedJumpTo = end)
+                // not overloaded, left is still on the stack
                 dup()
                 binaryExpr.right.accept(this@FunctionCompiler)
                 dup()
 
-                // A, A, B, B
-                dup() // leave the 4 on the stack for the subsequent checks
-                instanceof_(KLOX_INSTANCE)
-                ifeq(notInstance)
-                pop() // pop second A
-                checkcast(KLOX_INSTANCE)
-                getkloxfield("equals", KLOX_CALLABLE)
-                swap() // swap the equals method and the parameter B
-                kloxinvoke(1)
-                unbox("java/lang/Boolean")
-                swap() // swap and pop the second B
-                pop()
-                goto_(end)
-
-                label(notInstance)
                 // A, A, B, B
                 instanceof_("java/lang/Double")
                 ifeq(notNaNPop)
@@ -403,75 +499,33 @@ class Compiler : Program.Visitor<ClassPool> {
                 ifeq(notNaN)
                 pop2() // both NaN, so not equal
                 iconst_0()
-                goto_(end)
+                goto_(result)
 
                 label(notNaNPop) // there's an extra first param on the stack
                 // A, A, B
                 invokestatic("java/util/Objects", "equals", "(Ljava/lang/Object;Ljava/lang/Object;)Z")
                 swap()
                 pop()
-                goto_(end)
+                goto_(result)
 
                 label(notNaN)
                 invokestatic("java/util/Objects", "equals", "(Ljava/lang/Object;Ljava/lang/Object;)Z")
 
-                label(end)
+                label(result)
                 resultComposer?.let { it(composer) }
                 box("java/lang/Boolean")
+
+                label(end)
             }
 
             when (binaryExpr.operator.type) {
-                PLUS -> {
-                    binaryExpr.left.accept(this@FunctionCompiler)
-                    binaryExpr.right.accept(this@FunctionCompiler)
-                    composer.helper("Main", "add", stackInputSize = 2, stackResultSize = 1) {
-                        val (addDoubleString, throwLabel, addNumeric, addStringify) = labels(4)
-                        aload_0()
-                        instanceof_("java/lang/Double")
-                        ifne(addDoubleString)
-                        aload_0()
-                        instanceof_("java/lang/String")
-                        ifne(addDoubleString)
-                        aload_0()
-                        instanceof_(KLOX_INSTANCE)
-                        ifeq(throwLabel)
+                PLUS -> with(composer) {
+                    val (end) = labels(1)
+                    tryoverloaded(isOverloadedJumpTo = end)
+                    // not overloaded, left is still on the stack
+                    plus()
 
-                        label(addDoubleString)
-                        aload_1()
-                        instanceof_("java/lang/Double")
-                        ifne(addNumeric)
-                        aload_1()
-                        instanceof_("java/lang/String")
-                        ifne(addNumeric)
-                        aload_1()
-                        instanceof_(KLOX_INSTANCE)
-                        ifeq(throwLabel)
-
-                        label(addNumeric)
-                        aload_0()
-                        instanceof_("java/lang/Double")
-                        ifeq(addStringify)
-                        aload_1()
-                        instanceof_("java/lang/Double")
-                        ifeq(addStringify)
-                        aload_0()
-                        unbox("java/lang/Double")
-                        aload_1()
-                        unbox("java/lang/Double")
-                        dadd()
-                        box("java/lang/Double")
-                        areturn()
-
-                        label(addStringify)
-                        concat(
-                            { aload_0().stringify() },
-                            { aload_1().stringify() }
-                        )
-                        areturn()
-
-                        label(throwLabel)
-                        kloxthrow("Operands must be two numbers or two strings.")
-                    }
+                    label(end)
                 }
                 MINUS -> binaryOp("java/lang/Double") { dsub() }
                 SLASH -> binaryOp("java/lang/Double") { ddiv() }
@@ -537,6 +591,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 GREATER_GREATER -> bitwise { ishr() }
                 GREATER_GREATER_GREATER -> bitwise { iushr() }
                 DOT_DOT -> with(composer) {
+                    // TODO move this to maybeoverloaded helper
                     when {
                         binaryExpr.left is LiteralExpr && binaryExpr.left.value is Double &&
                             binaryExpr.right is LiteralExpr && binaryExpr.right.value is Double -> {
@@ -1377,6 +1432,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 .addInterface(KLOX_CALLABLE)
                 .addMethod(PUBLIC or ABSTRACT, "getSuperClass", "()L$KLOX_CLASS;")
                 .addMethod(PUBLIC or ABSTRACT, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
+                .addMethod(PUBLIC or ABSTRACT, "getName", "()Ljava/lang/String;")
                 .programClass
         )
 

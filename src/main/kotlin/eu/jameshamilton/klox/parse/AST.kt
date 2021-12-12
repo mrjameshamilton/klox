@@ -1,5 +1,6 @@
 package eu.jameshamilton.klox.parse
 
+import eu.jameshamilton.klox.interpret.RuntimeError
 import eu.jameshamilton.klox.parse.TokenType.*
 import java.util.EnumSet
 import java.util.EnumSet.*
@@ -50,6 +51,27 @@ class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
     interface Visitor<R> {
         fun visitBinaryExpr(binaryExpr: BinaryExpr): R
     }
+
+    val isOverloadable: Boolean
+        get() = operator.type == PLUS ||
+            operator.type == MINUS ||
+            operator.type == STAR ||
+            operator.type == SLASH ||
+            operator.type == PERCENT ||
+            operator.type == EQUAL_EQUAL ||
+            operator.type == BANG_EQUAL
+
+    val overloadMethodName: String
+        get() = when (operator.type) {
+            EQUAL_EQUAL -> "equals"
+            BANG_EQUAL -> "equals"
+            PLUS -> "plus"
+            MINUS -> "minus"
+            STAR -> "times"
+            SLASH -> "div"
+            PERCENT -> "rem"
+            else -> throw RuntimeError(operator, "Operator '${operator.lexeme}' overloading not supported.")
+        }
 }
 
 class UnaryExpr(val operator: Token, val right: Expr, val postfix: Boolean = false) : Expr {

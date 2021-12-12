@@ -1,0 +1,5 @@
+data class Foo(x) {
+    div(y) = this.x / y
+}
+
+print Foo(2) / 2; // expect: 1

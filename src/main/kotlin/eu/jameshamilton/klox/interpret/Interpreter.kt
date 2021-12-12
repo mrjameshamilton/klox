@@ -94,6 +94,31 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         val left = evaluate(binaryExpr.left)
         val right = evaluate(binaryExpr.right)
 
+        fun plus(): Any {
+            if ((left !is Double && left !is String && left !is LoxInstance) ||
+                (right !is Double && right !is String && right !is LoxInstance)
+            ) {
+                throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
+            }
+
+            return if (left is Double && right is Double) left + right
+            else return "${stringify(this, left)}${stringify(this, right)}"
+        }
+
+        if (left is LoxInstance && binaryExpr.isOverloadable) with(left.get(Token(IDENTIFIER, binaryExpr.overloadMethodName), safeAccess = true)) {
+            return when {
+                this is LoxFunction -> when (binaryExpr.operator.type) {
+                    BANG_EQUAL -> !(this.call(this@Interpreter, listOf(right)) as Boolean)
+                    else -> this.call(this@Interpreter, listOf(right))
+                }
+                binaryExpr.operator.type == PLUS -> plus()
+                else -> throw RuntimeError(
+                    binaryExpr.operator,
+                    "'${left.klass.name}' does not have an operator method '${binaryExpr.overloadMethodName}'."
+                )
+            }
+        }
+
         when (binaryExpr.operator.type) {
             MINUS, SLASH, STAR, STAR_STAR, GREATER, GREATER_GREATER, LESS_LESS, GREATER_GREATER_GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PIPE, AMPERSAND, CARET ->
                 checkNumberOperands(binaryExpr.operator, left, right)
@@ -121,16 +146,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             LESS_EQUAL -> (left as Double) <= (right as Double)
             BANG_EQUAL -> !isEqual(left, right)
             EQUAL_EQUAL -> isEqual(left, right)
-            PLUS -> {
-                if ((left !is Double && left !is String && left !is LoxInstance) ||
-                    (right !is Double && right !is String && right !is LoxInstance)
-                ) {
-                    throw RuntimeError(binaryExpr.operator, "Operands must be two numbers or two strings.")
-                }
-
-                return if (left is Double && right is Double) left + right
-                else return "${stringify(this, left)}${stringify(this, right)}"
-            }
+            PLUS -> plus()
             IS -> return when {
                 left !is LoxInstance -> false
                 right !is LoxClass -> false
@@ -334,7 +350,6 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     private fun isEqual(a: Any?, b: Any?): Boolean =
         if (a == null && b == null) true
         else when {
-            a is LoxInstance -> (a.get(Token(IDENTIFIER, "equals")) as LoxFunction).call(this, listOf(b)) as Boolean
             a is Double && b is Double && a.isNaN() && b.isNaN() -> false
             else -> a?.equals(b) ?: false
         }
