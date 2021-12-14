@@ -1,5 +1,5 @@
 class Foo {
-    class bar() {
+    static bar() {
         this.foo = 1;
     }
 }

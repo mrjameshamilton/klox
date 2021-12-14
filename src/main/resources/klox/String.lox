@@ -1,18 +1,18 @@
 class String {
 
-    class length(str) {
+    static length(str) {
         System.fail(Error("Native implementation for 'length' not provided."));
     }
 
-    class substr(str, start, end) {
+    static substr(str, start, end) {
         System.fail(Error("Native implementation for 'substr' not provided."));
     }
 
-    class charAt(str, index) {
+    static charAt(str, index) {
         return String.substr(str, index, index + 1);
     }
 
-    class indexOf(str, search, start) {
+    static indexOf(str, search, start) {
         if (start == nil) start = 0;
 
         var result = -1;
@@ -30,7 +30,7 @@ class String {
         return result;
     }
 
-    class split(str, separator) {
+    static split(str, separator) {
         var result = ArrayList();
         var length = String.length(str);
         var separatorLength = String.length(separator);
@@ -50,15 +50,15 @@ class String {
         return result;
     }
 
-    class charCodeAt(str, index) {
+    static charCodeAt(str, index) {
         return Character.toCharCode(String.charAt(str, index)!?);
     }
 
-    class toNumber(str) {
+    static toNumber(str) {
         System.fail(Error("Native implementation for 'toNumber' not provided."));
     }
 
-    class toByteArray(str) {
+    static toByteArray(str) {
         var length = String.length(str);
         var result = Array(length);
         for (var i = 0; i < length; i++) {
@@ -67,7 +67,7 @@ class String {
         return result;
     }
 
-    class fromByteArray(array) {
+    static fromByteArray(array) {
         var length = array.length();
         var result = "";
         for (var i = 0; i < length; i++) {

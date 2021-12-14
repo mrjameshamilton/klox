@@ -1,6 +1,6 @@
 class Bar(foo)
 class Foo < Bar(1) {
-    class bar() {
+    static bar() {
         print super.foo;
     }
 }

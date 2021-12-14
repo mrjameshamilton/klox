@@ -1,0 +1,7 @@
+class Foo {
+    static static bar() {
+        this.foo = 1;
+    }
+}
+
+print Foo.bar(); // expect error: Modifier already used.

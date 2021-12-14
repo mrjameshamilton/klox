@@ -412,7 +412,7 @@ print circle.area; // approx 50.266
 ### static class methods
 ```c
 class Math {
-    class square(n) {
+    static square(n) {
         return n * n;
     }
 }
@@ -422,7 +422,7 @@ print Math.square(3); // prints 9
 ### static class property getters
 ```c
 class Math {
-    class PI {
+    static PI {
         return 3.14159265358979323846;
     }
 }

@@ -1,5 +1,5 @@
 class Number {
-    class parseBinaryString(s) {
+    static parseBinaryString(s) {
         var length = String.length(s);
         var n = 0;
         for (var i = length - 1; i >= 0; i--) {
@@ -13,7 +13,7 @@ class Number {
         return Ok(n);
     }
 
-    class toBinaryString(n) {
+    static toBinaryString(n) {
         var s = "";
         while (n > 0) {
             var x = n % 2;
@@ -23,5 +23,5 @@ class Number {
         return s;
     }
 
-    class rangeTo(from, to) = NumberRange(from, to)
+    static rangeTo(from, to) = NumberRange(from, to)
 }

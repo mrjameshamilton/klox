@@ -2,14 +2,14 @@
 // is resolved correctly.
 
 class Foo {
-    class foo() {
+    static foo() {
         print Bar; // expect: Bar
         print Bar; // expect: Bar
     }
 }
 
 class Bar {
-    class test() {
+    static test() {
         print "test";
     }
 }

@@ -21,12 +21,20 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
+    private fun modifiers(): EnumSet<ModifierFlag> {
+        val modifiers = ModifierFlag.empty()
+        while (MODIFIER_KEYWORDS.containsKey(peek().lexeme) && !isAtEnd()) {
+            if (modifiers.contains(MODIFIER_KEYWORDS[peek().lexeme]))
+                error(peek(), "Modifier already used.")
+
+            modifiers.add(MODIFIER_KEYWORDS[advance().lexeme])
+        }
+        return modifiers
+    }
+
     private fun declaration(): Stmt? {
         try {
-            val modifiers = ModifierFlag.empty()
-            while (MODIFIER_KEYWORDS.containsKey(peek().lexeme)) {
-                modifiers.add(MODIFIER_KEYWORDS[advance().lexeme])
-            }
+            val modifiers = modifiers()
             if (match(CLASS)) return classDeclaration(modifiers)
             if (check(FUN, IDENTIFIER)) {
                 consume(FUN, "")
@@ -97,10 +105,9 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(LEFT_BRACE)) {
             while (!check(RIGHT_BRACE) && !isAtEnd()) {
-                val modifierFlags = ModifierFlag.empty()
+                val modifierFlags = modifiers()
                 val functionFlags = FunctionFlag.empty()
                 functionFlags.add(METHOD)
-                if (match(CLASS)) modifierFlags.add(ModifierFlag.STATIC)
                 methods.add(
                     function(functionFlags) { name, body ->
                         if (name.lexeme == "init") {

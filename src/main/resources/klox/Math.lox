@@ -1,33 +1,33 @@
 class Math {
-    class PI {
+    static PI {
         return 3.14159265358979323846;
     }
 
-    class sqrt(x) {
+    static sqrt(x) {
         System.fail(Error("Native implementation for 'sqrt' not provided."));
     }
 
-    class ceil(x) {
+    static ceil(x) {
         System.fail(Error("Native implementation for 'ceil' not provided."));
     }
 
-    class floor(x) {
+    static floor(x) {
         System.fail(Error("Native implementation for 'floor' not provided."));
     }
 
-    class round(x) {
+    static round(x) {
         System.fail(Error("Native implementation for 'round' not provided."));
     }
 
-    class min(x, y) {
+    static min(x, y) {
         if (x >= y) return y; else return x;
     }
 
-    class max(x, y) {
+    static max(x, y) {
         if (x >= y) return x; else return y;
     }
 
-    class abs(x) {
+    static abs(x) {
         if (x < 0) return -x; else return x;
     }
 }

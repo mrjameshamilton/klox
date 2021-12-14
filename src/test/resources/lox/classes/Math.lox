@@ -1,5 +1,5 @@
 class Math {
-    class square(n) {
+    static square(n) {
         return n * n;
     }
     sum(a, b) {

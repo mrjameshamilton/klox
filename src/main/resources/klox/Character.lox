@@ -1,11 +1,11 @@
 class Character {
-    class toCharCode(char) {
+    static toCharCode(char) {
         System.fail(Error("Native implementation for 'toCharCode' not provided."));
     }
 
-    class fromCharCode(n) {
+    static fromCharCode(n) {
         System.fail(Error("Native implementation for 'fromCharCode' not provided."));
     }
 
-    class rangeTo(start, end) = CharacterRange(start, end)
+    static rangeTo(start, end) = CharacterRange(start, end)
 }

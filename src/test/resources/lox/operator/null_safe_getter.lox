@@ -8,7 +8,7 @@ var foo = Foo();
 print foo?.getter?.test; // expect: nil
 
 class Bar {
-    class foo {
+    static foo {
 
     }
 }
