@@ -24,8 +24,9 @@ class Parser(private val tokens: List<Token>) {
     private fun modifiers(): EnumSet<ModifierFlag> {
         val modifiers = ModifierFlag.empty()
         while (MODIFIER_KEYWORDS.containsKey(peek().lexeme) && !isAtEnd()) {
-            if (modifiers.contains(MODIFIER_KEYWORDS[peek().lexeme]))
+            if (modifiers.contains(MODIFIER_KEYWORDS[peek().lexeme])) {
                 error(peek(), "Modifier already used.")
+            }
 
             modifiers.add(MODIFIER_KEYWORDS[advance().lexeme])
         }
