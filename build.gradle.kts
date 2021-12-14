@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.0"
+    kotlin("jvm") version "1.6.10"
     id("org.jlleitschuh.gradle.ktlint") version "10.1.0"
     application
     jacoco
@@ -20,12 +20,12 @@ dependencies {
     implementation("org.apache.commons:commons-text:1.9")
     compileOnly("org.jetbrains:annotations:22.0.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.5.21")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.6.3")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.3")
-    testImplementation("io.kotest:kotest-property-jvm:4.6.3")
-    testImplementation("io.kotest:kotest-framework-datatest:4.6.3")
-    testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.10")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.2")
+    testImplementation("io.kotest:kotest-property-jvm:5.0.2")
+    testImplementation("io.kotest:kotest-framework-datatest:5.0.2")
+    testImplementation("io.mockk:mockk:1.12.1")
 }
 
 tasks.test {
