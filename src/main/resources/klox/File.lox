@@ -7,9 +7,7 @@ class File {
         return this.path;
     }
 
-    delete() {
-        System.fail(Error("Native implementation for 'delete' not provided"));
-    }
+    native delete();
 
     readText() {
         var inputStream = BufferedInputStream(FileInputStream(this));

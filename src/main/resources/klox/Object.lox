@@ -1,8 +1,6 @@
 class Object {
 
-    hashCode() {
-        System.fail(Error("Native implementation for 'hashCode' not provided."));
-    }
+    native hashCode();
 
     equals(other) {
         if (other == nil) return false;

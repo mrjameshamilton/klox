@@ -3,6 +3,7 @@ package eu.jameshamilton.klox.interpret
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
+import eu.jameshamilton.klox.parse.ModifierFlag.NATIVE
 import eu.jameshamilton.klox.parse.Token
 import java.util.EnumSet
 
@@ -21,10 +22,8 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val modifiers: EnumSet<
             environment.define(declaration.params[i].name.lexeme, arguments[i])
         }
 
-        val native = findNative(interpreter, classStmt?.name?.lexeme, name)
-
-        if (native != null) {
-            return native(environment, arguments)
+        if (modifiers.contains(NATIVE)) {
+            return findNative(interpreter, classStmt?.name?.lexeme, name)(environment, arguments)
         } else {
             try {
                 interpreter.executeBlock(declaration.body, environment)

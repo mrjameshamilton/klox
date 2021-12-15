@@ -36,6 +36,7 @@ import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.ModifierFlag.GETTER
 import eu.jameshamilton.klox.parse.ModifierFlag.INITIALIZER
+import eu.jameshamilton.klox.parse.ModifierFlag.NATIVE
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
@@ -200,7 +201,7 @@ class Compiler : Program.Visitor<ClassPool> {
             this.function = function
 
             var native: (Composer.() -> Unit)? = null
-            if (name != null) native = findNative(this@Compiler, className, name, function)?.also {
+            if (modifiers.contains(NATIVE)) native = findNative(this@Compiler, className, name!!, function).also {
                 // TODO for now, assume all native functions need to capture these
                 function.capture(okClass)
                 function.capture(errorClass)

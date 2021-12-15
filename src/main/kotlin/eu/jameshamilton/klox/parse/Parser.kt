@@ -42,7 +42,7 @@ class Parser(private val tokens: List<Token>) {
                 return FunctionStmt(
                     consume(IDENTIFIER, "Expect function name."),
                     modifiers,
-                    functionBody(functionParameters())
+                    functionBody(modifiers, functionParameters())
                 )
             }
             if (match(VAR)) {
@@ -120,7 +120,7 @@ class Parser(private val tokens: List<Token>) {
                     FunctionStmt(
                         name,
                         methodModifiers,
-                        functionBody(parameters),
+                        functionBody(methodModifiers, parameters),
                         classStmt
                     )
                 )
@@ -146,15 +146,16 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    private fun functionBody(parameters: List<Parameter>): FunctionExpr = FunctionExpr(
+    private fun functionBody(modifiers: EnumSet<ModifierFlag>, parameters: List<Parameter>): FunctionExpr = FunctionExpr(
         parameters,
-        body = if (match(EQUAL)) {
-            val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
-            optional(SEMICOLON)
-            singleExprBody
-        } else {
-            consume(LEFT_BRACE, "Expect '{' before function body.")
-            block()
+        body = when {
+            match(EQUAL) -> listOf(ReturnStmt(Token(RETURN, "return"), expression())).also { optional(SEMICOLON) }
+            modifiers.contains(NATIVE) -> consume(SEMICOLON, "Expect ';' after native declaration.").run {
+                emptyList()
+            }
+            else -> consume(LEFT_BRACE, "Expect '{' before function body.").run {
+                block()
+            }
         }
     )
 
@@ -709,7 +710,7 @@ class Parser(private val tokens: List<Token>) {
         match(IDENTIFIER) -> VariableExpr(previous())
         match(FUN) -> {
             if (check(IDENTIFIER)) throw error(peek(), "Named function not allowed here.")
-            functionBody(functionParameters())
+            functionBody(ModifierFlag.empty(), functionParameters())
         }
         match(LEFT_PAREN) -> {
             val expr = expression()

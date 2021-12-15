@@ -181,6 +181,7 @@ class Scanner(private val source: String) {
 
         val MODIFIER_KEYWORDS = mapOf(
             "static" to ModifierFlag.STATIC,
+            "native" to ModifierFlag.NATIVE,
             "data" to ModifierFlag.DATA_CLASS,
         )
     }

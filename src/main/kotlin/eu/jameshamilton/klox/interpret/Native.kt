@@ -25,7 +25,7 @@ fun isKloxInteger(index: Any?): Boolean {
 }
 
 @OptIn(ExperimentalContracts::class)
-fun findNative(interpreter: Interpreter, className: String?, name: String): ((Environment, List<Any?>) -> Any?)? {
+fun findNative(interpreter: Interpreter, className: String?, name: String): ((Environment, List<Any?>) -> Any?) {
     fun kloxError(message: String) = interpreter.errorClass.call(interpreter, listOf(message))
     fun kloxOk(value: Any?) = interpreter.okClass.call(interpreter, listOf(value))
 
@@ -331,5 +331,5 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
         }
     }
 
-    return null
+    throw RuntimeError(Token(IDENTIFIER, name), "Native implementation for '$name' not provided.")
 }

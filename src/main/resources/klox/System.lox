@@ -3,17 +3,11 @@ class System {
     /**
     * Returns the command-line argument for the given index.
     */
-    static arg(index) {
-        System.fail(Error("Native implementation for 'arg' not provided."));
-    }
+    native static arg(index);
 
-    static clock() {
-        System.fail(Error("Native implementation for 'clock' not provided."));
-    }
+    native static clock();
 
-    static exit(code) {
-        return Error("Native implementation for 'exit' not provided.");
-    }
+    native static exit(code);
 
     static fail(error) {
         var code = -1;
@@ -22,9 +16,7 @@ class System {
         System.exit(code);
     }
 
-    static arraycopy(src, srcPos, dest, destPos, length) {
-        System.fail(Error("Native implementation for 'arraycopy' not provided."));
-    }
+    native static arraycopy(src, srcPos, dest, destPos, length);
 }
 
 // Alias clock function for compatibility with lox.

@@ -1,12 +1,8 @@
 class String {
 
-    static length(str) {
-        System.fail(Error("Native implementation for 'length' not provided."));
-    }
+    native static length(str);
 
-    static substr(str, start, end) {
-        System.fail(Error("Native implementation for 'substr' not provided."));
-    }
+    native static substr(str, start, end);
 
     static charAt(str, index) {
         return String.substr(str, index, index + 1);
@@ -54,9 +50,7 @@ class String {
         return Character.toCharCode(String.charAt(str, index)!?);
     }
 
-    static toNumber(str) {
-        System.fail(Error("Native implementation for 'toNumber' not provided."));
-    }
+    native static toNumber(str);
 
     static toByteArray(str) {
         var length = String.length(str);

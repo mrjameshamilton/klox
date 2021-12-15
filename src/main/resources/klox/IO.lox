@@ -25,21 +25,13 @@ class FileInputStream < InputStream {
         this.file = file;
     }
 
-    readByte() {
-        System.fail(Error("Native implementation for 'readByte' not provided"));
-    }
+    native readByte();
 
-    readBytes(array, offset, length) {
-        System.fail(Error("Native implementation for 'readBytes' not provided"));
-    }
+    native readBytes(array, offset, length);
 
-    readChar() {
-        System.fail(Error("Native implementation for 'readChar' not provided"));
-    }
+    native readChar();
 
-    close() {
-        System.fail(Error("Native implementation for 'close' not provided"));
-    }
+    native close();
 }
 
 class OutputStream {
@@ -72,21 +64,13 @@ class FileOutputStream < OutputStream {
         this.file = file;
     }
 
-    writeChar(c) {
-        System.fail(Error("Native implementation for 'writeChar' not provided"));
-    }
+    native writeChar(c);
 
-    writeByte(i) {
-        System.fail(Error("Native implementation for 'writeInt' not provided"));
-    }
+    native writeByte(i);
 
-    writeBytes(array, offset, length) {
-        System.fail(Error("Native implementation for 'writeBytes' not provided"));
-    }
+    native writeBytes(array, offset, length);
 
-    close() {
-        System.fail(Error("Native implementation for 'close' not provided"));
-    }
+    native close();
 }
 
 class BufferedOutputStream < OutputStream {

@@ -1,7 +1,10 @@
 package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
+import eu.jameshamilton.klox.interpret.RuntimeError
 import eu.jameshamilton.klox.parse.FunctionExpr
+import eu.jameshamilton.klox.parse.Token
+import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import proguard.classfile.AccessConstants.PRIVATE
 import proguard.classfile.ProgramClass
 import proguard.classfile.ProgramMethod
@@ -9,7 +12,7 @@ import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.instruction.InstructionUtil.arrayTypeFromInternalType
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun findNative(compiler: Compiler, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit)? {
+fun findNative(compiler: Compiler, className: String?, functionName: String, func: FunctionExpr): (Composer.() -> Unit) {
     // if (debug == true) println("findName($className, $functionName)")
 
     fun Composer.kloxOk(): Composer {
@@ -629,5 +632,6 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
             }
         }
     }
-    return null
+
+    throw RuntimeError(Token(IDENTIFIER, functionName), "Native implementation for '$functionName' not provided.")
 }

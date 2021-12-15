@@ -3,21 +3,13 @@ class Math {
         return 3.14159265358979323846;
     }
 
-    static sqrt(x) {
-        System.fail(Error("Native implementation for 'sqrt' not provided."));
-    }
+    native static sqrt(x);
 
-    static ceil(x) {
-        System.fail(Error("Native implementation for 'ceil' not provided."));
-    }
+    native static ceil(x);
 
-    static floor(x) {
-        System.fail(Error("Native implementation for 'floor' not provided."));
-    }
+    native static floor(x);
 
-    static round(x) {
-        System.fail(Error("Native implementation for 'round' not provided."));
-    }
+    native static round(x);
 
     static min(x, y) {
         if (x >= y) return y; else return x;

@@ -1,19 +1,8 @@
 class Array {
-    init(size) {
-        System.fail(Error("Native implementation for 'Array' not provided."));
-    }
-
-    get(i) {
-        System.fail(Error("Native implementation for 'get' not provided."));
-    }
-
-    set(i, value) {
-        System.fail(Error("Native implementation for 'set' not provided."));
-    }
-
-    length() {
-        System.fail(Error("Native implementation for 'length' not provided."));
-    }
+    native init(size);
+    native get(i);
+    native set(i, value);
+    native length();
 
     fill(value) {
         for (var i = 0; i < this.length(); i++) {
