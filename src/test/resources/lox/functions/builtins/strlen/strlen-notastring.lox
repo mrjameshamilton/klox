@@ -1,1 +1,1 @@
-print strlen(1); // expect: 1
+print String.length(1); // expect: 1

@@ -70,7 +70,3 @@ class String {
         return result;
     }
 }
-
-// Aliases for common top-level string functions.
-var strlen = String.length;
-var substr = String.substr;

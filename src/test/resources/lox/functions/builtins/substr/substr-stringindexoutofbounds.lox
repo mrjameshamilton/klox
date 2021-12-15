@@ -1,2 +1,2 @@
 var str = "foo";
-print substr(str, 0, 4); // expect: String index out of bounds for 'foo': begin 0, end 4.
+print String.substr(str, 0, 4); // expect: String index out of bounds for 'foo': begin 0, end 4.
