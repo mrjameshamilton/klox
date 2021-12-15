@@ -2,10 +2,10 @@ class String {
 
     native static length(str);
 
-    native static substr(str, start, end);
+    native static substring(str, start, end);
 
     static charAt(str, index) {
-        return String.substr(str, index, index + 1);
+        return String.substring(str, index, index + 1);
     }
 
     static indexOf(str, search, start) {
@@ -18,7 +18,7 @@ class String {
         for (var i = start; i < length; i++) {
             var end = i + searchLength;
             if (end > length) end = length;
-            if (String.substr(str, i, end).orElse(-1) == search) {
+            if (String.substring(str, i, end).orElse(-1) == search) {
                 result = i;
                 break;
             }
@@ -35,13 +35,13 @@ class String {
 
         while (pos >= start) {
             if (pos > start) {
-                result.add(String.substr(str, start, pos).orElse(""));
+                result.add(String.substring(str, start, pos).orElse(""));
             }
             start = pos + separatorLength;
             pos = String.indexOf(str, separator, start);
         }
 
-        if (start < length) result.add(String.substr(str, start, length).orElse(""));
+        if (start < length) result.add(String.substring(str, start, length).orElse(""));
 
         return result;
     }

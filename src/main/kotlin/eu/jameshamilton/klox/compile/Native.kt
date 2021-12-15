@@ -534,7 +534,7 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 box("java/lang/Double")
                 areturn()
             }
-            "substr" -> return {
+            "substring" -> return {
                 aload_1()
                 stringify()
                 checkcast("java/lang/String")

@@ -1,2 +1,2 @@
 var str = "foo";
-print String.substr(str, "0", 1);   // expect: substr 'start' parameter should be an integer.
+print String.substring(str, "0", 1);   // expect: substr 'start' parameter should be an integer.

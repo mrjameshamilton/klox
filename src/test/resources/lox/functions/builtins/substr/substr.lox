@@ -1,9 +1,9 @@
 var str = "foo";
-print String.substr(str, 0, 1);           // expect: f
-print String.substr(str, 0, String.length(str)); // expect: foo
-print String.substr(str, 1, 2);           // expect: o
+print String.substring(str, 0, 1);           // expect: f
+print String.substring(str, 0, String.length(str)); // expect: foo
+print String.substring(str, 1, 2);           // expect: o
 
-var result = String.substr("test", 1, 10);
+var result = String.substring("test", 1, 10);
 
 if (result is Error) {
     print "Problem: " + result; // expect: Problem: String index out of bounds for 'test': begin 1, end 10.

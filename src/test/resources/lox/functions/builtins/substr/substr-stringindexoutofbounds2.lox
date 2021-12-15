@@ -1,2 +1,2 @@
 var str = "foo";
-print String.substr(str, -1, 1); // expect: String index out of bounds for 'foo': begin -1, end 1.
+print String.substring(str, -1, 1); // expect: String index out of bounds for 'foo': begin -1, end 1.

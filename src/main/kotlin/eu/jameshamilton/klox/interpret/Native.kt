@@ -297,7 +297,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
         }
         "String" -> when (name) {
             "length" -> return fun (_, args): Double { return stringify(interpreter, args.first()).length.toDouble() }
-            "substr" -> return fun (_, args): Any {
+            "substring" -> return fun (_, args): Any {
                 val (str, start, end) = args
 
                 if (!isKloxInteger(start)) return kloxError("substr 'start' parameter should be an integer.")
