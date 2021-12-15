@@ -2,7 +2,6 @@ package eu.jameshamilton.klox.interpret
 
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
-import eu.jameshamilton.klox.parse.FunctionFlag.INITIALIZER
 import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.Token
 import java.util.EnumSet
@@ -30,7 +29,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val modifiers: EnumSet<
             try {
                 interpreter.executeBlock(declaration.body, environment)
             } catch (e: Interpreter.Return) {
-                return if (declaration.flags.contains(INITIALIZER)) closure.getAt(0, "this"); else e.value
+                return if (modifiers.contains(ModifierFlag.INITIALIZER)) closure.getAt(0, "this"); else e.value
             }
         }
 

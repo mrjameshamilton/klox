@@ -27,8 +27,6 @@ import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
-import eu.jameshamilton.klox.parse.FunctionFlag.*
-import eu.jameshamilton.klox.parse.FunctionFlag.Companion.empty
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -36,6 +34,8 @@ import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
+import eu.jameshamilton.klox.parse.ModifierFlag.GETTER
+import eu.jameshamilton.klox.parse.ModifierFlag.INITIALIZER
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.Program
@@ -95,7 +95,7 @@ class Compiler : Program.Visitor<ClassPool> {
         mainFunction = FunctionStmt(
             Token(FUN, "Main"),
             modifiers = ModifierFlag.empty(),
-            FunctionExpr(flags = empty(), params = emptyList(), body = program.stmts)
+            FunctionExpr(params = emptyList(), body = program.stmts)
         )
 
         Resolver().execute(mainFunction)
@@ -192,13 +192,15 @@ class Compiler : Program.Visitor<ClassPool> {
 
     private inner class FunctionCompiler(private val enclosingCompiler: FunctionCompiler? = null) : Stmt.Visitor<Unit>, Expr.Visitor<Unit> {
         private lateinit var composer: Composer
+        private lateinit var modifiers: EnumSet<ModifierFlag>
         private lateinit var function: FunctionExpr
 
-        fun compile(className: String?, modifiers: EnumSet<ModifierFlag>, name: String, function: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
+        fun compile(className: String?, modifiers: EnumSet<ModifierFlag>, name: String?, function: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
+            this.modifiers = modifiers
             this.function = function
 
-            val native = findNative(this@Compiler, className, name, function)
-            if (native != null) {
+            var native: (Composer.() -> Unit)? = null
+            if (name != null) native = findNative(this@Compiler, className, name, function)?.also {
                 // TODO for now, assume all native functions need to capture these
                 function.capture(okClass)
                 function.capture(errorClass)
@@ -229,7 +231,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         it.accept(this@FunctionCompiler)
                     }
 
-                    if (function.flags.contains(INITIALIZER)) {
+                    if (modifiers.contains(INITIALIZER)) {
                         aload_0()
                         invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
                         areturn()
@@ -839,9 +841,9 @@ class Compiler : Program.Visitor<ClassPool> {
                 if (functionStmt.classStmt == null) declare(this@FunctionCompiler.function, functionStmt)
             }
 
-        override fun visitFunctionExpr(functionExpr: FunctionExpr) = visitFunction(null, ModifierFlag.empty(), "Anonymous", functionExpr)
+        override fun visitFunctionExpr(functionExpr: FunctionExpr) = visitFunction(null, ModifierFlag.empty(), null, functionExpr)
 
-        private fun visitFunction(className: String?, modifiers: EnumSet<ModifierFlag>, name: String, function: FunctionExpr, initializer: (Composer.() -> Unit)? = null): Unit = with(composer) {
+        private fun visitFunction(className: String?, modifiers: EnumSet<ModifierFlag>, name: String?, function: FunctionExpr, initializer: (Composer.() -> Unit)? = null): Unit = with(composer) {
             val (clazz, _) = FunctionCompiler(enclosingCompiler = this@FunctionCompiler)
                 .compile(className, modifiers, name, function)
 
@@ -874,7 +876,7 @@ class Compiler : Program.Visitor<ClassPool> {
         override fun visitReturnStmt(returnStmt: ReturnStmt): Unit = with(composer) {
             when {
                 returnStmt.value != null -> returnStmt.value.accept(this@FunctionCompiler)
-                function.flags.contains(INITIALIZER) -> aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
+                modifiers.contains(INITIALIZER) -> aload_0().invokeinterface(KLOX_FUNCTION, "getReceiver", "()L$KLOX_INSTANCE;")
                 else -> aconst_null()
             }
 
@@ -1233,10 +1235,11 @@ class Compiler : Program.Visitor<ClassPool> {
             return clazz
         }
 
-        private fun create(modifiers: EnumSet<ModifierFlag>, name: String, functionExpr: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
+        private fun create(modifiers: EnumSet<ModifierFlag>, name: String?, functionExpr: FunctionExpr): Pair<ProgramClass, ProgramMethod> {
             if (debug == true) {
-                println("Compiling function $name (${functionExpr.javaClassName})")
+                println("Compiling function ${functionExpr.javaClassName}")
             }
+            val isAnonymous = name == null
             val clazz = ClassBuilder(
                 CLASS_VERSION_1_8,
                 PUBLIC,
@@ -1270,15 +1273,15 @@ class Compiler : Program.Visitor<ClassPool> {
                     return_()
                 }
                 .addMethod(PUBLIC, "getName", "()Ljava/lang/String;") {
-                    ldc(name)
+                    ldc(name ?: functionExpr.javaClassName)
                     areturn()
                 }
                 .addMethod(PUBLIC, "arity", "()I") {
-                    if (functionExpr.flags.contains(GETTER)) iconst_m1() else iconst(functionExpr.params.size)
+                    if (modifiers.contains(GETTER)) iconst_m1() else iconst(functionExpr.params.size)
                     ireturn()
                 }
                 .addMethod(PUBLIC, "bind", "(L$KLOX_INSTANCE;)L$KLOX_FUNCTION;") {
-                    if (!functionExpr.flags.contains(ANONYMOUS) && !modifiers.contains(ModifierFlag.STATIC)) {
+                    if (!isAnonymous && !modifiers.contains(ModifierFlag.STATIC)) {
                         aload_0()
                         invokevirtual(targetClass.name, "clone", "()Ljava/lang/Object;")
                         checkcast(targetClass.name)
@@ -1287,7 +1290,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         putfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        kloxthrow("$name cannot be bound.")
+                        kloxthrow("${name ?: functionExpr.javaClassName} cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC, "isStatic", "()Z") {
@@ -1310,17 +1313,17 @@ class Compiler : Program.Visitor<ClassPool> {
                     return_()
                 }
                 .addMethod(PUBLIC, "getReceiver", "()L$KLOX_INSTANCE;") {
-                    if (!functionExpr.flags.contains(ANONYMOUS) && !modifiers.contains(ModifierFlag.STATIC)) {
+                    if (!isAnonymous && !modifiers.contains(ModifierFlag.STATIC)) {
                         aload_0()
                         getfield(targetClass.name, "this", "L$KLOX_INSTANCE;")
                         areturn()
                     } else {
-                        kloxthrow("$name cannot be bound.")
+                        kloxthrow("${name ?: functionExpr.javaClassName} cannot be bound.")
                     }
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
-                    ldc("<fn $name>")
+                    ldc("<fn ${name ?: functionExpr.javaClassName}>")
                     areturn()
                 }
                 .apply {
@@ -1332,7 +1335,7 @@ class Compiler : Program.Visitor<ClassPool> {
                             "(Ljava/lang/invoke/MethodHandles\$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
                         )
                     }
-                    if (!functionExpr.flags.contains(ANONYMOUS) && !modifiers.contains(ModifierFlag.STATIC)) {
+                    if (!isAnonymous && !modifiers.contains(ModifierFlag.STATIC)) {
                         addInterface("java/lang/Cloneable")
                         addField(PRIVATE, "this", "L$KLOX_INSTANCE;")
                         addMethod(PUBLIC, "clone", "()Ljava/lang/Object;") {

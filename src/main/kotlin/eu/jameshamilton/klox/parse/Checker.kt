@@ -5,7 +5,7 @@ import eu.jameshamilton.klox.interpret.isKloxInteger
 import eu.jameshamilton.klox.parse.Checker.ClassType.CLASS
 import eu.jameshamilton.klox.parse.Checker.ClassType.NONE
 import eu.jameshamilton.klox.parse.Checker.ClassType.SUBCLASS
-import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.ModifierFlag.INITIALIZER
 import eu.jameshamilton.klox.parse.ModifierFlag.STATIC
 import eu.jameshamilton.klox.parse.TokenType.BANG_QUESTION
 import eu.jameshamilton.klox.parse.TokenType.BREAK
@@ -91,7 +91,7 @@ class Checker : ASTVisitor<Unit> {
             )
             BANG_QUESTION -> if (currentFunction == null) {
                 error(unaryExpr.operator, "Can't use !? in top-level code.")
-            } else if (currentFunction?.flags?.contains(INITIALIZER) == true) {
+            } else if (currentFunctionStmt?.modifiers?.contains(INITIALIZER) == true) {
                 error(unaryExpr.operator, "Can't use !? in an initializer.")
             } else unaryExpr.right.accept(this)
             TILDE -> if (unaryExpr.right is LiteralExpr && !isKloxInteger(unaryExpr.right.value)) {
@@ -138,7 +138,7 @@ class Checker : ASTVisitor<Unit> {
         if (returnStmt.value != null) {
             if (currentFunction == null) {
                 error(returnStmt.keyword, "Can't return from top-level code.")
-            } else if (currentFunction?.flags?.contains(INITIALIZER) == true) {
+            } else if (currentFunctionStmt?.modifiers?.contains(INITIALIZER) == true) {
                 error(returnStmt.keyword, "Can't return a value from an initializer.")
             } else returnStmt.value.accept(this)
         }

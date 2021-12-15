@@ -190,7 +190,6 @@ class SuperExpr(override val name: Token, val method: Token) : Expr, VarAccess {
 }
 
 class FunctionExpr(
-    val flags: EnumSet<FunctionFlag>,
     val params: List<Parameter> = emptyList(),
     val body: List<Stmt> = emptyList()
 ) : Expr {
@@ -336,22 +335,14 @@ open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
 }
 
 enum class ModifierFlag {
+    INITIALIZER,
     STATIC,
-    DATA_CLASS;
+    GETTER,
+    DATA_CLASS,
+    NATIVE;
 
     companion object {
         fun empty(): EnumSet<ModifierFlag> = noneOf(ModifierFlag::class.java)
-    }
-}
-
-enum class FunctionFlag {
-    ANONYMOUS,
-    GETTER,
-    INITIALIZER,
-    METHOD;
-
-    companion object {
-        fun empty(): EnumSet<FunctionFlag> = noneOf(FunctionFlag::class.java)
     }
 }
 

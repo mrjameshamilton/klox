@@ -14,7 +14,6 @@ import eu.jameshamilton.klox.parse.DoWhileStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
-import eu.jameshamilton.klox.parse.FunctionFlag.*
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -22,6 +21,7 @@ import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
+import eu.jameshamilton.klox.parse.ModifierFlag.GETTER
 import eu.jameshamilton.klox.parse.ModifierFlag.STATIC
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
@@ -258,7 +258,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                 else -> null
             }
 
-            if (value is LoxFunction && value.declaration.flags.contains(GETTER)) value.call(this) else value
+            if (value is LoxFunction && value.modifiers.contains(GETTER)) value.call(this) else value
         }
         else -> if (obj == null && getExpr.safeAccess) null else {
             throw RuntimeError(getExpr.name, "Only instances have properties.")

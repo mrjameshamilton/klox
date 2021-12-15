@@ -1,6 +1,6 @@
 package eu.jameshamilton.klox.parse
 
-import eu.jameshamilton.klox.parse.FunctionFlag.*
+import eu.jameshamilton.klox.parse.ModifierFlag.*
 import eu.jameshamilton.klox.parse.Scanner.Companion.MODIFIER_KEYWORDS
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.visitor.AllClassStmtVisitor
@@ -39,13 +39,11 @@ class Parser(private val tokens: List<Token>) {
             if (match(CLASS)) return classDeclaration(modifiers)
             if (check(FUN, IDENTIFIER)) {
                 consume(FUN, "")
-                return function(flags = FunctionFlag.empty()) { name, body ->
-                    FunctionStmt(
-                        name,
-                        modifiers,
-                        body
-                    )
-                }
+                return FunctionStmt(
+                    consume(IDENTIFIER, "Expect function name."),
+                    modifiers,
+                    functionBody(functionParameters())
+                )
             }
             if (match(VAR)) {
                 val varDeclaration = varDeclaration()
@@ -61,7 +59,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun classDeclaration(modifiers: EnumSet<ModifierFlag>): Stmt {
         val className = consume(IDENTIFIER, "Expect class name.")
-        val initParameters = if (check(LEFT_PAREN)) functionParameters(FunctionFlag.empty()) else null
+        val initParameters = if (check(LEFT_PAREN)) functionParameters() else null
 
         var superConstructorCall: Expr? = null
         val superClass = if (match(LESS)) {
@@ -86,9 +84,8 @@ class Parser(private val tokens: List<Token>) {
         initParameters?.run {
             methods += FunctionStmt(
                 Token(IDENTIFIER, "init"),
-                ModifierFlag.empty(),
+                EnumSet.of(INITIALIZER),
                 FunctionExpr(
-                    flags = EnumSet.of(INITIALIZER),
                     params = this,
                     body = (
                         listOfNotNull(superConstructorCall) + map {
@@ -106,20 +103,26 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(LEFT_BRACE)) {
             while (!check(RIGHT_BRACE) && !isAtEnd()) {
-                val modifierFlags = modifiers()
-                val functionFlags = FunctionFlag.empty()
-                functionFlags.add(METHOD)
-                methods.add(
-                    function(functionFlags) { name, body ->
-                        if (name.lexeme == "init") {
-                            if (methods.count { it.name.lexeme == "init" } > 0) {
-                                throw error(name, "A class can only have one initializer.")
-                            }
-
-                            functionFlags.add(INITIALIZER)
-                        }
-                        FunctionStmt(name, modifierFlags, body, classStmt)
+                val methodModifiers = modifiers()
+                val name = consume(IDENTIFIER, "Expect function name.")
+                if (name.lexeme == "init") {
+                    if (methods.count { it.name.lexeme == "init" } > 0) {
+                        throw error(name, "A class can only have one initializer.")
                     }
+
+                    methodModifiers.add(INITIALIZER)
+                }
+
+                val parameters = if (check(LEFT_PAREN)) functionParameters()
+                else emptyList<Parameter>().also { methodModifiers.add(GETTER) }
+
+                methods.add(
+                    FunctionStmt(
+                        name,
+                        methodModifiers,
+                        functionBody(parameters),
+                        classStmt
+                    )
                 )
             }
             consume(RIGHT_BRACE, "Expect '}' after class body.")
@@ -128,31 +131,23 @@ class Parser(private val tokens: List<Token>) {
         return classStmt
     }
 
-    private fun function(flags: EnumSet<FunctionFlag>, initializer: (Token, FunctionExpr) -> FunctionStmt): FunctionStmt =
-        initializer(consume(IDENTIFIER, "Expect function name."), functionBody(functionParameters(flags), flags))
-
-    private fun functionParameters(flags: EnumSet<FunctionFlag>): List<Parameter> = when {
-        check(LEFT_PAREN) -> {
-            val parameters = mutableListOf<Parameter>()
-            consume(LEFT_PAREN, "Expected '(' after function name")
+    private fun functionParameters(): List<Parameter> {
+        consume(LEFT_PAREN, "Expected '(' after function name")
+        return mutableListOf<Parameter>().also {
             if (!check(RIGHT_PAREN)) {
                 do {
-                    if (parameters.size >= 255) {
+                    if (it.size >= 255) {
                         error(peek(), "Can't have more than 255 parameters.")
                     }
-                    parameters.add(Parameter(consume(IDENTIFIER, "Expect parameter name.")))
+                    it.add(Parameter(consume(IDENTIFIER, "Expect parameter name.")))
                 } while (match(COMMA))
             }
             consume(RIGHT_PAREN, "Expect ')' after parameters.")
-            parameters
         }
-        flags.contains(METHOD) -> emptyList<Parameter>().also { flags.add(GETTER) }
-        flags.contains(ANONYMOUS) -> throw error(peek(), "Named function not allowed here.")
-        else -> throw error(peek(), "Expect ')' after parameters.")
     }
 
-    private fun functionBody(parameters: List<Parameter>, flags: EnumSet<FunctionFlag>): FunctionExpr = FunctionExpr(
-        flags, parameters,
+    private fun functionBody(parameters: List<Parameter>): FunctionExpr = FunctionExpr(
+        parameters,
         body = if (match(EQUAL)) {
             val singleExprBody = listOf(ReturnStmt(Token(RETURN, "return"), expression()))
             optional(SEMICOLON)
@@ -713,8 +708,8 @@ class Parser(private val tokens: List<Token>) {
         match(THIS) -> ThisExpr(previous())
         match(IDENTIFIER) -> VariableExpr(previous())
         match(FUN) -> {
-            val flags = EnumSet.of(ANONYMOUS)
-            functionBody(functionParameters(flags), flags)
+            if (check(IDENTIFIER)) throw error(peek(), "Named function not allowed here.")
+            functionBody(functionParameters())
         }
         match(LEFT_PAREN) -> {
             val expr = expression()

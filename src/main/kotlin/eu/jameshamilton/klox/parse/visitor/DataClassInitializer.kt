@@ -7,7 +7,6 @@ import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.Expr
 import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
-import eu.jameshamilton.klox.parse.FunctionFlag.*
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
 import eu.jameshamilton.klox.parse.GroupingExpr
@@ -15,6 +14,7 @@ import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
+import eu.jameshamilton.klox.parse.ModifierFlag.INITIALIZER
 import eu.jameshamilton.klox.parse.Parameter
 import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.Stmt
@@ -31,12 +31,11 @@ import eu.jameshamilton.klox.parse.TokenType.RETURN
 import eu.jameshamilton.klox.parse.TokenType.STAR
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
-import java.util.EnumSet
 
 class DataClassInitializer : ClassStmt.Visitor<Unit> {
     override fun visitClassStmt(classStmt: ClassStmt) {
         if (classStmt.modifiers.contains(ModifierFlag.DATA_CLASS)) {
-            val init = classStmt.methods.singleOrNull { it.functionExpr.flags.contains(INITIALIZER) }
+            val init = classStmt.methods.singleOrNull { it.modifiers.contains(INITIALIZER) }
 
             val parameters = init?.functionExpr?.params ?: emptyList()
 
@@ -68,7 +67,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         Token(IDENTIFIER, "toString"),
                         ModifierFlag.empty(),
                         FunctionExpr(
-                            EnumSet.of(METHOD),
                             emptyList(),
                             listOf(ReturnStmt(Token(RETURN, "return"), expr))
                         ),
@@ -111,7 +109,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         Token(IDENTIFIER, "equals"),
                         ModifierFlag.empty(),
                         FunctionExpr(
-                            EnumSet.of(METHOD),
                             listOf(otherName),
                             body = listOf(
                                 ReturnStmt(Token(RETURN, "return"), expr)
@@ -196,7 +193,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         Token(IDENTIFIER, "hashCode"),
                         ModifierFlag.empty(),
                         FunctionExpr(
-                            EnumSet.of(METHOD),
                             emptyList(),
                             hashCodes + listOf(ReturnStmt(Token(RETURN, "return"), expr))
                         ),
@@ -231,7 +227,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         Token(IDENTIFIER, "get"),
                         ModifierFlag.empty(),
                         FunctionExpr(
-                            EnumSet.of(METHOD),
                             listOf(indexParam),
                             listOf(ifStmt)
                         ),
@@ -247,7 +242,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         Token(IDENTIFIER, "copy"),
                         ModifierFlag.empty(),
                         FunctionExpr(
-                            EnumSet.of(METHOD),
                             emptyList(),
                             listOf(
                                 ReturnStmt(

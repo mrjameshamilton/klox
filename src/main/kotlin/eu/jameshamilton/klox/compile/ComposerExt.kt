@@ -13,7 +13,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
-import eu.jameshamilton.klox.parse.FunctionFlag.INITIALIZER
+import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.programClassPool
@@ -463,7 +463,7 @@ fun Composer.declare(func: FunctionExpr, varDef: VarDef): Composer {
  * After this method is called, the stack will contain the new instance.
  */
 fun Composer.new_(function: FunctionExpr, klass: ClassStmt): Composer {
-    val init = klass.methods.singleOrNull { it.functionExpr.flags.contains(INITIALIZER) }
+    val init = klass.methods.singleOrNull { it.modifiers.contains(ModifierFlag.INITIALIZER) }
     packarray(init?.functionExpr?.params?.size ?: 0)
     load(function, klass)
     checkcast(KLOX_CLASS)
