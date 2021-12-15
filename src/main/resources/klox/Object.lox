@@ -3,7 +3,7 @@ class Object {
     native hashCode();
 
     equals(other) {
-        if (other == nil) return false;
+        if (nil == other) return false;
 
         return this.hashCode() == other.hashCode();
     }
