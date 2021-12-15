@@ -32,6 +32,7 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
     when (className) {
         "Object" -> when (name) {
             "hashCode" -> return { env, _ -> (env.get(Token(IDENTIFIER, "this")) as LoxInstance).hashCode().toDouble() }
+            "toString" -> return { env, _ -> (env.get(Token(IDENTIFIER, "this")) as LoxInstance).klass.name + " instance" }
         }
         "Array" -> {
             when (name) {

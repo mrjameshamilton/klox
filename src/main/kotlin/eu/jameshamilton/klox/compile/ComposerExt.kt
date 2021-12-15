@@ -598,6 +598,16 @@ fun Composer.haskloxfield(name: String): Composer {
     return this
 }
 
+fun Composer.kloxclass(): Composer {
+    invokevirtual(KLOX_INSTANCE, "getKlass", "()L$KLOX_CLASS;")
+    return this
+}
+
+fun Composer.kloxclassname(): Composer {
+    invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
+    return this
+}
+
 // Useful for Debugging
 
 fun Composer.printlnerr(composer: Composer.() -> Composer): Composer {

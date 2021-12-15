@@ -1579,28 +1579,16 @@ class Compiler : Program.Visitor<ClassPool> {
                     return_()
                 }
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
-                    val (default) = labels(1)
                     aload_0()
-                    ldc("toString")
-                    iconst_1()
-                    invokevirtual(targetClass.name, "get", "(Ljava/lang/String;Z)Ljava/lang/Object;")
-                    dup()
-                    instanceof_(KLOX_FUNCTION)
-                    ifeq(default)
-                    checkcast(KLOX_FUNCTION)
+                    kloxclass()
+                    kloxfindmethod("toString")
+                    aload_0()
+                    invokeinterface(KLOX_FUNCTION, "bind", "(L$KLOX_INSTANCE;)L$KLOX_FUNCTION;")
                     iconst_0()
                     anewarray("java/lang/Object")
                     invokeinterface(KLOX_FUNCTION, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;")
                     stringify()
                     checkcast("java/lang/String")
-                    areturn()
-
-                    label(default)
-                    pop()
-                    concat(
-                        { aload_0().getfield(targetClass.name, "klass", "L$KLOX_CLASS;") },
-                        { ldc(" instance") }
-                    )
                     areturn()
                 }
                 .programClass

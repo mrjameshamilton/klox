@@ -75,6 +75,13 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 box("java/lang/Double")
                 areturn()
             }
+            "toString" -> return {
+                concat(
+                    { loadkloxinstance().kloxclass().kloxclassname() },
+                    { ldc(" instance") }
+                )
+                areturn()
+            }
         }
         "Array" -> when (functionName) {
             "init" -> return {
