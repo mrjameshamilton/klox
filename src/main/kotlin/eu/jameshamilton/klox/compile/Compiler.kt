@@ -1156,7 +1156,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     areturn()
                 }
                 .addMethod(PUBLIC, "getName", "()Ljava/lang/String;") {
-                    ldc(classStmt.javaClassName)
+                    ldc(classStmt.name.lexeme)
                     areturn()
                 }
                 .addMethod(PUBLIC, "arity", "()I") {
