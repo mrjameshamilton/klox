@@ -99,6 +99,11 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                 }
             })
         )
+
+        // Mark all slots used in all functions as used
+        slotsInFunctions.values.flatMap { it.values }.forEach {
+            it.isUsed = true
+        }
     }
 
     private fun resolve(stmts: List<Stmt>) = stmts.forEach { it.accept(this) }
@@ -139,7 +144,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                 /* var a = "foo"; var a = a; */
                 scopes.peek().remove(key)
                 if (varDef is VarStmt && varDef.initializer is VarAccess) {
-                    slotsInFunctions[currentFunction]?.set(varDef, slotsInFunctions[currentFunction]!![key]!!)
+                    slotsInFunctions[currentFunction]?.set(varDef, slotsInFunctions[currentFunction]?.remove(key)!!)
                     varDef = key
                 }
             } else error(varDef.name, "Already a variable with this name in this scope.")
@@ -468,9 +473,11 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         }
 
         private fun FunctionExpr.assign(slot: Int, varDef: VarDef): Int {
-            if (!slots.containsKey(varDef)) {
-                slots[varDef] = Slot(slot)
+            if (slots.containsKey(varDef)) {
+                throw IllegalStateException("Variable $varDef has already been assigned a slot in function $this")
             }
+
+            slots[varDef] = Slot(slot)
 
             return this.slot(varDef)
         }
@@ -481,9 +488,20 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             number
         } else null
 
-        private fun FunctionExpr.free(varDef: VarDef) {
-            if (debug == true) println("Freeing $varDef from ${slots[varDef]}")
-            slots[varDef]?.isUsed = false
+        fun FunctionExpr.free(vararg varDefs: VarDef) {
+            for (varDef in varDefs) {
+                if (debug == true) println("Freeing $varDef from ${slots[varDef]}")
+                slots[varDef]?.isUsed = false
+                if (varDef is TempVariable) slots.remove(varDef)
+            }
+        }
+
+        private class TempVariable : VarDef {
+            override val name: Token = Token(IDENTIFIER, "temp")
+        }
+
+        fun FunctionExpr.temp(): VarDef = TempVariable().also {
+            assign(nextSlotNumber(), it)
         }
 
         val FunctionExpr.maxLocals: Int

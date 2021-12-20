@@ -3,13 +3,14 @@ package eu.jameshamilton.klox.compile
 import eu.jameshamilton.klox.compile.Resolver.Companion.captured
 import eu.jameshamilton.klox.compile.Resolver.Companion.definedIn
 import eu.jameshamilton.klox.compile.Resolver.Companion.depth
+import eu.jameshamilton.klox.compile.Resolver.Companion.free
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
 import eu.jameshamilton.klox.compile.Resolver.Companion.isDefined
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaClassName
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
-import eu.jameshamilton.klox.compile.Resolver.Companion.maxLocals
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
+import eu.jameshamilton.klox.compile.Resolver.Companion.temp
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.debug
@@ -607,52 +608,52 @@ class Compiler : Program.Visitor<ClassPool> {
                             kloxinvoke(numberOfParams = 2)
                         }
                         else -> {
-                            // temporarily use the next two available slots for left and right
-                            val (left, right) = listOf(function.maxLocals + 1, function.maxLocals + 2)
+                            val (left, right) = listOf(function.temp(), function.temp())
                             binaryExpr.right.accept(this@FunctionCompiler)
-                            astore(right)
+                            astore(function.slot(right))
                             binaryExpr.left.accept(this@FunctionCompiler)
-                            astore(left)
+                            astore(function.slot(left))
 
                             val (maybeString, other, end) = labels(3)
 
-                            aload(right)
+                            aload(function.slot(right))
                             instanceof_("java/lang/Double")
                             ifeq(maybeString)
-                            aload(left)
+                            aload(function.slot(left))
                             instanceof_("java/lang/Double")
                             ifeq(maybeString)
 
                             load(function, numberClass)
                             kloxfindmethod("rangeTo")
-                            aload(right)
-                            aload(left)
+                            aload(function.slot(right))
+                            aload(function.slot(left))
                             kloxinvoke(numberOfParams = 2)
                             goto_(end)
 
                             label(maybeString)
-                            aload(right)
+                            aload(function.slot(right))
                             instanceof_("java/lang/String")
                             ifeq(other)
-                            aload(left)
+                            aload(function.slot(left))
                             instanceof_("java/lang/String")
                             ifeq(other)
 
                             load(function, characterClass)
                             kloxfindmethod("rangeTo")
-                            aload(right)
-                            aload(left)
+                            aload(function.slot(right))
+                            aload(function.slot(left))
                             kloxinvoke(numberOfParams = 2)
                             goto_(end)
 
                             label(other)
-                            aload(left)
+                            aload(function.slot(left))
                             checktype(KLOX_INSTANCE, "Expect an instance of a class that implements 'rangeTo'.")
                             getkloxfield("rangeTo", KLOX_CALLABLE)
-                            aload(right)
+                            aload(function.slot(right))
                             kloxinvoke(numberOfParams = 1)
 
                             label(end)
+                            function.free(left, right)
                         }
                     }
                 }
@@ -900,12 +901,12 @@ class Compiler : Program.Visitor<ClassPool> {
                     ifeq(end) // no-arg constructor, no problem // TODO: call no-arg constructor by default?
                     kloxthrow(classStmt.name) {
                         invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
-                        val temp = (function.maxLocals + 1).also {
-                            astore(it)
+                        val temp = function.temp().also {
+                            store(function, it)
                         }
                         concat(
                             { ldc("'${classStmt.name.lexeme}' does not call superclass '") },
-                            { aload(temp) },
+                            { load(function, temp).also { function.free(temp) } },
                             { ldc("' constructor.") }
                         )
                     }
