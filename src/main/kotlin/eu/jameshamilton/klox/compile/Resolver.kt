@@ -423,7 +423,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         private val slotsInFunctions = WeakHashMap<FunctionExpr, MutableMap<VarDef, Int>>()
         private val FunctionExpr.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
-        val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
+        private val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
 
         fun FunctionExpr.slot(varDef: VarDef): Int {
             if (!slots.containsKey(varDef)) {
@@ -437,6 +437,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             slots[varDef] = nextSlot
             return this.slot(varDef)
         }
+
+        val FunctionExpr.maxLocals: Int
+            get() = slotsInFunctions[this]?.maxOf { it.value } ?: 0
 
         private val javaFieldNames = WeakHashMap<VarDef, String>()
         val VarDef.javaName: String

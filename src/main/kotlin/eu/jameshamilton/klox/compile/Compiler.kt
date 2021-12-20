@@ -8,7 +8,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.isDefined
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaClassName
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
-import eu.jameshamilton.klox.compile.Resolver.Companion.nextSlot
+import eu.jameshamilton.klox.compile.Resolver.Companion.maxLocals
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
@@ -608,7 +608,7 @@ class Compiler : Program.Visitor<ClassPool> {
                         }
                         else -> {
                             // temporarily use the next two available slots for left and right
-                            val (left, right) = listOf(function.nextSlot, function.nextSlot + 1)
+                            val (left, right) = listOf(function.maxLocals + 1, function.maxLocals + 2)
                             binaryExpr.right.accept(this@FunctionCompiler)
                             astore(right)
                             binaryExpr.left.accept(this@FunctionCompiler)
@@ -900,7 +900,7 @@ class Compiler : Program.Visitor<ClassPool> {
                     ifeq(end) // no-arg constructor, no problem // TODO: call no-arg constructor by default?
                     kloxthrow(classStmt.name) {
                         invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
-                        val temp = function.nextSlot.also {
+                        val temp = (function.maxLocals + 1).also {
                             astore(it)
                         }
                         concat(
