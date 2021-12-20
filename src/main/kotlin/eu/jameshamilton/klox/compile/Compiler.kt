@@ -1626,7 +1626,8 @@ class Compiler : Program.Visitor<ClassPool> {
                     ificmpeq(correctArity)
                     kloxthrow {
                         concat(
-                            { ldc("Expected ") },
+                            { aload_0().invokeinterface(KLOX_CALLABLE, "getName", "()Ljava/lang/String;") },
+                            { ldc(": Expected ") },
                             { iload(4).box("java/lang/Integer") },
                             { ldc(" arguments but got ") },
                             { iload(5).box("java/lang/Integer") },
