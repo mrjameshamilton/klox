@@ -403,7 +403,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         val FunctionExpr.captured: MutableSet<VarDef>
             get() = captures.getOrPut(this) { HashSet() }
 
-        fun FunctionExpr.capture(varDef: VarDef) {
+        private fun FunctionExpr.capture(varDef: VarDef) {
             if (!captured.contains(varDef)) {
                 assign(varDef)
                 captured.add(varDef)
