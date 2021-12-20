@@ -426,8 +426,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
 
         fun FunctionExpr.slot(varDef: VarDef): Int {
-            if (!slots.containsKey(varDef))
+            if (!slots.containsKey(varDef)) {
                 throw IllegalStateException("Variable $varDef has no slot assigned in function $this")
+            }
 
             return slots[varDef]!!
         }
