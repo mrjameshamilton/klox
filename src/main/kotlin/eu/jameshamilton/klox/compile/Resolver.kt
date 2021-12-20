@@ -425,7 +425,12 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         private val FunctionExpr.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
         val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
 
-        fun FunctionExpr.slot(varDef: VarDef): Int = slots.getOrDefault(varDef, -1)
+        fun FunctionExpr.slot(varDef: VarDef): Int {
+            if (!slots.containsKey(varDef))
+                throw IllegalStateException("Variable $varDef has no slot assigned in function $this")
+
+            return slots[varDef]!!
+        }
 
         private fun FunctionExpr.assign(varDef: VarDef): Int {
             slots[varDef] = nextSlot
