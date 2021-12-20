@@ -22,6 +22,7 @@ import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
 import eu.jameshamilton.klox.parse.ModifierFlag.NATIVE
 import eu.jameshamilton.klox.parse.MultiVarStmt
+import eu.jameshamilton.klox.parse.Parameter
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.SetExpr
@@ -113,7 +114,10 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         beginScope()
     }
 
-    private fun endScope() = scopes.pop()
+    private fun endScope(): MutableMap<VarDef, Boolean>? {
+        scopes.peek().keys.forEach { currentFunction.free(it); }
+        return scopes.pop()
+    }
     private fun endScope(@Suppress("UNUSED_PARAMETER") functionExpr: FunctionExpr) {
         endScope()
         functionStack.pop()
@@ -135,7 +139,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                 /* var a = "foo"; var a = a; */
                 scopes.peek().remove(key)
                 if (varDef is VarStmt && varDef.initializer is VarAccess) {
-                    slotsInFunctions[currentFunction]?.set(varDef, currentFunction.slot(key))
+                    slotsInFunctions[currentFunction]?.set(varDef, slotsInFunctions[currentFunction]!![key]!!)
                     varDef = key
                 }
             } else error(varDef.name, "Already a variable with this name in this scope.")
@@ -154,7 +158,15 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         javaFieldNames[varDef] = "${varDef.name.lexeme}#${varDef.hashCode()}"
         definedIns[varDef] = currentFunction // TODO why does use_local_in_initializer fail without this?
-        currentFunction.assign(varDef)
+
+        // Assign a slot to the variable
+        with(currentFunction) {
+            assign(
+                // Parameters always get assigned to slots 1..n
+                if (varDef is Parameter) params.indexOf(varDef) + 1 else nextSlotNumber(),
+                varDef
+            )
+        }
     }
 
     private fun define(varDef: VarDef) {
@@ -191,6 +203,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     }
 
     private fun resolveFunction(functionExpr: FunctionExpr, name: String) {
+        slotsInFunctions[functionExpr] = mutableMapOf()
         javaClassNames[functionExpr] = when {
             !functionExpr.isMain -> {
                 functionNameStack.push(if (this.isGlobalScope) "${mainFunction.name.lexeme}\$$name" else name)
@@ -256,9 +269,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         // TODO do this after resolving?
         if (!currentFunction.isMain) {
             when (binaryExpr.operator.type) {
-                DOT_DOT -> {
-                    currentFunction.capture(globalClasses.single { it.name.lexeme == "Number" })
-                    currentFunction.capture(globalClasses.single { it.name.lexeme == "Character" })
+                DOT_DOT -> with(currentFunction) {
+                    capture(globalClasses.single { it.name.lexeme == "Number" })
+                    capture(globalClasses.single { it.name.lexeme == "Character" })
                 }
                 else -> {}
             }
@@ -407,7 +420,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         private fun FunctionExpr.capture(varDef: VarDef) {
             if (!captured.contains(varDef)) {
-                assign(varDef)
+                assign(nextSlotNumber(ensureNewSlot = true), varDef)
                 captured.add(varDef)
             }
         }
@@ -423,25 +436,58 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         val FunctionExpr.depth: Int
             get() = functionDepths[this]!!
 
-        private val slotsInFunctions = WeakHashMap<FunctionExpr, MutableMap<VarDef, Int>>()
-        private val FunctionExpr.slots get() = slotsInFunctions.getOrPut(this) { WeakHashMap() }
-        private val FunctionExpr.nextSlot get() = (slotsInFunctions[this]?.size ?: 0) + 1
+        private data class Slot(val number: Int, var isUsed: Boolean = true)
+
+        private val slotsInFunctions = WeakHashMap<FunctionExpr, MutableMap<VarDef, Slot>>()
+        private val FunctionExpr.slots: MutableMap<VarDef, Slot>
+            get() {
+                if (!slotsInFunctions.containsKey(this)) {
+                    throw IllegalStateException("Function $this has no slots")
+                }
+
+                return slotsInFunctions[this]!!
+            }
+
+        private fun FunctionExpr.nextSlotNumber(ensureNewSlot: Boolean = false): Int = if (ensureNewSlot) {
+            (slots.maxOfOrNull { it.value.number } ?: 0) + 1
+        } else {
+            val firstFreeSlot = slots
+                .filterNot { it.value.isUsed }
+                .minByOrNull { it.value.number }
+                ?.key
+
+            use(firstFreeSlot) ?: ((slots.maxOfOrNull { it.value.number } ?: 0) + 1)
+        }
 
         fun FunctionExpr.slot(varDef: VarDef): Int {
             if (!slots.containsKey(varDef)) {
                 throw IllegalStateException("Variable $varDef has no slot assigned in function $this")
             }
 
-            return slots[varDef]!!
+            return slots[varDef]!!.number
         }
 
-        private fun FunctionExpr.assign(varDef: VarDef): Int {
-            slots[varDef] = nextSlot
+        private fun FunctionExpr.assign(slot: Int, varDef: VarDef): Int {
+            if (!slots.containsKey(varDef)) {
+                slots[varDef] = Slot(slot)
+            }
+
             return this.slot(varDef)
         }
 
+        private fun FunctionExpr.use(varDef: VarDef?): Int? = if (varDef != null) with(slots[varDef]!!) {
+            if (debug == true) println("Reusing slot $number previously assigned to $varDef")
+            isUsed = true
+            number
+        } else null
+
+        private fun FunctionExpr.free(varDef: VarDef) {
+            if (debug == true) println("Freeing $varDef from ${slots[varDef]}")
+            slots[varDef]?.isUsed = false
+        }
+
         val FunctionExpr.maxLocals: Int
-            get() = slotsInFunctions[this]?.maxOf { it.value } ?: 0
+            get() = slotsInFunctions[this]?.maxOf { it.value.number } ?: 0
 
         private val javaFieldNames = WeakHashMap<VarDef, String>()
         val VarDef.javaName: String

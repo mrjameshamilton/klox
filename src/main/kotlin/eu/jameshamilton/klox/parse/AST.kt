@@ -172,7 +172,7 @@ class SetExpr(val obj: Expr, val name: Token, val value: Expr) : Expr {
         fun visitSetExpr(setExpr: SetExpr): R
     }
 
-    override fun toString(): String = "<set-expr ${obj}.${name.lexeme} = $value>"
+    override fun toString(): String = "<set-expr $obj.${name.lexeme} = $value>"
 }
 
 class ThisExpr(override val name: Token) : Expr, VarAccess {
