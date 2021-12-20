@@ -327,11 +327,13 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         define(object : VarDef {
             override val name: Token get() = Token(IDENTIFIER, "this", "this", classStmt.name.line)
+            override fun toString() = "<this@${classStmt.name.lexeme}>"
         })
 
         classStmt.superClass?.let {
             define(object : VarDef {
                 override val name: Token get() = Token(IDENTIFIER, "super", "super", classStmt.name.line)
+                override fun toString() = "<super@${classStmt.name.lexeme}>"
             })
         }
 

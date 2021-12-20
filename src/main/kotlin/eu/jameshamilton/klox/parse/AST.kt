@@ -160,6 +160,8 @@ class GetExpr(val obj: Expr, val name: Token, val safeAccess: Boolean = false) :
     interface Visitor<R> {
         fun visitGetExpr(getExpr: GetExpr): R
     }
+
+    override fun toString(): String = "<get-expr ${obj}${if (safeAccess) "?." else "."}${name.lexeme}>"
 }
 
 class SetExpr(val obj: Expr, val name: Token, val value: Expr) : Expr {
@@ -169,6 +171,8 @@ class SetExpr(val obj: Expr, val name: Token, val value: Expr) : Expr {
     interface Visitor<R> {
         fun visitSetExpr(setExpr: SetExpr): R
     }
+
+    override fun toString(): String = "<set-expr ${obj}.${name.lexeme} = $value>"
 }
 
 class ThisExpr(override val name: Token) : Expr, VarAccess {
@@ -178,6 +182,8 @@ class ThisExpr(override val name: Token) : Expr, VarAccess {
     interface Visitor<R> {
         fun visitThisExpr(thisExpr: ThisExpr): R
     }
+
+    override fun toString(): String = "<this-expr ${name.lexeme}>"
 }
 
 class SuperExpr(override val name: Token, val method: Token) : Expr, VarAccess {
@@ -187,6 +193,8 @@ class SuperExpr(override val name: Token, val method: Token) : Expr, VarAccess {
     interface Visitor<R> {
         fun visitSuperExpr(superExpr: SuperExpr): R
     }
+
+    override fun toString(): String = "<super-expr ${name.lexeme}>"
 }
 
 class FunctionExpr(
@@ -252,6 +260,8 @@ class PrintStmt(val expression: Expr) : Stmt {
     interface Visitor<R> {
         fun visitPrintStmt(printStmt: PrintStmt): R
     }
+
+    override fun toString(): String = "<print $expression>"
 }
 
 class VarStmt(override val name: Token, var initializer: Expr? = null) : Stmt, VarDef {
@@ -272,6 +282,8 @@ class IfStmt(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) :
     interface Visitor<R> {
         fun visitIfStmt(ifStmt: IfStmt): R
     }
+
+    override fun toString(): String = "<if-stmt $condition $thenBranch ${elseBranch?.let { "else $it" }}>"
 }
 
 class BlockStmt(val stmts: List<Stmt>) : Stmt {
@@ -281,6 +293,8 @@ class BlockStmt(val stmts: List<Stmt>) : Stmt {
     interface Visitor<R> {
         fun visitBlockStmt(block: BlockStmt): R
     }
+
+    override fun toString(): String = "<block ${stmts.joinToString(", ")}>"
 }
 
 class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
@@ -290,6 +304,8 @@ class WhileStmt(val condition: Expr, val body: Stmt) : Stmt {
     interface Visitor<R> {
         fun visitWhileStmt(whileStmt: WhileStmt): R
     }
+
+    override fun toString(): String = "<while-stmt $condition $body>"
 }
 
 class DoWhileStmt(val condition: Expr, val body: Stmt) : Stmt {
@@ -299,6 +315,8 @@ class DoWhileStmt(val condition: Expr, val body: Stmt) : Stmt {
     interface Visitor<R> {
         fun visitDoWhileStmt(whileStmt: DoWhileStmt): R
     }
+
+    override fun toString(): String = "<do-while-stmt $condition $body>"
 }
 
 class BreakStmt : Stmt {
@@ -308,6 +326,8 @@ class BreakStmt : Stmt {
     interface Visitor<R> {
         fun visitBreakStmt(breakStmt: BreakStmt): R
     }
+
+    override fun toString(): String = "<break>"
 }
 
 class ContinueStmt : Stmt {
@@ -317,6 +337,8 @@ class ContinueStmt : Stmt {
     interface Visitor<R> {
         fun visitContinueStmt(continueStmt: ContinueStmt): R
     }
+
+    override fun toString(): String = "<continue>"
 }
 
 open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
@@ -332,6 +354,8 @@ open class MultiVarStmt(statements: List<VarStmt>) : Stmt {
     interface Visitor<R> {
         fun visitMultiVarStmt(multiVarStmt: MultiVarStmt): R
     }
+
+    override fun toString(): String = "<multi-var ${statements.joinToString(", ")}>"
 }
 
 enum class ModifierFlag {
@@ -370,6 +394,8 @@ class ReturnStmt(val keyword: Token, val value: Expr? = null) : Stmt {
     interface Visitor<R> {
         fun visitReturnStmt(returnStmt: ReturnStmt): R
     }
+
+    override fun toString(): String = "<return ${value?.let { " $it" }}>"
 }
 
 class ClassStmt(
