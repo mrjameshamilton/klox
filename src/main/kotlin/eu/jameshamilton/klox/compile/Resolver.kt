@@ -91,11 +91,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         mainFunction.accept(
             AllFunctionStmtVisitor(object : FunctionStmt.Visitor<Unit> {
                 override fun visitFunctionStmt(functionStmt: FunctionStmt) {
-                    if (functionStmt.modifiers.contains(NATIVE)) {
-                        with(functionStmt.functionExpr) {
-                            capture(okClass)
-                            capture(errorClass)
-                        }
+                    if (functionStmt.modifiers.contains(NATIVE)) with(functionStmt.functionExpr) {
+                        capture(okClass)
+                        capture(errorClass)
                     }
                 }
             })
