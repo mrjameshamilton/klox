@@ -115,8 +115,8 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     private fun endScope() = scopes.pop()
     private fun endScope(@Suppress("UNUSED_PARAMETER") functionExpr: FunctionExpr) {
-        functionStack.pop()
         endScope()
+        functionStack.pop()
     }
 
     private fun declare(inVarDef: VarDef) {
