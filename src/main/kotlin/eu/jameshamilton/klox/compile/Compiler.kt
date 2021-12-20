@@ -1,6 +1,5 @@
 package eu.jameshamilton.klox.compile
 
-import eu.jameshamilton.klox.compile.Resolver.Companion.capture
 import eu.jameshamilton.klox.compile.Resolver.Companion.captured
 import eu.jameshamilton.klox.compile.Resolver.Companion.definedIn
 import eu.jameshamilton.klox.compile.Resolver.Companion.depth
@@ -200,13 +199,6 @@ class Compiler : Program.Visitor<ClassPool> {
             this.modifiers = modifiers
             this.function = function
 
-            var native: (Composer.() -> Unit)? = null
-            if (modifiers.contains(NATIVE)) native = findNative(this@Compiler, className, name!!, function).also {
-                // TODO for now, assume all native functions need to capture these
-                function.capture(okClass)
-                function.capture(errorClass)
-            }
-
             val (clazz, method) = create(modifiers, name, function)
             composer = Composer(clazz)
             with(composer) {
@@ -225,8 +217,8 @@ class Compiler : Program.Visitor<ClassPool> {
                     astore(function.slot(captured))
                 }
 
-                if (native != null) {
-                    native(this)
+                if (modifiers.contains(NATIVE)) {
+                    findNative(this@Compiler, className, name!!, function)(this)
                 } else {
                     function.body.forEach {
                         it.accept(this@FunctionCompiler)

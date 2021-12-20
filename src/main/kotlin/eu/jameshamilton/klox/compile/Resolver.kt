@@ -20,6 +20,7 @@ import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
+import eu.jameshamilton.klox.parse.ModifierFlag.NATIVE
 import eu.jameshamilton.klox.parse.MultiVarStmt
 import eu.jameshamilton.klox.parse.PrintStmt
 import eu.jameshamilton.klox.parse.ReturnStmt
@@ -37,6 +38,7 @@ import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
 import eu.jameshamilton.klox.parse.visitor.AllFunctionExprVisitor
+import eu.jameshamilton.klox.parse.visitor.AllFunctionStmtVisitor
 import eu.jameshamilton.klox.parse.visitor.AllVarStmtVisitor
 import java.util.Stack
 import java.util.WeakHashMap
@@ -44,6 +46,9 @@ import java.util.WeakHashMap
 class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     private lateinit var mainFunction: FunctionStmt
+    private val globalClasses: List<ClassStmt>
+        get() = mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>()
+
     private val scopes = Stack<MutableMap<VarDef, Boolean>>()
     private val unresolved = mutableSetOf<Pair<FunctionExpr, VarAccess>>()
     private val functionStack = Stack<FunctionExpr>()
@@ -77,6 +82,21 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                             }
                         })
                     )
+                }
+            })
+        )
+
+        val okClass = globalClasses.single { it.name.lexeme == "Ok" }
+        val errorClass = globalClasses.single { it.name.lexeme == "Error" }
+        mainFunction.accept(
+            AllFunctionStmtVisitor(object : FunctionStmt.Visitor<Unit> {
+                override fun visitFunctionStmt(functionStmt: FunctionStmt) {
+                    if (functionStmt.modifiers.contains(NATIVE)) {
+                        with(functionStmt.functionExpr) {
+                            capture(okClass)
+                            capture(errorClass)
+                        }
+                    }
                 }
             })
         )
@@ -237,7 +257,6 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         // TODO do this after resolving?
         if (!currentFunction.isMain) {
-            val globalClasses = mainFunction.functionExpr.variables.filterIsInstance<ClassStmt>()
             when (binaryExpr.operator.type) {
                 DOT_DOT -> {
                     currentFunction.capture(globalClasses.single { it.name.lexeme == "Number" })
@@ -334,7 +353,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     override fun visitArrayExpr(arrayExpr: ArrayExpr) {
         if (!currentFunction.isMain) {
-            currentFunction.capture(mainFunction.functionExpr.variables.single { it.name.lexeme == "Array" })
+            currentFunction.capture(globalClasses.single { it.name.lexeme == "Array" })
         }
 
         arrayExpr.elements.forEach { it.accept(this) }
