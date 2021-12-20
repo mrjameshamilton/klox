@@ -407,7 +407,6 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                         val (startLoop, endLoop) = labels(2)
 
                         iload(length)
-                        dup().box("java/lang/Integer").printlnpeek("l = ").pop()
 
                         newarray(arrayTypeFromInternalType('B').toInt())
                         astore(tempArray)
