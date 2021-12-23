@@ -1,0 +1,6 @@
+fun foo() {
+    var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
+    print f(2); // expect: 3
+}
+
+foo();
