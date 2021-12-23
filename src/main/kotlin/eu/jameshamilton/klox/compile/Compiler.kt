@@ -1,11 +1,13 @@
 package eu.jameshamilton.klox.compile
 
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_MAIN_CLASS
 import eu.jameshamilton.klox.compile.Resolver.Companion.captured
 import eu.jameshamilton.klox.compile.Resolver.Companion.definedIn
 import eu.jameshamilton.klox.compile.Resolver.Companion.depth
 import eu.jameshamilton.klox.compile.Resolver.Companion.free
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
 import eu.jameshamilton.klox.compile.Resolver.Companion.isDefined
+import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobal
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaClassName
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
@@ -61,6 +63,7 @@ import proguard.classfile.AccessConstants.PUBLIC
 import proguard.classfile.AccessConstants.STATIC
 import proguard.classfile.AccessConstants.VARARGS
 import proguard.classfile.ClassPool
+import proguard.classfile.Clazz
 import proguard.classfile.LibraryClass
 import proguard.classfile.ProgramClass
 import proguard.classfile.ProgramMethod
@@ -94,7 +97,7 @@ class Compiler : Program.Visitor<ClassPool> {
 
     override fun visitProgram(program: Program): ClassPool {
         mainFunction = FunctionStmt(
-            Token(FUN, "Main"),
+            Token(FUN, KLOX_MAIN_CLASS),
             modifiers = ModifierFlag.empty(),
             FunctionExpr(params = emptyList(), body = program.stmts)
         )
@@ -111,11 +114,11 @@ class Compiler : Program.Visitor<ClassPool> {
 
         if (hadError) return ClassPool()
 
-        val (mainClass, _) = FunctionCompiler().compile("Main", mainFunction.modifiers, "main", mainFunction.functionExpr)
+        val (mainClass, _) = FunctionCompiler().compile(KLOX_MAIN_CLASS, mainFunction.modifiers, mainFunction.name.lexeme, mainFunction.functionExpr)
 
         ClassBuilder(mainClass)
             .addField(PUBLIC or STATIC, "args", "[Ljava/lang/String;")
-            .addMethod(PUBLIC or STATIC, "main", "([Ljava/lang/String;)V") {
+            .addMethod(PUBLIC or STATIC, KLOX_MAIN_FUNCTION, "([Ljava/lang/String;)V") {
                 aload_0()
                 putstatic(targetClass.name, "args", "[Ljava/lang/String;")
 
@@ -212,7 +215,8 @@ class Compiler : Program.Visitor<ClassPool> {
                     }
                 }
 
-                for (captured in function.captured) {
+                for (captured in function.captured.filterNot { it.isGlobal }) {
+                    // Globals are not assigned slots, they are accessed directly.
                     aload_0()
                     getfield(targetClass.name, captured.javaName, "L$KLOX_CAPTURED_VAR;")
                     astore(function.slot(captured))
@@ -321,7 +325,7 @@ class Compiler : Program.Visitor<ClassPool> {
         override fun visitBinaryExpr(binaryExpr: BinaryExpr) {
             // `plus` assumes that left is already on the stack
             fun Composer.plus() = binaryExpr.right.accept(this@FunctionCompiler).also {
-                helper("Main", "add", stackInputSize = 2, stackResultSize = 1) {
+                helper(KLOX_MAIN_CLASS, "add", stackInputSize = 2, stackResultSize = 1) {
                     val (addDoubleString, throwLabel, addNumeric, addStringify) = labels(4)
                     aload_0()
                     instanceof_("java/lang/Double")
@@ -542,7 +546,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 IS -> {
                     binaryExpr.left.accept(this@FunctionCompiler)
                     binaryExpr.right.accept(this@FunctionCompiler)
-                    composer.helper("Main", "is", stackInputSize = 2, stackResultSize = 1) {
+                    composer.helper(KLOX_MAIN_CLASS, "is", stackInputSize = 2, stackResultSize = 1) {
                         val (isInstance, notInstance, loopStart) = labels(4)
                         aload_0()
                         instanceof_(KLOX_INSTANCE)
@@ -852,16 +856,21 @@ class Compiler : Program.Visitor<ClassPool> {
 
             if (function.captured.isNotEmpty()) {
                 for (varDef in function.captured) {
-                    dup()
-                    aload_0()
-                    if (enclosingCompiler?.function != null) {
-                        for (i in enclosingCompiler.function.depth downTo varDef.definedIn.depth) {
-                            invokeinterface(KLOX_CALLABLE, "getEnclosing", "()L$KLOX_CALLABLE;")
+                    dup() // the function object
+                    if (varDef.isGlobal) {
+                        getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                    } else {
+                        aload_0()
+                        if (enclosingCompiler?.function != null) {
+                            for (i in enclosingCompiler.function.depth downTo varDef.definedIn.depth) {
+                                invokeinterface(KLOX_CALLABLE, "getEnclosing", "()L$KLOX_CALLABLE;")
+                            }
+                            checkcast(varDef.definedIn.javaClassName)
                         }
-                        checkcast(varDef.definedIn.javaClassName)
+                        getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
                     }
-                    getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                    putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
                 }
                 pop()
             }
@@ -1244,8 +1253,14 @@ class Compiler : Program.Visitor<ClassPool> {
                 .addField(PRIVATE or FINAL, "__enclosing", "L$KLOX_CALLABLE;")
                 .addField(PRIVATE or FINAL, "__owner", "L$KLOX_CLASS;")
                 .apply {
-                    for (captured in functionExpr.captured + functionExpr.variables.filter { it.isCaptured }) {
-                        addField(PUBLIC, captured.javaName, "L$KLOX_CAPTURED_VAR;")
+                    if (functionExpr.isMain) {
+                        for (global in functionExpr.variables) {
+                            addField(PUBLIC or STATIC, global.javaName, if (global.isCaptured) "L$KLOX_CAPTURED_VAR;" else "Ljava/lang/Object;")
+                        }
+                    } else {
+                        for (captured in functionExpr.captured + functionExpr.variables.filter { it.isCaptured }) {
+                            addField(PUBLIC, captured.javaName, "L$KLOX_CAPTURED_VAR;")
+                        }
                     }
                 }
                 .addMethod(PUBLIC, "<init>", "(L$KLOX_CALLABLE;)V") {
@@ -1255,13 +1270,17 @@ class Compiler : Program.Visitor<ClassPool> {
                     aload_1()
                     putfield(targetClass.name, "__enclosing", "L$KLOX_CALLABLE;")
                     val lateInitVars = functionExpr.variables.filter { it.isLateInit }
-                    // Create null captured values for global lateinit variables
+                    // Create null captured values for lateinit variables
                     for ((i, variable) in lateInitVars.withIndex()) {
                         if (i == 0) aload_0()
-                        dup()
+                        if (!targetClass.isMain) dup()
                         aconst_null()
                         box(variable)
-                        putfield(targetClass.name, variable.javaName, "L$KLOX_CAPTURED_VAR;")
+                        if (targetClass.isMain) {
+                            putstatic(KLOX_MAIN_CLASS, variable.javaName, "L$KLOX_CAPTURED_VAR;")
+                        } else {
+                            putfield(targetClass.name, variable.javaName, "L$KLOX_CAPTURED_VAR;")
+                        }
                         if (i == lateInitVars.size - 1) pop()
                     }
                     return_()
@@ -1712,6 +1731,9 @@ class Compiler : Program.Visitor<ClassPool> {
         )
     }
 
+    val FunctionExpr.isMain: Boolean
+        get() = this == mainFunction.functionExpr
+
     companion object {
         const val KLOX_CALLABLE = "klox/KLoxCallable"
         const val KLOX_FUNCTION = "klox/KLoxFunction"
@@ -1720,5 +1742,10 @@ class Compiler : Program.Visitor<ClassPool> {
         const val KLOX_CAPTURED_VAR = "klox/CapturedVar"
         const val KLOX_INVOKER = "klox/Invoker"
         const val KLOX_EXCEPTION = "klox/Exception"
+        const val KLOX_MAIN_CLASS = "Main"
+        const val KLOX_MAIN_FUNCTION = "main"
     }
 }
+
+val Clazz.isMain: Boolean
+    get() = this.name == KLOX_MAIN_CLASS

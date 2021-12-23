@@ -66,11 +66,6 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         this.mainFunction = mainFunction
         mainFunction.accept(this)
 
-        if (debug == true) {
-            println("Unresolved: ${unresolved.map { "$it (${it.second.hashCode()})" }}")
-            println("Lateinits: ${lateInits.map { "$it (${it.hashCode()})" }}")
-        }
-
         // Late initialization when capturing in initializer e.g. f in the following:
         // var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
         mainFunction.accept(
@@ -100,9 +95,22 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             })
         )
 
-        // Mark all slots used in all functions as used
+        // Remove ThisDef and SuperDef -> these were used to resolve the this/super expressions in resolveLocal
+        // but they are not needed anymore. TODO: refactor to not require removing them like this?
+        definedIns.keys.removeAll(definedIns.keys.filter { it is ThisDef || it is SuperDef }.toSet())
+
+        // Mark all slots used in all functions as used, after resolving
+        // all slots were used at some point. Then `temp()` variables can be
+        // created based on the number of slots used.
         slotsInFunctions.values.flatMap { it.values }.forEach {
             it.isUsed = true
+        }
+
+        if (debug == true) {
+            println("Unresolved: ${unresolved.map { "$it (${it.second.hashCode()})" }}")
+            println("Lateinits: ${lateInits.map { "$it (${it.hashCode()})" }}")
+            println("Globals: ${globals.map { "$it (${it.hashCode()})" }}")
+            println("Main variables: ${mainFunction.functionExpr.variables.map { "$it (${it.hashCode()})" }}")
         }
     }
 
@@ -137,16 +145,15 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             error(varDef.name, "Too many local variables in function.")
         }
 
+        if (currentFunction.isMain) globals.add(varDef)
+
         if (scopes.peek().count { it.key.name.lexeme == varDef.name.lexeme } > 0) {
             if (isGlobalScope) {
                 val key = scopes.peek().keys.single { it.name.lexeme == varDef.name.lexeme }
                 // Special case: global scope allows redefining var in initializer, so replace the varDef with the VarDef of the original `a`.
                 /* var a = "foo"; var a = a; */
                 scopes.peek().remove(key)
-                if (varDef is VarStmt && varDef.initializer is VarAccess) {
-                    slotsInFunctions[currentFunction]?.set(varDef, slotsInFunctions[currentFunction]?.remove(key)!!)
-                    varDef = key
-                }
+                if (varDef is VarStmt && varDef.initializer is VarAccess) varDef = key
             } else error(varDef.name, "Already a variable with this name in this scope.")
         }
 
@@ -165,7 +172,8 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         definedIns[varDef] = currentFunction // TODO why does use_local_in_initializer fail without this?
 
         // Assign a slot to the variable
-        with(currentFunction) {
+        // Globals don't get a slot, they are stored as fields in the main class
+        if (!varDef.isGlobal) with(currentFunction) {
             assign(
                 // Parameters always get assigned to slots 1..n
                 if (varDef is Parameter) params.indexOf(varDef) + 1 else nextSlotNumber(),
@@ -343,17 +351,9 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         beginScope()
 
-        define(object : VarDef {
-            override val name: Token get() = Token(IDENTIFIER, "this", "this", classStmt.name.line)
-            override fun toString() = "<this@${classStmt.name.lexeme}>"
-        })
+        define(ThisDef(classStmt.name))
 
-        classStmt.superClass?.let {
-            define(object : VarDef {
-                override val name: Token get() = Token(IDENTIFIER, "super", "super", classStmt.name.line)
-                override fun toString() = "<super@${classStmt.name.lexeme}>"
-            })
-        }
+        classStmt.superClass?.let { define(SuperDef(classStmt.name)) }
 
         classStmt.methods.forEach {
             resolveFunction(it.functionExpr, "${classStmt.name.lexeme}\$${it.name.lexeme}")
@@ -425,7 +425,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         private fun FunctionExpr.capture(varDef: VarDef) {
             if (!captured.contains(varDef)) {
-                assign(nextSlotNumber(ensureNewSlot = true), varDef)
+                if (!varDef.isGlobal) assign(nextSlotNumber(ensureNewSlot = true), varDef)
                 captured.add(varDef)
             }
         }
@@ -504,8 +504,12 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
             assign(nextSlotNumber(), it)
         }
 
+        private val globals = mutableSetOf<VarDef>()
+        val VarDef.isGlobal: Boolean
+            get() = globals.contains(this)
+
         val FunctionExpr.maxLocals: Int
-            get() = slotsInFunctions[this]?.maxOf { it.value.number } ?: 0
+            get() = slotsInFunctions[this]?.maxOfOrNull { it.value.number } ?: 0
 
         private val javaFieldNames = WeakHashMap<VarDef, String>()
         val VarDef.javaName: String
@@ -517,5 +521,15 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         val ClassStmt.javaClassName: String
             get() = javaClassNames.getOrDefault(this, this.name.lexeme)
+
+        class ThisDef(private val className: Token) : VarDef {
+            override val name: Token get() = Token(IDENTIFIER, "this", "this", className.line)
+            override fun toString() = "<this@${className.lexeme}>"
+        }
+
+        class SuperDef(private val className: Token) : VarDef {
+            override val name: Token get() = Token(IDENTIFIER, "super", "super", className.line)
+            override fun toString() = "<super@${className.lexeme}>"
+        }
     }
 }

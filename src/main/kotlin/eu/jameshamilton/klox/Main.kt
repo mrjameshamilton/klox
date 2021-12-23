@@ -1,6 +1,8 @@
 package eu.jameshamilton.klox
 
 import eu.jameshamilton.klox.compile.Compiler
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_MAIN_CLASS
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_MAIN_FUNCTION
 import eu.jameshamilton.klox.compile.contains
 import eu.jameshamilton.klox.interpret.Interpreter
 import eu.jameshamilton.klox.interpret.Resolver
@@ -171,11 +173,10 @@ fun run(programClassPool: ClassPool) {
     if (programClassPool.contains("Main")) {
         if (debug == true) println("Executing...")
         val clazzLoader = ClassPoolClassLoader(programClassPool)
-        Thread.currentThread().contextClassLoader = clazzLoader
         clazzLoader
-            .loadClass("Main")
+            .loadClass(KLOX_MAIN_CLASS)
             .declaredMethods
-            .single { it.name == "main" }
+            .single { it.name == KLOX_MAIN_FUNCTION }
             .invoke(null, args.toTypedArray())
     }
 }

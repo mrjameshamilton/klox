@@ -6,7 +6,9 @@ import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_CLASS
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_EXCEPTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_FUNCTION
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
+import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_MAIN_CLASS
 import eu.jameshamilton.klox.compile.Resolver.Companion.isCaptured
+import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobal
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
@@ -428,31 +430,44 @@ fun Composer.stringify(): Composer = helper("Main", "stringify", stackInputSize 
 }
 
 /**
- * Declare a Klox local variable - takes into account if the variable is captured or not.
+ * Declare a Klox local variable - takes into account if the variable is global, late init, captured or not.
+ *
+ * The initial value should be on the stack.
+ *
+ * Globals are stored as static fields in the main class.
+ * Captured variables are stored as non-static fields in the capturing class.
+ * Late init variables are captured variables that are used before they are declared e.g. using a global from a function before it's declared.
+ *    -> A CapturedVar with a null value is put in the field in the function's constructor.
  */
-fun Composer.declare(func: FunctionExpr, varDef: VarDef): Composer {
-    if (varDef.isCaptured) when {
-        varDef.isLateInit -> {
-            // Variable was not yet initialized, so set the initial value. A CapturedVar
-            // with a null value is put in the field in the function's constructor.
-            aload_0()
-            getfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-            dup_x1()
+fun Composer.declare(func: FunctionExpr, varDef: VarDef): Composer = when {
+    varDef.isGlobal -> when {
+        // Declaring a global variable so access directly the static field.
+        varDef.isCaptured && varDef.isLateInit -> {
+            getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
             swap()
             invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
         }
-        else -> {
-            box(varDef)
-            dup()
-            aload_0()
-            swap()
-            putfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-        }
+        varDef.isCaptured -> box(varDef).putstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+        else -> putstatic(KLOX_MAIN_CLASS, varDef.javaName, "Ljava/lang/Object;")
     }
-
-    astore(func.slot(varDef))
-
-    return this
+    varDef.isCaptured && varDef.isLateInit -> {
+        aload_0()
+        getfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+        dup_x1()
+        swap()
+        invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
+        astore(func.slot(varDef))
+    }
+    varDef.isCaptured -> {
+        box(varDef)
+        dup()
+        aload_0()
+        swap()
+        putfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+        astore(func.slot(varDef))
+    }
+    // normal locals
+    else -> astore(func.slot(varDef))
 }
 
 /**
@@ -502,10 +517,19 @@ fun Composer.unbox(varDef: VarDef): Composer {
  *
  * Takes into account if it's captured or not.
  */
-fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer {
-    aload(function.slot(varDef))
-    if (varDef.isCaptured) unbox(varDef)
-    return this
+fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer = when {
+    varDef.isGlobal -> if (varDef.isCaptured) {
+        if (targetClass.isMain) {
+            getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+        } else {
+            aload_0()
+            getfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+        }
+        unbox(varDef)
+    } else getstatic(KLOX_MAIN_CLASS, varDef.javaName, "Ljava/lang/Object;")
+    else -> aload(function.slot(varDef)).also {
+        if (varDef.isCaptured) unbox(varDef)
+    }
 }
 
 /**
@@ -513,12 +537,25 @@ fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer {
  *
  * Takes into account if it's captured or not.
  */
-fun Composer.store(function: FunctionExpr, varDef: VarDef): Composer = if (varDef.isCaptured) {
-    aload(function.slot(varDef))
-    swap()
-    invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
-} else {
-    astore(function.slot(varDef))
+fun Composer.store(function: FunctionExpr, varDef: VarDef): Composer = when {
+    varDef.isGlobal -> {
+        if (varDef.isCaptured) {
+            if (targetClass.isMain) {
+                getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+            } else {
+                aload_0()
+                getfield(targetClass.name, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+            }
+            swap()
+            invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
+        } else putstatic(KLOX_MAIN_CLASS, varDef.javaName, "Ljava/lang/Object;")
+    }
+    varDef.isCaptured -> {
+        aload(function.slot(varDef))
+        swap()
+        invokevirtual(KLOX_CAPTURED_VAR, "setValue", "(Ljava/lang/Object;)V")
+    }
+    else -> astore(function.slot(varDef))
 }
 
 /**
