@@ -18,7 +18,7 @@ import kotlin.contracts.ExperimentalContracts
 // TODO: validate modifiers
 // TODO: check data classes
 class Checker : ASTVisitor<Unit> {
-    private var inLoop = false
+    private var inLoop = 0
     private var currentFunction: FunctionExpr? = null
     private var currentFunctionStmt: FunctionStmt? = null
     private var currentClassType = NONE
@@ -51,26 +51,26 @@ class Checker : ASTVisitor<Unit> {
 
     override fun visitWhileStmt(whileStmt: WhileStmt) {
         whileStmt.condition.accept(this)
-        inLoop = true
+        inLoop++
         whileStmt.body.accept(this)
-        inLoop = false
+        inLoop--
     }
 
     override fun visitDoWhileStmt(whileStmt: DoWhileStmt) {
-        inLoop = true
+        inLoop++
         whileStmt.body.accept(this)
-        inLoop = false
+        inLoop--
         whileStmt.condition.accept(this)
     }
 
     override fun visitBreakStmt(breakStmt: BreakStmt) {
-        if (!inLoop) {
+        if (inLoop <= 0) {
             error(Token(BREAK, "break", null, -1), "break statement is only allowed in loops.")
         }
     }
 
     override fun visitContinueStmt(continueStmt: ContinueStmt) {
-        if (!inLoop) {
+        if (inLoop <= 0) {
             error(Token(CONTINUE, "continue", null, -1), "continue statement is only allowed in loops.")
         }
     }

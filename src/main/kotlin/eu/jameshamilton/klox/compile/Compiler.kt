@@ -15,6 +15,9 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.temp
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
+import eu.jameshamilton.klox.compile.composer.break_
+import eu.jameshamilton.klox.compile.composer.continue_
+import eu.jameshamilton.klox.compile.composer.loop
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.hadError
 import eu.jameshamilton.klox.parse.ArrayExpr
@@ -283,40 +286,33 @@ class Compiler : Program.Visitor<ClassPool> {
             label(endLabel)
         }
 
-        private lateinit var currentLoopContinueLabel: Label
-        private lateinit var currentLoopBreakLabel: Label
-
         override fun visitWhileStmt(whileStmt: WhileStmt): Unit = with(composer) {
-            val (conditionLabel, loopBody, endLabel) = labels(3)
-            currentLoopContinueLabel = conditionLabel
-            currentLoopBreakLabel = endLabel
-            label(conditionLabel)
-            whileStmt.condition.accept(this@FunctionCompiler)
-            ifnontruthy(endLabel)
-            label(loopBody)
-            whileStmt.body.accept(this@FunctionCompiler)
-            goto_(conditionLabel)
-            label(endLabel)
+            loop { condition, body, end ->
+                label(condition)
+                whileStmt.condition.accept(this@FunctionCompiler)
+                ifnontruthy(end)
+                label(body)
+                whileStmt.body.accept(this@FunctionCompiler)
+                goto_(condition)
+            }
         }
 
         override fun visitDoWhileStmt(whileStmt: DoWhileStmt): Unit = with(composer) {
-            val (conditionLabel, loopBody, endLabel) = labels(3)
-            currentLoopContinueLabel = conditionLabel
-            currentLoopBreakLabel = endLabel
-            label(loopBody)
-            whileStmt.body.accept(this@FunctionCompiler)
-            label(conditionLabel)
-            whileStmt.condition.accept(this@FunctionCompiler)
-            iftruthy(loopBody)
-            label(endLabel)
+            loop { condition, body, _ ->
+                label(body)
+                whileStmt.body.accept(this@FunctionCompiler)
+                label(condition)
+                whileStmt.condition.accept(this@FunctionCompiler)
+                iftruthy(body)
+            }
         }
 
         override fun visitBreakStmt(breakStmt: BreakStmt): Unit = with(composer) {
-            goto_(currentLoopBreakLabel)
+            break_()
         }
 
         override fun visitContinueStmt(continueStmt: ContinueStmt): Unit = with(composer) {
-            goto_(currentLoopContinueLabel)
+            continue_()
         }
 
         override fun visitMultiVarStmt(multiVarStmt: MultiVarStmt) =

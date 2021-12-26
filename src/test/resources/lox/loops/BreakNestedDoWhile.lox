@@ -1,0 +1,21 @@
+var i = 0;
+do {
+    print "i = " + i;
+    var j = 0;
+    while (j < 5) {
+        if (i == 5) break;
+        print "j = " + j;
+        j = j + 1;
+    }
+    break;
+    print "end of loop";
+    i = i + 1;
+} while (i < 10);
+// expect: i = 0
+// expect: j = 0
+// expect: j = 1
+// expect: j = 2
+// expect: j = 3
+// expect: j = 4
+print "end";
+// expect: end
