@@ -28,6 +28,8 @@ sealed class Switch(
         val lookupLabels = lookupIndices
             .map { it.key to Label() }
             .toMap()
+            // lookupswitch indices must be sorted in ascending order
+            .toSortedMap()
 
         lookupswitch(default, lookupLabels.keys.toTypedArray().toIntArray(), lookupLabels.values.toTypedArray())
 

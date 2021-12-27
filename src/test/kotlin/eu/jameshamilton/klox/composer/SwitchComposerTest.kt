@@ -202,6 +202,27 @@ class SwitchComposerTest : FunSpec({
         } shouldBe "B!"
     }
 
+    test("Integer switch wrong order") {
+        execute {
+            ldc(1)
+            switch(
+                DefaultVariableAllocator(),
+                2 case {
+                    ldc("A!")
+                    break_()
+                },
+                1 case {
+                    ldc("B!")
+                    break_()
+                },
+                default = {
+                    ldc("default")
+                }
+            )
+            areturn()
+        } shouldBe "B!"
+    }
+
     test("Integer switch fallthrough") {
         execute {
             ldc(1)
