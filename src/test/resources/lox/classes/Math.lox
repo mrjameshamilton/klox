@@ -1,4 +1,4 @@
-class Math {
+class MathExample {
     static square(n) {
         return n * n;
     }
@@ -7,5 +7,5 @@ class Math {
     }
 }
 
-print Math.square(3); // expect: 9
-print Math().sum(1, 1); // expect: 2
+print MathExample.square(3); // expect: 9
+print MathExample().sum(1, 1); // expect: 2

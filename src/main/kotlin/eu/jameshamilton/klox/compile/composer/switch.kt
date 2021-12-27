@@ -140,3 +140,13 @@ fun Composer.switch(function: FunctionExpr, vararg cases: SwitchCase<*>, default
         cases = cases,
         default = default
     )
+
+fun Composer.switch(temporary: Int, vararg cases: SwitchCase<*>, default: Composer.() -> Unit = {}): Composer =
+    switch(
+        object : VariableAllocator {
+            override fun next(): Int = temporary
+            override fun free(index: Int) {}
+        },
+        cases = cases,
+        default = default
+    )

@@ -16,8 +16,10 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.temp
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.compile.composer.break_
+import eu.jameshamilton.klox.compile.composer.case
 import eu.jameshamilton.klox.compile.composer.continue_
 import eu.jameshamilton.klox.compile.composer.loop
+import eu.jameshamilton.klox.compile.composer.switch
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.hadError
 import eu.jameshamilton.klox.parse.ArrayExpr
@@ -932,7 +934,8 @@ class Compiler : Program.Visitor<ClassPool> {
                 dup()
                 method.accept(this@FunctionCompiler)
                 dup_x2()
-                invokevirtual(classStmt.javaClassName, "addMethod", "(L$KLOX_FUNCTION;)V")
+
+                putfield(classStmt.javaClassName, method.javaName, "L$KLOX_FUNCTION;")
                 invokevirtual(method.functionExpr.javaClassName, "setOwner", "(L$KLOX_CLASS;)V")
             }
         }
@@ -1107,8 +1110,12 @@ class Compiler : Program.Visitor<ClassPool> {
                 .addInterface(KLOX_CLASS)
                 .addInterface(KLOX_CALLABLE)
                 .addField(PRIVATE or FINAL, "__enclosing", "L$KLOX_CALLABLE;")
-                .addField(PRIVATE or FINAL, "__methods", "Ljava/util/Map;")
                 .apply { if (classStmt.superClass != null) addField(PRIVATE or FINAL, "__superClass", "L$KLOX_CLASS;") }
+                .apply {
+                    for (method in classStmt.methods) {
+                        addField(PUBLIC, method.javaName, "L$KLOX_FUNCTION;")
+                    }
+                }
                 .addMethod(PUBLIC, "<init>", """(L$KLOX_CALLABLE;${if (classStmt.superClass != null) "L$KLOX_CLASS;" else ""})V""") {
                     aload_0()
                     dup()
@@ -1120,11 +1127,6 @@ class Compiler : Program.Visitor<ClassPool> {
                         aload_2()
                         putfield(targetClass.name, "__superClass", "L$KLOX_CLASS;")
                     }
-                    aload_0()
-                    new_("java/util/HashMap")
-                    dup()
-                    invokespecial("java/util/HashMap", "<init>", "()V")
-                    putfield(targetClass.name, "__methods", "Ljava/util/Map;")
                     return_()
                 }
                 .addMethod(PUBLIC or VARARGS, "invoke", "([Ljava/lang/Object;)Ljava/lang/Object;") {
@@ -1185,43 +1187,29 @@ class Compiler : Program.Visitor<ClassPool> {
                     }
                     areturn()
                 }
-                .addMethod(PUBLIC, "addMethod", "(L$KLOX_FUNCTION;)V") {
-                    aload_0()
-                    getfield(targetClass.name, "__methods", "Ljava/util/Map;")
-                    aload_1()
-                    invokeinterface(KLOX_FUNCTION, "getName", "()Ljava/lang/String;")
-                    aload_1()
-                    invokeinterface(
-                        "java/util/Map",
-                        "put",
-                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
-                    )
-                    pop()
-                    return_()
-                }
                 .addMethod(PUBLIC, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;") {
-                    val (end, endNull) = labels(2)
-                    aload_0()
-                    getfield(targetClass.name, "__methods", "Ljava/util/Map;")
                     aload_1()
-                    invokeinterface("java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;")
-                    dup()
-                    ifnonnull(end)
-                    pop()
-                    aload_0()
-                    invokeinterface(KLOX_CLASS, "getSuperClass", "()L$KLOX_CLASS;")
-                    dup()
-                    ifnull(endNull)
-                    aload_1()
-                    invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
-
-                    label(end)
-                    checkcast(KLOX_FUNCTION)
-                    areturn()
-
-                    label(endNull)
-                    aconst_null()
-                    areturn()
+                    switch(
+                        temporary = 2,
+                        *classStmt.methods.map {
+                            it.name.lexeme case {
+                                aload_0()
+                                getfield(targetClass.name, it.javaName, "L$KLOX_FUNCTION;")
+                                areturn()
+                            }
+                        }.toTypedArray(),
+                        default = {
+                            if (classStmt.superClass != null) {
+                                aload_0()
+                                getfield(targetClass.name, "__superClass", "L$KLOX_CLASS;")
+                                aload_1()
+                                invokeinterface(KLOX_CLASS, "findMethod", "(Ljava/lang/String;)L$KLOX_FUNCTION;")
+                            } else {
+                                aconst_null()
+                            }
+                            areturn()
+                        }
+                    )
                 }
                 .addMethod(PUBLIC, "toString", "()Ljava/lang/String;") {
                     ldc(classStmt.name.lexeme)
