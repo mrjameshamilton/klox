@@ -4,6 +4,8 @@ import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import java.util.Stack
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
+fun Composer.Label() = createLabel()
+
 private var breakLabels: Stack<Label> = Stack()
 private var continueLabels: Stack<Label> = Stack()
 
