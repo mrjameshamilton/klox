@@ -228,6 +228,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
 
                 if (modifiers.contains(NATIVE)) {
+                    assert(name != null) { "Native functions must have a name." }
                     findNative(this@Compiler, className, name!!, function)(this)
                 } else {
                     function.body.forEach {
