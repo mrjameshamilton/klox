@@ -385,6 +385,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         lateInits.clear()
         superThisAccessDepths.clear()
         varUseMap.clear()
+        globals.clear()
         captures.clear()
         definedIns.clear()
         functionDepths.clear()
