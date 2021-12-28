@@ -38,6 +38,7 @@ import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
+import eu.jameshamilton.klox.parse.visitor.AllClassStmtVisitor
 import eu.jameshamilton.klox.parse.visitor.AllFunctionExprVisitor
 import eu.jameshamilton.klox.parse.visitor.AllFunctionStmtVisitor
 import eu.jameshamilton.klox.parse.visitor.AllVarStmtVisitor
@@ -66,21 +67,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         this.mainFunction = mainFunction
         mainFunction.accept(this)
 
-        // Late initialization when capturing in initializer e.g. f in the following:
-        // var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
-        mainFunction.accept(
-            AllVarStmtVisitor(object : VarStmt.Visitor<Unit> {
-                override fun visitVarStmt(varStmt: VarStmt) {
-                    if (varStmt.isCaptured) varStmt.initializer?.accept(
-                        AllFunctionExprVisitor(object : FunctionExpr.Visitor<Unit> {
-                            override fun visitFunctionExpr(functionExpr: FunctionExpr) {
-                                if (functionExpr.captured.contains(varStmt)) lateInits += varStmt
-                            }
-                        })
-                    )
-                }
-            })
-        )
+        lateInits += findSelfReferencingLateInits(mainFunction)
 
         val okClass = globalClasses.single { it.name.lexeme == "Ok" }
         val errorClass = globalClasses.single { it.name.lexeme == "Error" }
@@ -531,6 +518,37 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         class SuperDef(private val className: Token) : VarDef {
             override val name: Token get() = Token(IDENTIFIER, "super", "super", className.line)
             override fun toString() = "<super@${className.lexeme}>"
+        }
+
+        private fun findSelfReferencingLateInits(mainFunction: FunctionStmt): Set<VarDef> = mutableSetOf<VarDef>().also { lateInits ->
+            class LateInitVarAdder(val varDef: VarDef) : FunctionExpr.Visitor<Unit> {
+                override fun visitFunctionExpr(functionExpr: FunctionExpr) {
+                    if (functionExpr.captured.contains(varDef)) lateInits += varDef
+                }
+            }
+
+            // Late initialization when capturing in initializer e.g. f in the following:
+            // var f = fun (a) { if (a == 0) return 0; else return a + f(a - 1); };
+            mainFunction.accept(
+                AllVarStmtVisitor(object : VarStmt.Visitor<Unit> {
+                    override fun visitVarStmt(varStmt: VarStmt) {
+                        if (varStmt.isCaptured) varStmt.initializer?.accept(
+                            AllFunctionExprVisitor(LateInitVarAdder(varStmt))
+                        )
+                    }
+                })
+            )
+
+            // Late initialization when capturing the class itself in methods of a class.
+            mainFunction.accept(
+                AllClassStmtVisitor(object : ClassStmt.Visitor<Unit> {
+                    override fun visitClassStmt(classStmt: ClassStmt) {
+                        if (classStmt.isCaptured) classStmt.methods.forEach {
+                            it.functionExpr.accept(AllFunctionExprVisitor(LateInitVarAdder(classStmt)))
+                        }
+                    }
+                })
+            )
         }
     }
 }
