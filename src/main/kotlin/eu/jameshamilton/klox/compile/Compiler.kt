@@ -257,6 +257,51 @@ class Compiler : Program.Visitor<ClassPool> {
             }
         }
 
+        /**
+         * Compile a function, using the receiver Composer to generate the bytecode.
+         */
+        private fun Composer.compile(
+            currentCompiler: FunctionCompiler,
+            function: FunctionExpr,
+            className: String? = null,
+            modifiers: EnumSet<ModifierFlag> = ModifierFlag.empty(),
+            name: String? = null,
+            initializer: (proguard.classfile.editor.CompactCodeAttributeComposer.() -> Unit)? = null
+        ) {
+            val (clazz, _) = FunctionCompiler(enclosingCompiler = currentCompiler)
+                .compile(className, modifiers, name, function)
+
+            new_(clazz)
+            dup()
+            aload_0()
+            invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;)V")
+
+            if (function.captured.isNotEmpty()) dup()
+
+            initializer?.invoke(this)
+
+            if (function.captured.isNotEmpty()) {
+                for (varDef in function.captured) {
+                    dup() // the function object
+                    if (varDef.isGlobal) {
+                        getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                    } else {
+                        aload_0()
+                        if (currentCompiler.enclosingCompiler?.function != null) {
+                            for (i in currentCompiler.enclosingCompiler.function.depth downTo varDef.definedIn.depth) {
+                                invokeinterface(KLOX_CALLABLE, "getEnclosing", "()L$KLOX_CALLABLE;")
+                            }
+                            checkcast(varDef.definedIn.javaClassName)
+                        }
+                        getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
+                    }
+                }
+                pop()
+            }
+        }
+
         override fun visitExprStmt(exprStmt: ExprStmt): Unit = with(composer) {
             exprStmt.expression.accept(this@FunctionCompiler)
             // Anything left on the stack by the expression should be discarded because statements don't produce values.
@@ -832,47 +877,21 @@ class Compiler : Program.Visitor<ClassPool> {
             label(end)
         }
 
-        override fun visitFunctionStmt(functionStmt: FunctionStmt): Unit =
-            visitFunction(functionStmt.classStmt?.name?.lexeme, functionStmt.modifiers, functionStmt.name.lexeme, functionStmt.functionExpr) {
-                // If a method, don't need to store, it should remain on the stack so that it can be added to the class
-                if (functionStmt.classStmt == null) declare(this@FunctionCompiler.function, functionStmt)
+        override fun visitFunctionStmt(functionStmt: FunctionStmt): Unit = with(composer) {
+            compile(
+                currentCompiler = this@FunctionCompiler,
+                function = functionStmt.functionExpr,
+                className = functionStmt.classStmt?.name?.lexeme,
+                modifiers = functionStmt.modifiers,
+                name = functionStmt.name.lexeme
+            ) {
+                // Function statements should declare and store the function in the current scope.
+                declare(function, functionStmt)
             }
+        }
 
-        override fun visitFunctionExpr(functionExpr: FunctionExpr) = visitFunction(null, ModifierFlag.empty(), null, functionExpr)
-
-        private fun visitFunction(className: String?, modifiers: EnumSet<ModifierFlag>, name: String?, function: FunctionExpr, initializer: (Composer.() -> Unit)? = null): Unit = with(composer) {
-            val (clazz, _) = FunctionCompiler(enclosingCompiler = this@FunctionCompiler)
-                .compile(className, modifiers, name, function)
-
-            new_(clazz)
-            dup()
-            aload_0()
-            invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;)V")
-
-            if (function.captured.isNotEmpty()) dup()
-
-            initializer?.invoke(composer)
-
-            if (function.captured.isNotEmpty()) {
-                for (varDef in function.captured) {
-                    dup() // the function object
-                    if (varDef.isGlobal) {
-                        getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                    } else {
-                        aload_0()
-                        if (enclosingCompiler?.function != null) {
-                            for (i in enclosingCompiler.function.depth downTo varDef.definedIn.depth) {
-                                invokeinterface(KLOX_CALLABLE, "getEnclosing", "()L$KLOX_CALLABLE;")
-                            }
-                            checkcast(varDef.definedIn.javaClassName)
-                        }
-                        getfield(varDef.definedIn.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                        putfield(function.javaClassName, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
-                    }
-                }
-                pop()
-            }
+        override fun visitFunctionExpr(functionExpr: FunctionExpr) = with(composer) {
+            compile(currentCompiler = this@FunctionCompiler, function = functionExpr)
         }
 
         override fun visitReturnStmt(returnStmt: ReturnStmt): Unit = with(composer) {
@@ -926,19 +945,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 invokespecial(clazz.name, "<init>", "(L$KLOX_CALLABLE;)V")
             }
 
-            if (classStmt.methods.isNotEmpty()) dup()
-
             declare(function, classStmt)
-
-            for (method in classStmt.methods) {
-                dup()
-                dup()
-                method.accept(this@FunctionCompiler)
-                dup_x2()
-
-                putfield(classStmt.javaClassName, method.javaName, "L$KLOX_FUNCTION;")
-                invokevirtual(method.functionExpr.javaClassName, "setOwner", "(L$KLOX_CLASS;)V")
-            }
         }
 
         override fun visitGetExpr(getExpr: GetExpr): Unit = with(composer) {
@@ -1114,7 +1121,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 .apply { if (classStmt.superClass != null) addField(PRIVATE or FINAL, "__superClass", "L$KLOX_CLASS;") }
                 .apply {
                     for (method in classStmt.methods) {
-                        addField(PUBLIC, method.javaName, "L$KLOX_FUNCTION;")
+                        addField(PRIVATE or FINAL, method.javaName, "L$KLOX_FUNCTION;")
                     }
                 }
                 .addMethod(PUBLIC, "<init>", """(L$KLOX_CALLABLE;${if (classStmt.superClass != null) "L$KLOX_CLASS;" else ""})V""") {
@@ -1127,6 +1134,20 @@ class Compiler : Program.Visitor<ClassPool> {
                         aload_0()
                         aload_2()
                         putfield(targetClass.name, "__superClass", "L$KLOX_CLASS;")
+                    }
+                    for (method in classStmt.methods) compile(
+                        currentCompiler = this@FunctionCompiler,
+                        function = method.functionExpr,
+                        className = method.classStmt?.name?.lexeme,
+                        modifiers = method.modifiers,
+                        name = method.name.lexeme
+                    ) {
+                        dup()
+                        aload_0()
+                        invokevirtual(method.functionExpr.javaClassName, "setOwner", "(L$KLOX_CLASS;)V")
+                        aload_0()
+                        swap()
+                        putfield(targetClass.name, method.javaName, "L$KLOX_FUNCTION;")
                     }
                     return_()
                 }
