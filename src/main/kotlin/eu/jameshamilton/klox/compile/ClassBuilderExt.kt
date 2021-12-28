@@ -36,6 +36,12 @@ fun ClassBuilder.addMethod(u2accessFlags: Int, name: String, descriptor: String,
         override fun catch_(startLabel: Label, endLabel: Label, handlerLabel: Label, catchType: String, referencedClass: Clazz?): Composer = this
         override fun catchAll(startLabel: Label, endLabel: Label): Composer = this
         override fun catchAll(startLabel: Label, endLabel: Label, handlerLabel: Label): Composer = this
+
+        override fun putfield(className: String, name: String, descriptor: String): Composer {
+            // TODO: override this, it caused a problem in the KloxTest tests - why?
+            nop().nop().nop().nop().nop()
+            return this
+        }
     })
 
     return addMethod(u2accessFlags, name, descriptor, countingComposer.codeLength) {
