@@ -1,4 +1,4 @@
-class Bar(x)
+data class Bar(x)
 data class Foo(foo, bar)
 
 print Foo(Bar(1), 2) == Foo(Bar(1), 2); // expect: true
