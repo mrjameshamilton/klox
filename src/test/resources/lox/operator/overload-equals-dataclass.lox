@@ -1,0 +1,5 @@
+data class Foo(x, y)
+
+print Foo(1, 2) == Foo(1, 2); // expect: true
+print Foo(2, 1) == Foo(1, 2); // expect: false
+print Foo(1, 1) == Foo(1, 2); // expect: false

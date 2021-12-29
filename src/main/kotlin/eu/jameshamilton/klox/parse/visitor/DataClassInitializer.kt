@@ -9,7 +9,6 @@ import eu.jameshamilton.klox.parse.ExprStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.FunctionStmt
 import eu.jameshamilton.klox.parse.GetExpr
-import eu.jameshamilton.klox.parse.GroupingExpr
 import eu.jameshamilton.klox.parse.IfStmt
 import eu.jameshamilton.klox.parse.LiteralExpr
 import eu.jameshamilton.klox.parse.LogicalExpr
@@ -20,12 +19,11 @@ import eu.jameshamilton.klox.parse.ReturnStmt
 import eu.jameshamilton.klox.parse.Stmt
 import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
-import eu.jameshamilton.klox.parse.TokenType
+import eu.jameshamilton.klox.parse.TokenType.AND
 import eu.jameshamilton.klox.parse.TokenType.EQUAL_EQUAL
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
 import eu.jameshamilton.klox.parse.TokenType.IS
 import eu.jameshamilton.klox.parse.TokenType.LEFT_PAREN
-import eu.jameshamilton.klox.parse.TokenType.OR
 import eu.jameshamilton.klox.parse.TokenType.PLUS
 import eu.jameshamilton.klox.parse.TokenType.RETURN
 import eu.jameshamilton.klox.parse.TokenType.STAR
@@ -77,11 +75,15 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
 
             if (classStmt.methods.count { it.name.lexeme == "equals" && it.functionExpr.params.size == 1 } == 0) {
                 val otherName = Parameter("other")
-                var expr: Expr = LiteralExpr(false)
+                var expr: Expr = BinaryExpr(
+                    VariableExpr(otherName.name),
+                    Token(IS, "is"),
+                    VariableExpr(classStmt.name)
+                )
                 for (parameter in parameters) {
                     expr = LogicalExpr(
                         expr,
-                        Token(OR, "or"),
+                        Token(AND, "and"),
                         BinaryExpr(
                             GetExpr(
                                 ThisExpr(Token(IDENTIFIER, "this")),
@@ -95,15 +97,6 @@ class DataClassInitializer : ClassStmt.Visitor<Unit> {
                         )
                     )
                 }
-                expr = LogicalExpr(
-                    BinaryExpr(
-                        VariableExpr(otherName.name),
-                        Token(IS, "is"),
-                        VariableExpr(classStmt.name)
-                    ),
-                    Token(TokenType.AND, "and"),
-                    GroupingExpr(expr)
-                )
                 classStmt.methods.add(
                     FunctionStmt(
                         Token(IDENTIFIER, "equals"),
