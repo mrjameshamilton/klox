@@ -61,6 +61,22 @@ class ArrayList {
         return result;
     }
 
+    flatMapIndexed(function) {
+        var length = this.length();
+        var result = ArrayList();
+        for (var i = 0; i < length; i++) {
+            var element = function(i, this.get(i));
+            if (element is ArrayList or element is Array) {
+                result.addAll(element);
+            } else {
+                result.add(element);
+            }
+        }
+        return result;
+    }
+
+    flatMap(function) = this.flatMapIndexed(fun (i, e) = function(e))
+
     withIndex() = this.mapIndexed(fun (i, e) = Pair(i, e))
 
     count(function) = this.reduce(0, fun (acc, e) {

@@ -1,0 +1,12 @@
+var result = [[1, 2], [3, 4]]
+    .flatMap(fun(sublist) = sublist.map(fun(x) = x + 1));
+
+
+for (var i in result) {
+    print i;
+}
+
+// expect: 2
+// expect: 3
+// expect: 4
+// expect: 5
