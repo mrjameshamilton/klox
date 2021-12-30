@@ -55,6 +55,7 @@ import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.UnaryExpr
+import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
@@ -92,6 +93,8 @@ class Compiler : Program.Visitor<ClassPool> {
     lateinit var resultClass: ClassStmt
     lateinit var errorClass: ClassStmt
     lateinit var okClass: ClassStmt
+    lateinit var stringClass: ClassStmt
+    lateinit var booleanClass: ClassStmt
     lateinit var numberClass: ClassStmt
     lateinit var characterClass: ClassStmt
 
@@ -114,6 +117,8 @@ class Compiler : Program.Visitor<ClassPool> {
         resultClass = globalClasses.single { it.name.lexeme == "Result" }
         errorClass = globalClasses.single { it.name.lexeme == "Error" }
         okClass = globalClasses.single { it.name.lexeme == "Ok" }
+        stringClass = globalClasses.single { it.name.lexeme == "String" }
+        booleanClass = globalClasses.single { it.name.lexeme == "Boolean" }
         numberClass = globalClasses.single { it.name.lexeme == "Number" }
         characterClass = globalClasses.single { it.name.lexeme == "Character" }
 
@@ -591,10 +596,19 @@ class Compiler : Program.Visitor<ClassPool> {
                     binaryExpr.left.accept(this@FunctionCompiler)
                     binaryExpr.right.accept(this@FunctionCompiler)
                     composer.helper(KLOX_MAIN_CLASS, "is", stackInputSize = 2, stackResultSize = 1) {
-                        val (isInstance, notInstance, loopStart) = labels(4)
+                        val (isInstance, loopStart, notInstance) = labels(3)
+                        val (checkPrimitives, checkString, checkNumber, checkBoolean) = labels(4)
+
+                        data class PrimitiveInfo(val varDef: VarDef, val javaType: String, val label: Label)
+                        val primitives = listOf(
+                            PrimitiveInfo(stringClass, "java/lang/String", checkString),
+                            PrimitiveInfo(numberClass, "java/lang/Double", checkNumber),
+                            PrimitiveInfo(booleanClass, "java/lang/Boolean", checkBoolean)
+                        )
+
                         aload_0()
                         instanceof_(KLOX_INSTANCE)
-                        ifeq(notInstance)
+                        ifeq(checkPrimitives)
 
                         aload_0()
                         checkcast(KLOX_INSTANCE)
@@ -617,6 +631,19 @@ class Compiler : Program.Visitor<ClassPool> {
                         label(isInstance)
                         TRUE()
                         areturn()
+
+                        label(checkPrimitives)
+                        for ((index, primitive) in primitives.withIndex()) {
+                            label(primitive.label)
+                            aload_0()
+                            instanceof_(primitive.javaType)
+                            ifeq(if (index == primitives.lastIndex) notInstance else primitives[index + 1].label)
+                            global(primitive.varDef)
+                            aload_1()
+                            ifacmpne(notInstance)
+                            TRUE()
+                            areturn()
+                        }
 
                         label(notInstance)
                         FALSE()

@@ -55,6 +55,8 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     val resultClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Result")) as LoxClass }
     val errorClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Error")) as LoxClass }
     val okClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Ok")) as LoxClass }
+    val stringClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "String")) as LoxClass }
+    val booleanClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Boolean")) as LoxClass }
     val numberClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Number")) as LoxClass }
     val characterClass: LoxClass by lazy { globals.get(Token(IDENTIFIER, "Character")) as LoxClass }
 
@@ -148,7 +150,6 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             EQUAL_EQUAL -> isEqual(left, right)
             PLUS -> plus()
             IS -> return when {
-                left !is LoxInstance -> false
                 right !is LoxClass -> false
                 else -> return kloxIsInstance(left, right)
             }
@@ -172,13 +173,21 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
         }
     }
 
-    private fun kloxIsInstance(kloxInstance: LoxInstance, kloxClass: LoxClass): Boolean {
-        var klass = kloxInstance.klass as LoxClass?
-        while (klass != null) {
-            if (klass == kloxClass) return true
-            else klass = klass.superClass
+    private fun kloxIsInstance(left: Any?, kloxClass: LoxClass): Boolean {
+        return when (left) {
+            is LoxInstance -> {
+                var klass = left.klass as LoxClass?
+                while (klass != null) {
+                    if (klass == kloxClass) return true
+                    else klass = klass.superClass
+                }
+                false
+            }
+            is String -> kloxClass == stringClass
+            is Double -> kloxClass == numberClass
+            is Boolean -> kloxClass == booleanClass
+            else -> false
         }
-        return false
     }
 
     override fun visitUnaryExpr(unaryExpr: UnaryExpr): Any? {

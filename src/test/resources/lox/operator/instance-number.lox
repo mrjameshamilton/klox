@@ -1,0 +1,2 @@
+print 1 is Number; // expect: true
+print "test" is Number; // expect: false

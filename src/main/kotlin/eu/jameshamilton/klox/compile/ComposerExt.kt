@@ -518,6 +518,13 @@ fun Composer.unbox(varDef: VarDef): Composer {
  * Takes into account if it's captured or not.
  */
 fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer = when {
+    varDef.isGlobal -> global(varDef)
+    else -> aload(function.slot(varDef)).also {
+        if (varDef.isCaptured) unbox(varDef)
+    }
+}
+
+fun Composer.global(varDef: VarDef): Composer = when {
     varDef.isGlobal -> if (varDef.isCaptured) {
         if (targetClass.isMain) {
             getstatic(KLOX_MAIN_CLASS, varDef.javaName, "L$KLOX_CAPTURED_VAR;")
@@ -527,9 +534,7 @@ fun Composer.load(function: FunctionExpr, varDef: VarDef): Composer = when {
         }
         unbox(varDef)
     } else getstatic(KLOX_MAIN_CLASS, varDef.javaName, "Ljava/lang/Object;")
-    else -> aload(function.slot(varDef)).also {
-        if (varDef.isCaptured) unbox(varDef)
-    }
+    else -> throw RuntimeException("Cannot load a non-global variable.")
 }
 
 /**

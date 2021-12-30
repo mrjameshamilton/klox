@@ -1,0 +1,2 @@
+print true is Boolean; // expect: true
+print "test" is Boolean; // expect: false
