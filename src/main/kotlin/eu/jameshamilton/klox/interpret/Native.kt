@@ -330,6 +330,13 @@ fun findNative(interpreter: Interpreter, className: String?, name: String): ((En
                 else kloxOk(b.toInt().toChar().toString())
             }
         }
+        "Number" -> when (name) {
+            "hashCode" -> return fun (_, args): Any {
+                if (args.isEmpty() || args.first() !is Double) throw RuntimeError(Token(IDENTIFIER, "hashCode"), "'Number.hashCode' parameter should be a number.")
+                val n = args.first() as Double
+                return n.hashCode().toDouble()
+            }
+        }
     }
 
     throw RuntimeError(Token(IDENTIFIER, name), "Native implementation for '$name' not provided.")

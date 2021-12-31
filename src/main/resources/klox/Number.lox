@@ -24,4 +24,7 @@ class Number {
     }
 
     static rangeTo(from, to) = NumberRange(from, to)
+
+    // TODO: implement in klox.
+    native static hashCode(n);
 }

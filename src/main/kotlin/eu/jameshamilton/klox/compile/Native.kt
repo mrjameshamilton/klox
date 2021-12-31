@@ -637,6 +637,17 @@ fun findNative(compiler: Compiler, className: String?, functionName: String, fun
                 areturn()
             }
         }
+        "Number" -> when (functionName) {
+            "hashCode" -> return {
+                aload_1()
+                checktype("java/lang/Double", "'Number.hashCode' parameter should be a number.")
+                boxed("java/lang/Double") {
+                    invokestatic("java/lang/Double", "hashCode", "(D)I")
+                    i2d()
+                }
+                areturn()
+            }
+        }
     }
 
     throw RuntimeError(Token(IDENTIFIER, functionName), "Native implementation for '$functionName' not provided.")
