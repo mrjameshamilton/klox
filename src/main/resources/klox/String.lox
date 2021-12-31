@@ -69,4 +69,19 @@ class String {
         }
         return result;
     }
+
+    static hashCode(str) {
+        // Implements same String hashCode algorithm as for Java strings.
+        var hash = 0;
+        var length = String.length(str);
+
+        if (String.length(str) > 0) {
+            var chars = String.toByteArray(str);
+            for (var i = 0; i < length; i++) {
+                hash = (31 * hash) + chars[i];
+            }
+        }
+
+        return hash;
+    }
 }

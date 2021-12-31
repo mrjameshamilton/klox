@@ -1,0 +1,4 @@
+print String.hashCode("Test"); // expect: 2603186
+print String.hashCode("Ea"); // expect: 2236
+print String.hashCode("FB"); // expect: 2236
+print String.hashCode(""); // expect: 0
