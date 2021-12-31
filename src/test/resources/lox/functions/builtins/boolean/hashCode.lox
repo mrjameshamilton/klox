@@ -1,0 +1,2 @@
+print Boolean.hashCode(true); // expect: 1231
+print Boolean.hashCode(false); // expect: 1237

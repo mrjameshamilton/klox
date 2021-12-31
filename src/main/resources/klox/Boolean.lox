@@ -1,1 +1,6 @@
-class Boolean
+class Boolean {
+    static hashCode(value) {
+        // Implements the same hashCode algorithm as for Java Boolean.
+        if (value) return 1231; else return 1237;
+    }
+}
