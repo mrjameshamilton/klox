@@ -5,7 +5,12 @@ class Object {
     equals(other) {
         if (nil == other) return false;
 
-        return this.hashCode() == other.hashCode();
+        if (other is String or other is Number or other is Boolean) {
+            // An object cannot be equal to a primitive.
+            return false;
+        } else {
+            return this.hashCode() == other.hashCode();
+        }
     }
 
     native toString();
