@@ -1,0 +1,11 @@
+var array = ["foo", "bar", "bar", "baz", "baz", "baz"];
+
+var map = array.groupBy(fun(entry) = entry);
+
+for (var entry in map.entries) {
+    print entry.key + " => " + entry.value.length();
+}
+
+// expect: bar => 2
+// expect: foo => 1
+// expect: baz => 3

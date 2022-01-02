@@ -1,0 +1,191 @@
+class Map {
+    init() {
+        System.fail("Abstract class");
+    }
+    get(key) = System.fail("Abstract method");
+    set(key, value) = System.fail("Abstract method");
+}
+
+class HashMap < Map {
+    init() {
+        this.size = 0;
+        this.loadFactor = 0.75;
+        this.initialCapacity = 16;
+    }
+
+    get(key) {
+       var self = this;
+
+       fun get(hash, key) {
+           var entry = self?.array?.get(hash);
+           if (entry == nil) {
+               return nil;
+           } else if (entry != nil and entry?.next == nil) {
+               return entry;
+           } else if (entry?.next != nil) {
+               do {
+                   if (hash == self.hash(entry.key) and key == entry.key) {
+                       return entry;
+                   }
+               } while ((entry = entry?.next) != nil);
+               return entry;
+           }
+           return nil;
+       }
+
+       var entry = get(this.hash(key), key);
+       if (entry == nil) return nil; else return entry.value;
+    }
+
+    set(key, value) {
+        this.resize();
+        var hash = this.hash(key);
+        var head = this.array.get(hash);
+        if (head == nil) {
+            this.array.set(hash, Entry(key, value));
+            this.size = this.size + 1;
+            return nil;
+        } else {
+            var previousValue = nil;
+            if (head?.next == nil) {
+                if (head.key == key) {
+                    previousValue = head.value;
+                    head.value = value;
+                } else {
+                    this.size = this.size + 1;
+                    head.next = Entry(key, value);
+                }
+            } else {
+                var tail;
+                do {
+                    tail = head;
+                    if (tail.key == key) {
+                        previousValue = tail.value;
+                        tail.value = value;
+                        return previousValue;
+                    }
+                } while ((head = head?.next) != nil);
+                this.size = this.size + 1;
+                tail.next = Entry(key, value);
+            }
+            return previousValue;
+        }
+    }
+
+    mapValues(function) {
+        var result = HashMap();
+        for (var entry in this.entries) {
+            result.set(entry.key, function(entry.value));
+        }
+        return result;
+    }
+
+    mapKeys(function) {
+        var result = HashMap();
+        for (var entry in this.entries) {
+            result.set(function(entry.key), entry.value);
+        }
+        return result;
+    }
+
+    containsKey(key) {
+        for (var k in this.keys) {
+            if (k == key) return true;
+        }
+        return false;
+    }
+
+    getOrPut(key, defaultValue) {
+        if (this.containsKey(key)) {
+            return this.get(key);
+        } else {
+            var value = defaultValue();
+            this.set(key, value);
+            return value;
+        }
+    }
+
+    remove(key) {
+        var hash = this.hash(key);
+        var entry = this.array.get(hash);
+
+        if (entry == nil) return nil;
+
+        if (entry.key == key) {
+            this.array.set(hash, entry?.next);
+            this.size = this.size - 1;
+            return entry.value;
+        } else {
+            var prev = nil;
+            do {
+                if (entry.key == key) {
+                    prev.next = entry.next;
+                    this.size = this.size - 1;
+                    return entry.value;
+                }
+                prev = entry;
+            } while ((entry = entry.next) != nil);
+        }
+
+        return nil;
+    }
+
+    resize() {
+        if (this?.array == nil) this.array = Array(this.initialCapacity);
+
+        // TODO: rehash entries
+        if (this.size > this.array.length() * this.loadFactor) {
+            var newArray = Array(n * 2);
+            System.arraycopy(this.array, 0, newArray, 0, n);
+            this.array = newArray;
+        }
+    }
+
+    hash(key) {
+        var hash = 0;
+
+        if (key == nil) return 0;
+        else if (key is String) hash = String.hashCode(key);
+        else if (key is Number) hash = Number.hashCode(key);
+        else if (key is Boolean) hash = Boolean.hashCode(key);
+        else hash = key.hashCode();
+
+        return Math.abs(hash) % this.array.length();
+    }
+
+    clear() {
+        this.size = 0;
+        this.array = nil;
+    }
+
+    isEmpty() = this.size == 0
+    isNotEmpty() = this.size != 0
+
+    entries {
+        var result = Array(this.size);
+
+        if (this.isNotEmpty()) {
+            var length = this.array.length();
+            for (var i = 0, j = 0; i < length; i++) {
+                var head = this.array.get(i);
+                if (head != nil) do {
+                    result[j++] = head;
+                } while ((head = head?.next) != nil);
+            }
+        }
+
+        return result;
+    }
+
+    keys {
+        return this.entries.map(fun(entry) = entry.key);
+    }
+
+    values {
+        return this.entries.map(fun(entry) = entry.value);
+    }
+
+    toString() = "HashMap"
+}
+
+data class Entry(key, value)

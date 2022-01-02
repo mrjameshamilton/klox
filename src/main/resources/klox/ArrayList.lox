@@ -52,6 +52,17 @@ class ArrayList {
         return this.length() - 1;
     }
 
+    groupBy(function) {
+        var result = HashMap();
+        var length = this.length();
+        for (var i = 0; i < length; i++) {
+            var value = this.get(i);
+            result.getOrPut(function(value), fun() = ArrayList())
+                  .add(value);
+        }
+        return result;
+    }
+
     map(function) = this.mapIndexed(fun (i, e) = function(e))
 
     mapIndexed(function) {

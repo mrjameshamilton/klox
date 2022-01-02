@@ -1,0 +1,11 @@
+var map = HashMap();
+print map.getOrPut("A", fun() = "test"); // expect: test
+print map.getOrPut("A", fun() = "test second"); // expect: test
+print map["A"]; // expect: test
+print map.keys.first(); // expect: A
+print map.values.first(); // expect: test
+
+var map2 = HashMap();
+print map2.getOrPut("A", fun() = ArrayList()); // expect: ArrayList(0)
+map2["A"].add("test");
+print map2["A"].first(); // expect: test

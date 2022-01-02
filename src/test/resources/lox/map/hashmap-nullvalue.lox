@@ -1,0 +1,5 @@
+var map = HashMap();
+
+print map["a"] = "foo"; // expect: nil
+print map["a"] = nil; // expect: foo
+print map["a"]; // expect: nil

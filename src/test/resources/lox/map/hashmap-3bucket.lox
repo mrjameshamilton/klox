@@ -1,0 +1,18 @@
+class Foo(x) {
+    hashCode() = this.x
+    equals(other) = other is Foo and other.x == this.x
+    toString() = "Foo " + this.x
+}
+
+var map = HashMap();
+var foo1 = Foo(1), foo2 = Foo(2), foo3 = Foo(3);
+print map[foo1] = "foo1"; // expect: nil
+print map[foo1]; // expect: foo1
+print map[foo2] = "foo2"; // expect: nil
+print map[foo2]; // expect: foo2
+print map[foo3] = "foo3"; // expect: nil
+print map[foo3]; // expect: foo3
+
+print "Replace foo1 with foo1-2"; // expect: Replace foo1 with foo1-2
+print map[foo1] = "foo1-2"; // expect: foo1
+print map[foo1]; // expect: foo1-2

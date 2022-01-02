@@ -1,0 +1,22 @@
+var map = HashMap();
+
+map["A"] = 1;
+map["B"] = 2;
+
+print map.size; // expect: 2
+
+print map["A"]; // expect: 1
+print map["B"]; // expect: 2
+print map["C"]; // expect: nil
+
+print map.size; // expect: 2
+
+print map.keys.first(); // expect: A
+print map.values.first(); // expect: 1
+
+print map.entries.first(); // expect: Entry(key = A, value = 1)
+
+print map.remove("A"); // expect: 1
+print map.size; // expect: 1
+print map.entries.get(0); // expect: Entry(key = B, value = 2)
+print map.keys.first(); // expect: B

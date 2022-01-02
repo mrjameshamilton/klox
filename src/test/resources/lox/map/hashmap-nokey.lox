@@ -1,0 +1,3 @@
+var map = HashMap();
+
+print map["key"]; // expect: nil
