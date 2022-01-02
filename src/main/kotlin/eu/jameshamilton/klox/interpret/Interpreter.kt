@@ -135,10 +135,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 
         return when (binaryExpr.operator.type) {
             MINUS -> (left as Double) - (right as Double)
-            SLASH -> {
-                if (right as Double == 0.0) return Double.NaN
-                return left as Double / right
-            }
+            SLASH -> return left as Double / right as Double
             STAR -> (left as Double) * (right as Double)
             STAR_STAR -> (left as Double).pow(right as Double)
             PERCENT -> (left as Double) % (right as Double)
