@@ -63,7 +63,7 @@ class CharacterRange < Range {
             next() {
                 var result = this.current;
                 this.current = this.current + this.step;
-                return Character.fromCharCode(result);
+                return Character.fromCharCode(result).orElse(0);
             }
         }
 
