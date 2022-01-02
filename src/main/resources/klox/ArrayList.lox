@@ -48,6 +48,10 @@ class ArrayList {
     first() = this.get(0)
     last() = this.get(this.size - 1)
 
+    lastIndex {
+        return this.length() - 1;
+    }
+
     map(function) = this.mapIndexed(fun (i, e) = function(e))
 
     mapIndexed(function) {
