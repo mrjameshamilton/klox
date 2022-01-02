@@ -108,6 +108,8 @@ class HashMap < Map {
     }
 
     remove(key) {
+        if (this.isEmpty()) return nil;
+
         var hash = this.hash(key);
         var entry = this.array.get(hash);
 
