@@ -146,8 +146,8 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             BANG_EQUAL -> !isEqual(left, right)
             EQUAL_EQUAL -> isEqual(left, right)
             PLUS -> plus()
-            IS -> return when {
-                right !is LoxClass -> false
+            IS -> return when (right) {
+                !is LoxClass -> false
                 else -> return kloxIsInstance(left, right)
             }
             COMMA -> return right
