@@ -139,8 +139,8 @@ class HashMap < Map {
 
         // TODO: rehash entries
         if (this.size > this.array.length() * this.loadFactor) {
-            var newArray = Array(n * 2);
-            System.arraycopy(this.array, 0, newArray, 0, n);
+            var newArray = Array(this.array.length() * 2);
+            System.arraycopy(this.array, 0, newArray, 0, this.array.length());
             this.array = newArray;
         }
     }
