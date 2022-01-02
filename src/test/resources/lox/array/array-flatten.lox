@@ -1,0 +1,15 @@
+var array = [[1,2,3],[4,5,6],[7,8,9]].flatten();
+print array.length(); // expect: 9
+for (var x in array) {
+    print x;
+}
+
+// expect: 1
+// expect: 2
+// expect: 3
+// expect: 4
+// expect: 5
+// expect: 6
+// expect: 7
+// expect: 8
+// expect: 9

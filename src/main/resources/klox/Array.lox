@@ -45,6 +45,8 @@ class Array {
 
     flatMap(function) = this.flatMapIndexed(fun (i, e) = function(e))
 
+    flatten() = this.flatMap(fun (e) = e)
+
     withIndex() = this.mapIndexed(fun (i, e) = Pair(i, e))
 
     count(function) = this.reduce(0, fun (acc, e) {
