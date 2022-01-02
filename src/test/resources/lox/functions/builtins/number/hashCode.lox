@@ -1,0 +1,3 @@
+print Number.hashCode(1); // expect: 1072693248
+print Number.hashCode(2); // expect: 1073741824
+print Number.hashCode(1/0); // expect: 2146435072
