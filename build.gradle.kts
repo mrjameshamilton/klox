@@ -21,11 +21,11 @@ dependencies {
     compileOnly("org.jetbrains:annotations:22.0.0")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.10")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.2")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.2")
-    testImplementation("io.kotest:kotest-property-jvm:5.0.2")
-    testImplementation("io.kotest:kotest-framework-datatest:5.0.2")
     testImplementation("io.mockk:mockk:1.12.1")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.3")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.3")
+    testImplementation("io.kotest:kotest-property-jvm:5.0.3")
+    testImplementation("io.kotest:kotest-framework-datatest:5.0.3")
 }
 
 tasks.test {
