@@ -188,14 +188,14 @@ class Parser(private val tokens: List<Token>) {
                     names.map { VarStmt(it) }
                 )
             } else if (match(EQUAL)) {
-                val tempForDestructure = Token(IDENTIFIER, nameFactory.next())
+                val tempForDestructure = Token(IDENTIFIER, nameFactory.next(), line = previous().line)
 
                 val variables: List<VarStmt> = names.mapIndexed { index, name ->
                     VarStmt(
                         name,
                         if (name.type != UNDERSCORE) CallExpr(
-                            GetExpr(VariableExpr(tempForDestructure), Token(IDENTIFIER, "get")),
-                            Token(LEFT_PAREN, ")"),
+                            GetExpr(VariableExpr(tempForDestructure), Token(IDENTIFIER, "get", line = name.line)),
+                            Token(LEFT_PAREN, ")", line = name.line),
                             listOf(LiteralExpr(index.toDouble()))
                         ) else null
                     )
@@ -310,11 +310,12 @@ class Parser(private val tokens: List<Token>) {
 
         if (initializer is ForInVarStmt) {
             consume(RIGHT_PAREN, "Expect ')' after for clauses.")
+            val line = previous().line
 
             val iterator = VarStmt(
-                Token(IDENTIFIER, nameFactory.next()),
+                Token(IDENTIFIER, nameFactory.next(), line = line),
                 CallExpr(
-                    GetExpr(initializer.iteratorExpr, Token(IDENTIFIER, "iterator")),
+                    GetExpr(initializer.iteratorExpr, Token(IDENTIFIER, "iterator", line = line)),
                     Token(LEFT_PAREN, ")"),
                     listOf()
                 )
@@ -322,11 +323,11 @@ class Parser(private val tokens: List<Token>) {
 
             val condition = BinaryExpr(
                 CallExpr(
-                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "hasNext")),
-                    Token(LEFT_PAREN, "("),
+                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "hasNext", line = line)),
+                    Token(LEFT_PAREN, "(", line = line),
                     listOf()
                 ),
-                Token(EQUAL_EQUAL, "=="),
+                Token(EQUAL_EQUAL, "==", line = line),
                 LiteralExpr(true)
             )
 
@@ -348,15 +349,15 @@ class Parser(private val tokens: List<Token>) {
                      } while (iterator.hasNext())
                  }
                  */
-                val tempIteratorNext = VarStmt(Token(IDENTIFIER, nameFactory.next()))
+                val tempIteratorNext = VarStmt(Token(IDENTIFIER, nameFactory.next(), line = line))
                 val assignments = mutableListOf<Expr>()
 
                 assignments.add(
                     AssignExpr(
                         tempIteratorNext.name,
                         CallExpr(
-                            GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next")),
-                            Token(LEFT_PAREN, "("),
+                            GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next", line = line)),
+                            Token(LEFT_PAREN, "(", line = line),
                             listOf()
                         )
                     )
@@ -368,8 +369,8 @@ class Parser(private val tokens: List<Token>) {
                             AssignExpr(
                                 varStmt.name,
                                 CallExpr(
-                                    GetExpr(VariableExpr(tempIteratorNext.name), Token(IDENTIFIER, "get")),
-                                    Token(LEFT_PAREN, ")"),
+                                    GetExpr(VariableExpr(tempIteratorNext.name), Token(IDENTIFIER, "get", line = line)),
+                                    Token(LEFT_PAREN, ")", line = line),
                                     listOf(LiteralExpr(index.toDouble()))
                                 )
                             )
@@ -386,8 +387,8 @@ class Parser(private val tokens: List<Token>) {
                                 // assume only one
                                 initializer.varStmts.first().name,
                                 CallExpr(
-                                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next")),
-                                    Token(LEFT_PAREN, "("),
+                                    GetExpr(VariableExpr(iterator.name), Token(IDENTIFIER, "next", line = line)),
+                                    Token(LEFT_PAREN, "(", line = line),
                                     listOf()
                                 ),
                             )

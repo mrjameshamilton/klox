@@ -1023,8 +1023,15 @@ class Compiler : Program.Visitor<ClassPool> {
             }
 
             label(throwOnlyInstancesHaveProperties)
-            pop()
-            kloxthrow(getExpr.name, "Only instances have properties.")
+            kloxthrow(getExpr.name) {
+                stringify()
+                astore_1()
+                concat(
+                    { ldc("Can't read property '${getExpr.name.lexeme}' of '") },
+                    { aload_1() },
+                    { ldc("'.") }
+                )
+            }
 
             label(notStatic)
             kloxthrow(getExpr.name) {

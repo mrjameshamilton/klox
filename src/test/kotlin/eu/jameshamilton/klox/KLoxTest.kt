@@ -53,6 +53,13 @@ class KLoxTest : FunSpec({
             !file.path.contains("if/fun_in_then.lox") &&
             !file.path.contains("if/fun_in_else.lox") &&
 
+            // Klox error messages for getExpr are different
+            !file.path.contains("field/get_on_bool.lox") &&
+            !file.path.contains("field/get_on_nil.lox") &&
+            !file.path.contains("field/get_on_num.lox") &&
+            !file.path.contains("field/get_on_string.lox") &&
+            !file.path.contains("field/get_on_function.lox") &&
+
             // klox supports bitwise or
             !file.path.contains("unexpected_character.lox") &&
 

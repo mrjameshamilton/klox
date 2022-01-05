@@ -6,4 +6,4 @@ class Foo {
 
 var foo = Foo();
 
-print foo.baz()?.bar(); // expect runtime error: Only instances have properties.
+print foo.baz()?.bar(); // expect runtime error: Can't read property 'bar' of 'baz'.

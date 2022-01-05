@@ -267,7 +267,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             if (value is LoxFunction && value.modifiers.contains(GETTER)) value.call(this) else value
         }
         else -> if (obj == null && getExpr.safeAccess) null else {
-            throw RuntimeError(getExpr.name, "Only instances have properties.")
+            throw RuntimeError(getExpr.name, "Can't read property '${getExpr.name.lexeme}' of '${stringify(this, obj)}'.")
         }
     }
 
