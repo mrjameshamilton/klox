@@ -1,0 +1,79 @@
+class Set {
+    init() {
+        System.fail("Abstract class");
+    }
+
+    add(value) {
+        System.fail("Abstract method");
+    }
+
+    remove(value) {
+        System.fail("Abstract method");
+    }
+
+    contains(value) {
+        System.fail("Abstract method");
+    }
+}
+
+class HashSet < Set {
+    init() {
+        this.map = HashMap();
+        this.PRESENT = Object();
+    }
+
+    add(value) = this.map.set(value, this.PRESENT) == this.PRESENT
+
+    addAll(elements) {
+        var result = false;
+        for (var element in elements) {
+            result = result or this.add(element);
+        }
+        return result;
+    }
+    remove(value) = this.map.remove(value) == this.PRESENT
+
+    removeAll(elements) {
+        var result = false;
+        for (var element in elements) {
+            result = result or this.remove(element);
+        }
+        return result;
+    }
+
+    contains(value) = this.map.get(value) == this.PRESENT
+
+    containsAll(elements) {
+        for (var element in elements) {
+            if (!this.contains(element)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    retainAll(elements) {
+        var toRemove = HashSet();
+        for (var element in this.map.keys) {
+            if (!elements.contains(element)) {
+                toRemove.add(element);
+            }
+        }
+        this.removeAll(toRemove);
+    }
+
+    size {
+        return this.map.size;
+    }
+
+    isEmpty() = this.size == 0
+    isNotEmpty() = this.size != 0
+
+    clear() {
+        this.map = HashMap();
+    }
+
+    toArray() = this.map.keys;
+
+    iterator() = this.map.keys.iterator()
+}

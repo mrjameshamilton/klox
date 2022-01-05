@@ -1,0 +1,10 @@
+var set = HashSet();
+
+print set.add(nil); // expect: false
+print set.add(nil); // expect: true
+print set.contains(nil); // expect: true
+print set.size; // expect: 1
+
+print set.remove(nil); // expect: true
+print set.contains(nil); // expect: false
+print set.size; // expect: 0

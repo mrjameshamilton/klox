@@ -1,0 +1,14 @@
+var set = HashSet();
+
+print set.add("A"); // expect: false
+print set.add("A"); // expect: true
+print set.size; // expect: 1
+
+print set.add("B"); // expect: false
+print set.size; // expect: 2
+
+print set.contains("A"); // expect: true
+
+print set.remove("A"); // expect: true
+print set.contains("A"); // expect: false
+print set.size; // expect: 1

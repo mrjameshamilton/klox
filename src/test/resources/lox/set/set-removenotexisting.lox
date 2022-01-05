@@ -1,0 +1,3 @@
+var set = HashSet();
+
+print set.remove("A"); // expect: false

@@ -1,0 +1,17 @@
+var set = HashSet();
+
+print set.add("A"); // expect: false
+print set.add("B"); // expect: false
+print set.add("C"); // expect: false
+print set.add("D"); // expect: false
+print set.add("E"); // expect: false
+
+for (var item in set) {
+    print item;
+}
+
+// expect: A
+// expect: B
+// expect: C
+// expect: D
+// expect: E

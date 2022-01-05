@@ -1,0 +1,5 @@
+var set = HashSet();
+print set.addAll([1, 2, 3]); // expect: false
+print set.size; // expect: 3
+print set.addAll([1]); // expect: true
+print set.size; // expect: 3
