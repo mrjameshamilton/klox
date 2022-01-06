@@ -28,13 +28,6 @@ import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun Composer.println(composer: Composer.() -> Composer): Composer {
-    getstatic("java/lang/System", "out", "Ljava/io/PrintStream;")
-    composer(this)
-    invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
-    return this
-}
-
 fun Composer.try_(composer: Composer.() -> Composer): Pair<Label, Label> {
     val (tryStart, tryEnd) = labels(2)
     label(tryStart)
@@ -505,35 +498,6 @@ fun Composer.kloxclassname(): Composer {
 }
 
 // Useful for Debugging
-
-fun Composer.printlnerr(composer: Composer.() -> Composer): Composer {
-    getstatic("java/lang/System", "err", "Ljava/io/PrintStream;")
-    composer(this)
-    invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
-    return this
-}
-
-fun Composer.printlndebug(str: String): Composer = if (debug == true) {
-    println { ldc(str) }
-} else this
-
-fun Composer.printlnpeek(prefix: String? = null): Composer {
-    if (debug != true) return this
-
-    dup()
-    getstatic("java/lang/System", "out", "Ljava/io/PrintStream;")
-    dup_x1()
-    swap()
-    if (prefix != null) {
-        getstatic("java/lang/System", "out", "Ljava/io/PrintStream;")
-        ldc(prefix)
-        invokevirtual("java/io/PrintStream", "print", "(Ljava/lang/Object;)V")
-    }
-    invokevirtual("java/io/PrintStream", "print", "(Ljava/lang/Object;)V")
-    ldc(" (stack top at offset ${this.codeLength})")
-    invokevirtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V")
-    return this
-}
 
 val Composer.codeAttribute: CodeAttribute
     get() {

@@ -29,6 +29,7 @@ import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.invokedynamic
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.loop
+import eu.jameshamilton.klox.compile.composer.println
 import eu.jameshamilton.klox.compile.composer.switch
 import eu.jameshamilton.klox.compile.composer.unbox
 import eu.jameshamilton.klox.compile.composer.unpackarray
