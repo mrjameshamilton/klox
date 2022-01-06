@@ -34,9 +34,6 @@ import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun Composer.invokedynamic(bootStrapMethodIndex: Int, name: String, descriptor: String): Composer =
-    invokedynamic(bootStrapMethodIndex, name, descriptor, null)
-
 /**
  * Concatenate strings produced by each composer. Each composer should
  * leave one object on the stack, toString will be called on the object.
