@@ -22,8 +22,6 @@ import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.VarDef
-import proguard.classfile.attribute.CodeAttribute
-import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
 // Custom Klox instructions
