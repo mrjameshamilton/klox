@@ -452,4 +452,3 @@ fun Composer.kloxclassname(): Composer {
     invokeinterface(KLOX_CLASS, "getName", "()Ljava/lang/String;")
     return this
 }
-
