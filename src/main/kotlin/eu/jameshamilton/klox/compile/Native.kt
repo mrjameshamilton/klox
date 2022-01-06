@@ -1,6 +1,7 @@
 package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
+import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.interpret.RuntimeError
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.Token

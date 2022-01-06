@@ -12,6 +12,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobal
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
+import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -30,8 +31,6 @@ import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.util.ClassUtil.internalPrimitiveTypeFromNumericClassName
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun Composer.labels(n: Int): List<Label> =
-    (1..n).map { this.createLabel() }
 
 fun Composer.TRUE(): Composer =
     getstatic("java/lang/Boolean", "TRUE", "Ljava/lang/Boolean;")
