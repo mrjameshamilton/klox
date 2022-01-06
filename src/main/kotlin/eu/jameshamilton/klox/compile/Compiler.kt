@@ -15,6 +15,8 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.Resolver.Companion.temp
 import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
+import eu.jameshamilton.klox.compile.composer.FALSE
+import eu.jameshamilton.klox.compile.composer.TRUE
 import eu.jameshamilton.klox.compile.composer.break_
 import eu.jameshamilton.klox.compile.composer.case
 import eu.jameshamilton.klox.compile.composer.continue_

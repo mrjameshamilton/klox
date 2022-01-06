@@ -31,13 +31,6 @@ import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.util.ClassUtil.internalPrimitiveTypeFromNumericClassName
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-
-fun Composer.TRUE(): Composer =
-    getstatic("java/lang/Boolean", "TRUE", "Ljava/lang/Boolean;")
-
-fun Composer.FALSE(): Composer =
-    getstatic("java/lang/Boolean", "FALSE", "Ljava/lang/Boolean;")
-
 fun Composer.box(type: String): Composer {
     boxPrimitiveType(internalPrimitiveTypeFromNumericClassName(type))
     return this
