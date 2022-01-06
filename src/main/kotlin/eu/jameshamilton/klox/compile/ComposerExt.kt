@@ -12,6 +12,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.isGlobal
 import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
+import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.unbox
 import eu.jameshamilton.klox.debug
@@ -29,11 +30,7 @@ import proguard.classfile.attribute.CodeAttribute
 import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
-import proguard.classfile.util.ClassUtil.internalPrimitiveTypeFromNumericClassName
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
-
-fun Composer.instanceof_(type: String): Composer =
-    instanceof_(type, null)
 
 fun Composer.anewarray(type: String): Composer =
     anewarray(type, null)
