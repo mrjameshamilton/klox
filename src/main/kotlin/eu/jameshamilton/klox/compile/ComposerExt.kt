@@ -455,21 +455,3 @@ fun Composer.kloxclassname(): Composer {
     return this
 }
 
-// Useful for Debugging
-
-val Composer.codeAttribute: CodeAttribute
-    get() {
-        return javaClass.getDeclaredField("codeAttributeComposer").let { field ->
-            field.isAccessible = true
-            val codeAttributeComposer = field.get(this) as CodeAttributeComposer
-            val code = codeAttributeComposer.javaClass.getDeclaredField("code").let {
-                it.isAccessible = true
-                it.get(codeAttributeComposer) as ByteArray
-            }
-            val codeLength = codeAttributeComposer.javaClass.getDeclaredField("codeLength").let {
-                it.isAccessible = true
-                it.getInt(codeAttributeComposer)
-            }
-            CodeAttribute(0, 0, 0, codeLength, code, 0, null, 0, null)
-        }
-    }

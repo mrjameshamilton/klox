@@ -24,6 +24,7 @@ import eu.jameshamilton.klox.compile.composer.break_
 import eu.jameshamilton.klox.compile.composer.case
 import eu.jameshamilton.klox.compile.composer.catchAll
 import eu.jameshamilton.klox.compile.composer.catch_
+import eu.jameshamilton.klox.compile.composer.codeAttribute
 import eu.jameshamilton.klox.compile.composer.concat
 import eu.jameshamilton.klox.compile.composer.continue_
 import eu.jameshamilton.klox.compile.composer.helper
