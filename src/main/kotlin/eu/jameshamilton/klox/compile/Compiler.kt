@@ -17,12 +17,15 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.varDef
 import eu.jameshamilton.klox.compile.Resolver.Companion.variables
 import eu.jameshamilton.klox.compile.composer.FALSE
 import eu.jameshamilton.klox.compile.composer.TRUE
+import eu.jameshamilton.klox.compile.composer.box
+import eu.jameshamilton.klox.compile.composer.boxed
 import eu.jameshamilton.klox.compile.composer.break_
 import eu.jameshamilton.klox.compile.composer.case
 import eu.jameshamilton.klox.compile.composer.continue_
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.loop
 import eu.jameshamilton.klox.compile.composer.switch
+import eu.jameshamilton.klox.compile.composer.unbox
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.hadError
 import eu.jameshamilton.klox.parse.ArrayExpr

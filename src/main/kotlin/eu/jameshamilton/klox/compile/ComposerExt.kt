@@ -13,6 +13,7 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.isLateInit
 import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.composer.labels
+import eu.jameshamilton.klox.compile.composer.unbox
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -31,28 +32,11 @@ import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.util.ClassUtil.internalPrimitiveTypeFromNumericClassName
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
 
-fun Composer.box(type: String): Composer {
-    boxPrimitiveType(internalPrimitiveTypeFromNumericClassName(type))
-    return this
-}
-
-fun Composer.unbox(type: String): Composer {
-    unboxPrimitiveType("Ljava/lang/Object;", internalPrimitiveTypeFromNumericClassName(type).toString())
-    return this
-}
-
 fun Composer.instanceof_(type: String): Composer =
     instanceof_(type, null)
 
 fun Composer.anewarray(type: String): Composer =
     anewarray(type, null)
-
-fun Composer.boxed(type: String, composer: Composer.() -> Composer): Composer {
-    unbox(type)
-    composer(this)
-    box(type)
-    return this
-}
 
 fun Composer.invokedynamic(bootStrapMethodIndex: Int, name: String, descriptor: String): Composer =
     invokedynamic(bootStrapMethodIndex, name, descriptor, null)
