@@ -2,6 +2,7 @@ package eu.jameshamilton.klox.compile
 
 import eu.jameshamilton.klox.compile.Compiler.Companion.KLOX_INSTANCE
 import eu.jameshamilton.klox.compile.composer.TRUE
+import eu.jameshamilton.klox.compile.composer.anewarray
 import eu.jameshamilton.klox.compile.composer.box
 import eu.jameshamilton.klox.compile.composer.boxed
 import eu.jameshamilton.klox.compile.composer.instanceof_

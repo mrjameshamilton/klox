@@ -14,7 +14,9 @@ import eu.jameshamilton.klox.compile.Resolver.Companion.javaName
 import eu.jameshamilton.klox.compile.Resolver.Companion.slot
 import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.labels
+import eu.jameshamilton.klox.compile.composer.packarray
 import eu.jameshamilton.klox.compile.composer.unbox
+import eu.jameshamilton.klox.compile.composer.unpackarray
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
@@ -31,9 +33,6 @@ import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
-
-fun Composer.anewarray(type: String): Composer =
-    anewarray(type, null)
 
 fun Composer.invokedynamic(bootStrapMethodIndex: Int, name: String, descriptor: String): Composer =
     invokedynamic(bootStrapMethodIndex, name, descriptor, null)
@@ -117,33 +116,6 @@ fun Composer.helper(
 
     if (stackResultSize > 1) unpackarray(stackResultSize)
 
-    return this
-}
-
-fun Composer.packarray(n: Int, type: String = "java/lang/Object"): Composer {
-    iconst(n)
-    anewarray(type)
-    for (i in 0 until n) {
-        dup_x1()
-        swap()
-        iconst(i)
-        swap()
-        aastore()
-    }
-    return this
-}
-
-fun Composer.unpackarray(n: Int, action: (Composer.(i: Int) -> Composer)? = null): Composer {
-    for (i in 0 until n) {
-        if (i != n - 1) dup()
-        iconst(i)
-        aaload()
-        if (action == null) {
-            if (i != n - 1) swap()
-        } else {
-            action.invoke(this, i)
-        }
-    }
     return this
 }
 
