@@ -17,42 +17,16 @@ import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.packarray
 import eu.jameshamilton.klox.compile.composer.unbox
-import eu.jameshamilton.klox.compile.composer.unpackarray
 import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.VarDef
-import eu.jameshamilton.klox.programClassPool
-import proguard.classfile.AccessConstants.PUBLIC
-import proguard.classfile.AccessConstants.STATIC
-import proguard.classfile.ProgramClass
-import proguard.classfile.VersionConstants.CLASS_VERSION_1_8
 import proguard.classfile.attribute.CodeAttribute
-import proguard.classfile.editor.ClassBuilder
 import proguard.classfile.editor.CodeAttributeComposer
 import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
-
-/**
- * Concatenate strings produced by each composer. Each composer should
- * leave one object on the stack, toString will be called on the object.
- * Primitives are not supported.
- */
-fun Composer.concat(vararg composers: Composer.() -> Composer): Composer {
-    // TODO invokedynamic
-    new_("java/lang/StringBuilder")
-    dup()
-    invokespecial("java/lang/StringBuilder", "<init>", "()V")
-    composers.forEach { composer ->
-        composer(this@concat)
-        invokevirtual("java/lang/Object", "toString", "()Ljava/lang/String;")
-        invokevirtual("java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;")
-    }
-    invokevirtual("java/lang/StringBuilder", "toString", "()Ljava/lang/String;")
-    return this
-}
 
 fun Composer.println(composer: Composer.() -> Composer): Composer {
     getstatic("java/lang/System", "out", "Ljava/io/PrintStream;")

@@ -5,6 +5,7 @@ import eu.jameshamilton.klox.compile.composer.TRUE
 import eu.jameshamilton.klox.compile.composer.anewarray
 import eu.jameshamilton.klox.compile.composer.box
 import eu.jameshamilton.klox.compile.composer.boxed
+import eu.jameshamilton.klox.compile.composer.concat
 import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.unbox

@@ -22,6 +22,7 @@ import eu.jameshamilton.klox.compile.composer.box
 import eu.jameshamilton.klox.compile.composer.boxed
 import eu.jameshamilton.klox.compile.composer.break_
 import eu.jameshamilton.klox.compile.composer.case
+import eu.jameshamilton.klox.compile.composer.concat
 import eu.jameshamilton.klox.compile.composer.continue_
 import eu.jameshamilton.klox.compile.composer.helper
 import eu.jameshamilton.klox.compile.composer.instanceof_
