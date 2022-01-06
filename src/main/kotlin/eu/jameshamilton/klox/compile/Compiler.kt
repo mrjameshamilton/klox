@@ -22,6 +22,8 @@ import eu.jameshamilton.klox.compile.composer.box
 import eu.jameshamilton.klox.compile.composer.boxed
 import eu.jameshamilton.klox.compile.composer.break_
 import eu.jameshamilton.klox.compile.composer.case
+import eu.jameshamilton.klox.compile.composer.catchAll
+import eu.jameshamilton.klox.compile.composer.catch_
 import eu.jameshamilton.klox.compile.composer.concat
 import eu.jameshamilton.klox.compile.composer.continue_
 import eu.jameshamilton.klox.compile.composer.helper
@@ -31,6 +33,7 @@ import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.loop
 import eu.jameshamilton.klox.compile.composer.println
 import eu.jameshamilton.klox.compile.composer.switch
+import eu.jameshamilton.klox.compile.composer.try_
 import eu.jameshamilton.klox.compile.composer.unbox
 import eu.jameshamilton.klox.compile.composer.unpackarray
 import eu.jameshamilton.klox.debug

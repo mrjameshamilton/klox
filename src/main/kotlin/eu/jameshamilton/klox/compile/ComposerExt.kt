@@ -17,7 +17,6 @@ import eu.jameshamilton.klox.compile.composer.instanceof_
 import eu.jameshamilton.klox.compile.composer.labels
 import eu.jameshamilton.klox.compile.composer.packarray
 import eu.jameshamilton.klox.compile.composer.unbox
-import eu.jameshamilton.klox.debug
 import eu.jameshamilton.klox.parse.ClassStmt
 import eu.jameshamilton.klox.parse.FunctionExpr
 import eu.jameshamilton.klox.parse.ModifierFlag
@@ -25,48 +24,7 @@ import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.VarDef
 import proguard.classfile.attribute.CodeAttribute
 import proguard.classfile.editor.CodeAttributeComposer
-import proguard.classfile.editor.CompactCodeAttributeComposer.Label
 import proguard.classfile.editor.CompactCodeAttributeComposer as Composer
-
-fun Composer.try_(composer: Composer.() -> Composer): Pair<Label, Label> {
-    val (tryStart, tryEnd) = labels(2)
-    label(tryStart)
-    composer(this)
-    label(tryEnd)
-    return Pair(tryStart, tryEnd)
-}
-
-fun Composer.catch_(start: Label, end: Label, type: String, composer: Composer.() -> Composer): Composer {
-    val (skip, handler) = labels(2)
-    catch_(start, end, handler, type, null)
-    goto_(skip)
-    label(handler)
-    composer(this)
-    label(skip)
-    return this
-}
-
-fun Composer.catchAll(start: Label, end: Label, composer: Composer.() -> Composer): Composer {
-    val (skip, handler) = labels(2)
-    goto_(skip)
-    catchAll(start, end, handler)
-    label(handler)
-    composer(this)
-    label(skip)
-    return this
-}
-
-fun Composer.throw_(type: String, message: String): Composer = throw_(type) { ldc(message) }
-
-fun Composer.throw_(type: String, message: Composer.() -> Composer): Composer {
-    message()
-    new_(type)
-    dup_x1()
-    swap()
-    invokespecial(type, "<init>", "(Ljava/lang/String;)V")
-    athrow()
-    return this
-}
 
 // Custom Klox instructions
 
