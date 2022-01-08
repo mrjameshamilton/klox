@@ -85,7 +85,7 @@ class Checker : ASTVisitor<Unit> {
         unaryExpr.right.accept(this)
 
         when (unaryExpr.operator.type) {
-            PLUS_PLUS, MINUS_MINUS -> if (ungroup(unaryExpr.right) !is VariableExpr) error(
+            PLUS_PLUS, MINUS_MINUS -> if (unaryExpr.right !is VariableExpr) error(
                 unaryExpr.operator,
                 "${unaryExpr.operator.lexeme} operand must be a variable."
             )
@@ -94,7 +94,7 @@ class Checker : ASTVisitor<Unit> {
             } else if (currentFunctionStmt?.modifiers?.contains(INITIALIZER) == true) {
                 error(unaryExpr.operator, "Can't use !? in an initializer.")
             } else unaryExpr.right.accept(this)
-            TILDE -> if (unaryExpr.right is LiteralExpr && !isKloxInteger(unaryExpr.right.value)) {
+            TILDE -> if (unaryExpr.right is LiteralExpr && !isKloxInteger((unaryExpr.right as LiteralExpr).value)) {
                 error(unaryExpr.operator, "Can't use ~ on a non-integer value.")
             }
             else -> {}

@@ -36,7 +36,6 @@ import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
-import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.runtimeError
 import java.lang.Double.doubleToRawLongBits
 import java.math.BigDecimal
@@ -206,7 +205,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
                     "${unaryExpr.operator.lexeme} operand is 'nil'."
                 )
 
-                val varExpr = ungroup(unaryExpr.right) as VariableExpr
+                val varExpr = unaryExpr.right as VariableExpr
 
                 checkNumberOperand(
                     unaryExpr.operator,

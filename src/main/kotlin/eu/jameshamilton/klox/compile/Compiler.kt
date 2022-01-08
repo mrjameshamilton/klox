@@ -76,7 +76,6 @@ import eu.jameshamilton.klox.parse.VarDef
 import eu.jameshamilton.klox.parse.VarStmt
 import eu.jameshamilton.klox.parse.VariableExpr
 import eu.jameshamilton.klox.parse.WhileStmt
-import eu.jameshamilton.klox.parse.ungroup
 import eu.jameshamilton.klox.programClassPool
 import proguard.classfile.AccessConstants.ABSTRACT
 import proguard.classfile.AccessConstants.FINAL
@@ -784,7 +783,7 @@ class Compiler : Program.Visitor<ClassPool> {
                 }
                 PLUS_PLUS, MINUS_MINUS -> {
                     val (isNull, end) = labels(2)
-                    val varDef = (ungroup(unaryExpr.right) as VariableExpr)
+                    val varDef = (unaryExpr.right as VariableExpr)
                     if (!varDef.isDefined) {
                         pop()
                         kloxthrow(unaryExpr.operator, "Variable ${varDef.name} is not defined.")

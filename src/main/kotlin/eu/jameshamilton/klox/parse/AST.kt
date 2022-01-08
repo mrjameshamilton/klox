@@ -74,7 +74,7 @@ class BinaryExpr(val left: Expr, val operator: Token, val right: Expr) : Expr {
         }
 }
 
-class UnaryExpr(val operator: Token, val right: Expr, val postfix: Boolean = false) : Expr {
+class UnaryExpr(val operator: Token, var right: Expr, val postfix: Boolean = false) : Expr {
     override fun <R> accept(visitor: Expr.Visitor<R>): R =
         visitor.visitUnaryExpr(this)
 

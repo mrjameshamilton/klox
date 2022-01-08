@@ -4,7 +4,9 @@ import eu.jameshamilton.klox.parse.ModifierFlag.*
 import eu.jameshamilton.klox.parse.Scanner.Companion.MODIFIER_KEYWORDS
 import eu.jameshamilton.klox.parse.TokenType.*
 import eu.jameshamilton.klox.parse.visitor.AllClassStmtVisitor
+import eu.jameshamilton.klox.parse.visitor.AllExprVisitor
 import eu.jameshamilton.klox.parse.visitor.DataClassInitializer
+import eu.jameshamilton.klox.parse.visitor.GroupingExprSimplifier
 import java.util.EnumSet
 import eu.jameshamilton.klox.error as errorFun
 
@@ -17,6 +19,7 @@ class Parser(private val tokens: List<Token>) {
             declaration()?.let { statements.add(it) }
         }
         return Program(statements).also {
+            it.statementAccept(AllExprVisitor(GroupingExprSimplifier()))
             it.statementAccept(AllClassStmtVisitor(DataClassInitializer()))
         }
     }
