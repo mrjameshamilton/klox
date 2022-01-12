@@ -19,7 +19,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val modifiers: EnumSet<
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         val environment = Environment(closure)
         if (declaration.params.isNotEmpty()) for (i in 0 until declaration.params.size) {
-            environment.define(declaration.params[i].name.lexeme, arguments[i])
+            environment.define(declaration.params[i].name.lexeme, isVal = false, arguments[i])
         }
 
         if (modifiers.contains(NATIVE)) {
@@ -37,7 +37,7 @@ open class LoxFunction(val classStmt: ClassStmt? = null, val modifiers: EnumSet<
 
     fun bind(instance: LoxInstance): LoxFunction {
         val environment = Environment(closure)
-        environment.define("this", instance)
+        environment.define("this", isVal = true, instance)
         return LoxFunction(classStmt, modifiers, name, declaration, environment)
     }
 

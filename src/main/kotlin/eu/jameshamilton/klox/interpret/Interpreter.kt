@@ -284,6 +284,7 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     override fun visitFunctionStmt(functionStmt: FunctionStmt) {
         environment.define(
             functionStmt.name.lexeme,
+            isVal = true,
             LoxFunction(classStmt = null, functionStmt.modifiers, functionStmt.name.lexeme, functionStmt.functionExpr, environment)
         )
     }
@@ -409,10 +410,15 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
     override fun visitContinueStmt(continueStmt: ContinueStmt) =
         throw Continue()
 
-    override fun visitVarStmt(varStmt: VarStmt) {
-        environment.define(
+    override fun visitVarStmt(varStmt: VarStmt) = when {
+        varStmt.initializer != null -> environment.define(
             varStmt.name.lexeme,
-            if (varStmt.initializer != null) evaluate(varStmt.initializer as Expr) else null
+            varStmt.isVal,
+            evaluate(varStmt.initializer as Expr)
+        )
+        else -> environment.define(
+            varStmt.name.lexeme,
+            varStmt.isVal
         )
     }
 
@@ -455,11 +461,11 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
             }
         }
 
-        environment.define(classStmt.name.lexeme)
+        environment.define(classStmt.name.lexeme, isVal = true)
 
         if (classStmt.superClass != null) {
             environment = Environment(environment)
-            environment.define("super", superClass)
+            environment.define("super", isVal = true, superClass)
         }
 
         val methods = mutableMapOf<String, LoxFunction>()
@@ -547,32 +553,41 @@ class Interpreter(val args: Array<String> = emptyArray()) : ExprVisitor<Any?>, S
 class RuntimeError(val token: Token, override val message: String) : RuntimeException(message)
 
 class Environment(val enclosing: Environment? = null) {
-    private val values: MutableMap<String, Any?> = mutableMapOf()
+    data class ValueContainer(var value: Any? = null, val isVal: Boolean, var isAssigned: Boolean)
+    private val values: MutableMap<String, ValueContainer> = mutableMapOf()
 
-    fun define(name: String, value: Any? = null) {
-        values[name] = value
+    fun define(name: String, isVal: Boolean) {
+        values[name] = ValueContainer(isVal = isVal, isAssigned = false)
     }
 
-    fun get(name: Token): Any? {
-        return if (values.containsKey(name.lexeme)) values[name.lexeme]
-        else if (enclosing != null) enclosing.get(name)
-        else {
-            throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+    fun define(name: String, isVal: Boolean, value: Any?) {
+        values[name] = ValueContainer(value, isVal, isAssigned = true)
+    }
+
+    fun get(name: Token): Any? = when {
+        values.containsKey(name.lexeme) -> values[name.lexeme]?.value
+        enclosing != null -> enclosing.get(name)
+        else -> throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+    }
+
+    fun getAt(distance: Int, name: String): Any? = ancestor(distance).values[name]?.value
+
+    fun assign(name: Token, value: Any?): Any? = when {
+        values.containsKey(name.lexeme) -> assign(name, values[name.lexeme]!!, value)
+        enclosing != null -> enclosing.assign(name, value)
+        else -> throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+    }
+
+    fun assignAt(distance: Int, name: Token, value: Any?) =
+        assign(name, ancestor(distance).values[name.lexeme]!!, value)
+
+    private fun assign(name: Token, valueContainer: ValueContainer, value: Any?) = with(valueContainer) {
+        if (this.isVal && this.isAssigned) {
+            throw RuntimeError(name, "Cannot reassign val '${name.lexeme}'.")
         }
-    }
 
-    fun getAt(distance: Int, name: String): Any? {
-        return ancestor(distance).values[name]
-    }
-
-    fun assign(name: Token, value: Any?) {
-        return if (values.containsKey(name.lexeme)) values[name.lexeme] = value
-        else if (enclosing != null) enclosing.assign(name, value)
-        else throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
-    }
-
-    fun assignAt(distance: Int, name: Token, value: Any?) {
-        ancestor(distance).values[name.lexeme] = value
+        this.value = value
+        this.isAssigned = true
     }
 
     private fun ancestor(distance: Int): Environment {

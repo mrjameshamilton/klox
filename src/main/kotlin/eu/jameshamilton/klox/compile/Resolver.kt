@@ -32,6 +32,8 @@ import eu.jameshamilton.klox.parse.ThisExpr
 import eu.jameshamilton.klox.parse.Token
 import eu.jameshamilton.klox.parse.TokenType.DOT_DOT
 import eu.jameshamilton.klox.parse.TokenType.IDENTIFIER
+import eu.jameshamilton.klox.parse.TokenType.MINUS_MINUS
+import eu.jameshamilton.klox.parse.TokenType.PLUS_PLUS
 import eu.jameshamilton.klox.parse.UnaryExpr
 import eu.jameshamilton.klox.parse.VarAccess
 import eu.jameshamilton.klox.parse.VarDef
@@ -180,7 +182,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         definedIns[varDef] = currentFunction
     }
 
-    private fun resolveLocal(varAccess: VarAccess) {
+    private fun resolveLocal(varAccess: VarAccess): VarDef? {
         if (debug == true) print("resolveLocal($varAccess)")
         for (i in scopes.size - 1 downTo 0) {
             if (scopes[i].count { it.key.name.lexeme == varAccess.name.lexeme } > 0) {
@@ -193,13 +195,14 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
                         varUseMap[varAccess] = varDef
                     }
                     if (debug == true) println(" = $varDef")
-                    return
+                    return varDef
                 }
             }
         }
 
         if (debug == true) println(" = unresolved")
         unresolved.add(Pair(currentFunction, varAccess))
+        return null
     }
 
     private fun resolveFunction(functionExpr: FunctionExpr, name: String) {
@@ -229,7 +232,10 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     override fun visitVarStmt(varStmt: VarStmt) {
         declare(varStmt)
-        varStmt.initializer?.let { resolve(it) }
+        varStmt.initializer?.let {
+            resolve(it)
+            isAssigneds.add(varStmt)
+        }
         define(varStmt)
     }
 
@@ -278,7 +284,19 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         }
     }
 
-    override fun visitUnaryExpr(unaryExpr: UnaryExpr) = resolve(unaryExpr.right)
+    override fun visitUnaryExpr(unaryExpr: UnaryExpr) {
+        resolve(unaryExpr.right)
+
+        when (unaryExpr.operator.type) {
+            PLUS_PLUS, MINUS_MINUS -> {
+                val varDef = (unaryExpr.right as VariableExpr).varDef
+                if (varDef?.isVal == true && varDef.isAssigned) {
+                    error(unaryExpr.operator, "Cannot reassign val '${varDef.name.lexeme}'.")
+                }
+            }
+            else -> {}
+        }
+    }
 
     override fun visitGroupingExpr(groupingExpr: GroupingExpr) = resolve(groupingExpr.expression)
 
@@ -297,7 +315,11 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     override fun visitAssignExpr(assignExpr: AssignExpr) {
         resolve(assignExpr.value)
-        resolveLocal(assignExpr)
+        val varDef = resolveLocal(assignExpr)
+        if (varDef?.isVal == true && varDef.isAssigned) {
+            error(assignExpr.name, "Cannot reassign val '${varDef.name.lexeme}'.")
+        }
+        varDef?.let { isAssigneds.add(it) }
     }
 
     override fun visitLogicalExpr(logicalExpr: LogicalExpr) {
@@ -364,11 +386,16 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
         arrayExpr.elements.forEach { it.accept(this) }
     }
 
-    override fun visitSuperExpr(superExpr: SuperExpr) = resolveLocal(superExpr)
+    override fun visitSuperExpr(superExpr: SuperExpr) {
+        resolveLocal(superExpr)
+    }
 
-    override fun visitThisExpr(thisExpr: ThisExpr) = resolveLocal(thisExpr)
+    override fun visitThisExpr(thisExpr: ThisExpr) {
+        resolveLocal(thisExpr)
+    }
 
     private fun clearMaps() {
+        isAssigneds.clear()
         lateInits.clear()
         superThisAccessDepths.clear()
         varUseMap.clear()
@@ -383,8 +410,10 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
     companion object {
         // TODO move these to AST nodes classes?
-
         // AST decorations for variable definition and usage.
+
+        private val isAssigneds = mutableSetOf<VarDef>()
+        val VarDef.isAssigned: Boolean get() = isAssigneds.contains(this)
 
         private val lateInits = mutableSetOf<VarDef>()
         val VarDef.isLateInit
@@ -486,6 +515,7 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         private class TempVariable : VarDef {
             override val name: Token = Token(IDENTIFIER, "temp")
+            override val isVal: Boolean get() = false
         }
 
         fun FunctionExpr.temp(): VarDef = TempVariable().also {
@@ -512,11 +542,13 @@ class Resolver : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
 
         class ThisDef(private val className: Token) : VarDef {
             override val name: Token get() = Token(IDENTIFIER, "this", "this", className.line)
+            override val isVal: Boolean get() = true
             override fun toString() = "<this@${className.lexeme}>"
         }
 
         class SuperDef(private val className: Token) : VarDef {
             override val name: Token get() = Token(IDENTIFIER, "super", "super", className.line)
+            override val isVal: Boolean get() = true
             override fun toString() = "<super@${className.lexeme}>"
         }
 

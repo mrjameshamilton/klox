@@ -66,6 +66,9 @@ class KLoxTest : FunSpec({
             // klox supports --
             !file.path.contains("operator/negate.lox") &&
 
+            // klox doesn't support reassigning classes
+            !file.path.contains("super/reassign_superclass.lox") &&
+
             // not relevant for klox?
             !file.path.contains("limit/too_many_constants.lox") &&
             !file.path.contains("limit/loop_too_large.lox") &&
