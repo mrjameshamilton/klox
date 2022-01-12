@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.guardsquare:proguard-core:8.0.4")
+    implementation("com.guardsquare:proguard-core:8.0.5")
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.4")
     implementation("org.apache.commons:commons-text:1.9")
     compileOnly("org.jetbrains:annotations:22.0.0")
