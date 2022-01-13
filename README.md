@@ -106,10 +106,6 @@ Employee("John", "Smith").greet();
 
 ## `klox` features
 
-### `val` and `var`
-
-Klox supports both `val` and `var` variables: `val` variables are immutable and `var` variables are mutable.
-
 ### Do-while loops
 
 ```c
