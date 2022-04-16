@@ -48,8 +48,8 @@ class Parser(private val tokens: List<Token>) {
                     functionBody(modifiers, functionParameters())
                 )
             }
-            if (match(VAR, VAL)) {
-                val varDeclaration = varDeclaration(isVal = previous().type == VAL)
+            if (match(VAR)) {
+                val varDeclaration = varDeclaration()
                 consume(SEMICOLON, "Expect ';' after variable declaration.")
                 return varDeclaration
             }
@@ -168,7 +168,7 @@ class Parser(private val tokens: List<Token>) {
     private class ForInVarStmt(val iteratorExpr: Expr, val isDestructuring: Boolean, val varStmts: List<VarStmt>) :
         MultiVarStmt(varStmts)
 
-    private fun varDeclaration(isVal: Boolean): MultiVarStmt {
+    private fun varDeclaration(): MultiVarStmt {
         if (match(LEFT_PAREN)) {
             // destructuring declaration e.g. var (a, b) = [1, 2];
             // syntactic sugar for
@@ -188,7 +188,7 @@ class Parser(private val tokens: List<Token>) {
                 return ForInVarStmt(
                     expression(allowCommaExpr = false),
                     isDestructuring = true,
-                    names.map { VarStmt(it, isVal = isVal) }
+                    names.map { VarStmt(it) }
                 )
             } else if (match(EQUAL)) {
                 val tempForDestructure = Token(IDENTIFIER, nameFactory.next(), line = previous().line)
@@ -196,7 +196,6 @@ class Parser(private val tokens: List<Token>) {
                 val variables: List<VarStmt> = names.mapIndexed { index, name ->
                     VarStmt(
                         name,
-                        isVal = isVal,
                         if (name.type != UNDERSCORE) CallExpr(
                             GetExpr(VariableExpr(tempForDestructure), Token(IDENTIFIER, "get", line = name.line)),
                             Token(LEFT_PAREN, ")", line = name.line),
@@ -205,7 +204,7 @@ class Parser(private val tokens: List<Token>) {
                     )
                 }
 
-                return MultiVarStmt(listOf(VarStmt(tempForDestructure, isVal = true, expression())) + variables)
+                return MultiVarStmt(listOf(VarStmt(tempForDestructure, expression())) + variables)
             } else throw error(peek(), "Expect '=' with destructuring declaration.")
         } else {
             val varStmts = mutableListOf<VarStmt>()
@@ -221,12 +220,12 @@ class Parser(private val tokens: List<Token>) {
                         return ForInVarStmt(
                             expression(allowCommaExpr = false),
                             isDestructuring = false,
-                            listOf(VarStmt(name, isVal = isVal))
+                            listOf(VarStmt(name))
                         )
                     }
                     else -> null
                 }
-                varStmts.add(VarStmt(name, isVal = isVal, initializer))
+                varStmts.add(VarStmt(name, initializer))
             } while (match(COMMA))
 
             return MultiVarStmt(varStmts)
@@ -309,9 +308,8 @@ class Parser(private val tokens: List<Token>) {
         consume(LEFT_PAREN, "Expect '(' after 'for'.")
 
         val initializer: Stmt? = if (match(SEMICOLON)) null
-        else if (match(VAR, VAL)) {
-            varDeclaration(previous().type == VAL)
-        } else expressionStmt()
+        else if (match(VAR)) varDeclaration()
+        else expressionStmt()
 
         if (initializer is ForInVarStmt) {
             consume(RIGHT_PAREN, "Expect ')' after for clauses.")
@@ -319,7 +317,6 @@ class Parser(private val tokens: List<Token>) {
 
             val iterator = VarStmt(
                 Token(IDENTIFIER, nameFactory.next(), line = line),
-                isVal = true,
                 CallExpr(
                     GetExpr(initializer.iteratorExpr, Token(IDENTIFIER, "iterator", line = line)),
                     Token(LEFT_PAREN, ")"),

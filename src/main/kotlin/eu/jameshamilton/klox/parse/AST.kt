@@ -264,7 +264,7 @@ class PrintStmt(val expression: Expr) : Stmt {
     override fun toString(): String = "<print $expression>"
 }
 
-class VarStmt(override val name: Token, override var isVal: Boolean = false, var initializer: Expr? = null) : Stmt, VarDef {
+class VarStmt(override val name: Token, var initializer: Expr? = null) : Stmt, VarDef {
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitVarStmt(this)
 
@@ -380,9 +380,6 @@ open class FunctionStmt(
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitFunctionStmt(this)
 
-    override val isVal: Boolean
-        get() = true
-
     override fun toString(): String = "<fn ${name.lexeme} $functionExpr>"
 
     interface Visitor<R> {
@@ -412,9 +409,6 @@ class ClassStmt(
     override fun <R> accept(visitor: Stmt.Visitor<R>): R =
         visitor.visitClassStmt(this)
 
-    override val isVal: Boolean
-        get() = true
-
     override fun toString(): String = "<class[$modifiers] ${name.lexeme}>"
 
     interface Visitor<R> {
@@ -424,7 +418,6 @@ class ClassStmt(
 
 interface VarDef {
     val name: Token
-    val isVal: Boolean
 }
 
 interface VarAccess {
@@ -433,9 +426,6 @@ interface VarAccess {
 
 class Parameter(override val name: Token) : VarDef {
     constructor(name: String) : this(Token(IDENTIFIER, name))
-
-    override val isVal: Boolean
-        get() = false
 
     override fun toString(): String = "<param ${name.lexeme}>"
 }

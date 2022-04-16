@@ -1,2 +1,0 @@
-val (x, y) = [1, 2];
-x = 1; // expect runtime error: Cannot reassign val 'x'.

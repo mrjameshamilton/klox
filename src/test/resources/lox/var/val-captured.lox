@@ -1,9 +1,0 @@
-fun foo() {
-    val x = 1;
-    fun bar() {
-        x = x + 1;
-        print x; // expect runtime error: Cannot reassign val 'x'.
-    }
-    bar();
-}
-foo();

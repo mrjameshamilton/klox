@@ -1,3 +1,0 @@
-val x;
-x = 1;
-print x; // expect: 1

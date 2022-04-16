@@ -1,3 +1,0 @@
-val x = 1;
-x = x + 1;
-print x; // expect runtime error: Cannot reassign val 'x'.
