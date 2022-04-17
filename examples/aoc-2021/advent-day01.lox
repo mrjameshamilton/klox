@@ -1,0 +1,72 @@
+var example = [199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+
+class WindowedArray {
+    init(array, size) {
+        this.array = array;
+        this.size = size;
+        this.current = 0;
+    }
+
+    next() {
+        if (this.current + this.size > this.array.length()) return Ok(nil);
+        var window = this.array.slice(this.current, this.current + this.size, 1);
+        this.current = this.current + 1;
+        return Ok(window);
+    }
+}
+
+class WindowedLineReader {
+    init(lineReader, size) {
+        this.lineReader = lineReader;
+        this.size = size;
+    }
+
+    next() {
+        if (this?.window == nil) {
+            this.window = Array(this.size);
+            for (var line, i = 0; i < this.size; i++) {
+                line = this.lineReader.readLine()!?;
+                this.window.set(i, line);
+            }
+            return Ok(this.window);
+        } else {
+            var line = this.lineReader.readLine()!?;
+            if (line == nil) {
+                return Ok(nil);
+            } else {
+                System.arraycopy(this.window, 1, this.window, 0, this.size - 1);
+                this.window.set(this.size - 1, line);
+                return Ok(this.window);
+            }
+        }
+    }
+}
+
+fun compute(windowed, convert) {
+    var window = windowed.next();
+    var previous = 0;
+    var count = 0;
+    while (window = windowed.next()!?) {
+       var sum = window.reduce(0, fun (a, b) = a + convert(b));
+       if (sum > previous) count++;
+       previous = sum;
+    }
+
+    return Ok(count);
+}
+
+fun part1Example(depths) = compute(WindowedArray(depths, 1), fun (x) = x);
+fun part2Example(depths) = compute(WindowedArray(depths, 3), fun (x) = x);
+
+fun windowed(file, size) =
+    WindowedLineReader(LineReader(BufferedInputStream(FileInputStream(file))), size);
+
+fun parseNumber(x) = String.toNumber(x).orElse(0);
+fun part1(file) = compute(windowed(file, 1), parseNumber);
+fun part2(file) = compute(windowed(file, 3), parseNumber);
+
+var file = File("examples/aoc-2021/advent-day01.txt");
+print part1Example(example); // expect: 7
+print part1(file); // expect: 1342
+print part2Example(example); // expect: 5
+print part2(file); // expect: 1378

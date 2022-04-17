@@ -1,0 +1,95 @@
+class Submarine {
+    init() {
+        this.depth = 0;
+        this.horizontal = 0;
+    }
+
+    forward(n) {
+        this.horizontal = this.horizontal + n;
+        return this;
+    }
+
+    down(n) {
+        this.depth = this.depth + n;
+        return this;
+    }
+
+    up(n) {
+        this.depth = this.depth - n;
+        return this;
+    }
+
+    toString() {
+        return "Submarine(" + this.horizontal + ", " + this.depth + ")";
+    }
+}
+
+class SubmarineWithAim < Submarine {
+    init() {
+        super.init();
+        this.aim = 0;
+    }
+
+    forward(n) {
+        this.horizontal = this.horizontal + n;
+        this.depth = this.depth + this.aim * n;
+        return this;
+    }
+
+    down(n) {
+        this.aim = this.aim + n;
+        return this;
+    }
+
+    up(n) {
+        this.aim = this.aim - n;
+        return this;
+    }
+
+    toString() {
+        return "Submarine(" + this.horizontal + ", " + this.depth + ", " + this.aim + ")";
+    }
+}
+
+fun example(submarine) {
+    submarine
+        .forward(5)
+        .down(5)
+        .forward(8)
+        .up(3)
+        .down(8)
+        .forward(2);
+
+    return submarine.depth * submarine.horizontal;
+}
+
+
+fun parse(file) {
+    var commands = ArrayList();
+    var input = LineReader(BufferedInputStream(FileInputStream(file)));
+
+    var line;
+    while (line = input.readLine()!?) {
+        var (direction, value) = String.split(line, " ");
+        commands.add(Pair(direction, String.toNumber(value)!?));
+    }
+
+    return Ok(commands);
+}
+
+fun compute(commands, submarine) {
+    for (var (direction, value) in commands) {
+        if (direction == "forward") submarine.forward(value);
+        if (direction == "up") submarine.up(value);
+        if (direction == "down") submarine.down(value);
+    }
+
+    return submarine.depth * submarine.horizontal;
+}
+
+var input = parse(File("examples/aoc-2021/advent-day02.txt")).orFail();
+
+print example(Submarine()); // expect: 150
+print compute(input, Submarine()); // expect: 1480518
+print example(SubmarineWithAim()); // expect: 150
+print compute(input, SubmarineWithAim()); // expect: 1282809906

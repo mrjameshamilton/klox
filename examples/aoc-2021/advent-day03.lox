@@ -1,0 +1,76 @@
+var example = [
+    "00100",
+    "11110",
+    "10110",
+    "10111",
+    "10101",
+    "01111",
+    "00111",
+    "11100",
+    "10000",
+    "11001",
+    "00010",
+    "01010",
+].toList();
+
+fun part1(input) {
+    var numberOfBits = String.length(input[0]);
+    input = input.map(fun(string) = Number.parseBinaryString(string).orNil());
+    var result = Array(numberOfBits);
+    result.fill(0);
+    for (var i = 0; i < input.length(); i++) {
+        for (var j = 0; j < numberOfBits; j++) {
+            result[numberOfBits - j - 1] = result[numberOfBits - j - 1] + ((input[i] >> j) & 1);
+        }
+    }
+
+    var gamma = result.map(fun(x) {
+       if (x > input.length() / 2) return 1; else return 0;
+    }).reduce("", fun (a, b) = a + b);
+
+    var epsilon = result.map(fun(x) {
+       if (x < input.length() / 2) return 1; else return 0;
+    }).reduce("", fun (a, b) = a + b);
+
+    return Number.parseBinaryString(gamma)!? * Number.parseBinaryString(epsilon)!?;
+}
+
+
+fun parse(file) {
+    var commands = ArrayList();
+    var input = LineReader(BufferedInputStream(FileInputStream(file)));
+
+    var line;
+    while (line = input.readLine()!?) {
+        commands.add(line);
+    }
+
+    return Ok(commands);
+}
+
+fun part2(input) {
+    var numberOfBits = String.length(input[0]);
+    fun find(mostFrequent) {
+        var copy = input.copy();
+        for (var i = 0; i < numberOfBits; i++) {
+            var zeros = copy.count(fun (row) = String.charAt(row, i).orNil() == "0");
+            var ones = copy.length() - zeros;
+            var toKeep;
+            if (zeros <= ones) {
+                if (mostFrequent) toKeep = "1"; else toKeep = "0";
+            } else {
+                if (mostFrequent) toKeep = "0"; else toKeep = "1";
+            }
+            copy.removeIf(fun (row) = String.charAt(row, i).orNil() != toKeep);
+            if (copy.length() == 1) return Number.parseBinaryString(copy.first())!?;
+        }
+    }
+
+    return find(true) * find(false);
+}
+
+var input = parse(File("examples/aoc-2021/advent-day03.txt")).orFail();
+print part1(example); // expect: 198
+print part1(input); // expect: 1025636
+print part2(example); // expect: 230
+print part2(input); // expect: 793873

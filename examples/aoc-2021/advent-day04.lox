@@ -1,0 +1,162 @@
+class Board {
+    init(size) {
+        this.board = Array(size);
+        for (var x in 0..(size - 1)) {
+            this.board.set(x, Row(size));
+        }
+    }
+
+    set(row, col, value) {
+        this.board.get(row).set(col, value);
+        return this;
+    }
+
+    mark(number) {
+        this.lastNumber = number;
+        for (var row in this.board) {
+            row.mark(number);
+        }
+    }
+
+    row(n) = this.board.get(n);
+
+    column(n) {
+        var col = Column(this.board.length());
+        for (var (i, row) in this.board.withIndex()) {
+            col[i] = row[n];
+        }
+        return col;
+    }
+
+    sum {
+        return this.board.reduce(0, fun(x, row) = x + row.sum);
+    }
+
+    isWon {
+        for (var row in this.board) {
+            if (row.isComplete) {
+               return true;
+            }
+        }
+        for (var col in 0..(this.board.length()-1)) {
+            if (this.column(col).isComplete) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    toString() {
+        var s = "";
+        for (var row in this.board) {
+            for (var cell in row) {
+                s = s + cell + " ";
+            }
+            s = s + "\n";
+        }
+        return s;
+    }
+}
+
+class BoardRowColumn < Array {
+    isComplete {
+        return this.reduce(this.get(0).isMarked, fun(a, b) = a and b.isMarked);
+    }
+
+    mark(number) {
+        this.filter(fun(cell) = cell.value == number).forEach(fun(cell) = cell.isMarked = true);
+    }
+
+    sum {
+        return this.filterNot(fun(cell) = cell.isMarked).reduce(0, fun(sum, cell) = sum + cell.value);
+    }
+}
+
+class Row < BoardRowColumn
+class Column < BoardRowColumn
+
+class Cell {
+    init(value) {
+        this.value = value;
+        this.isMarked = false;
+    }
+
+    mark() {
+        this.isMarked = true;
+    }
+
+    toString() {
+        var s = "";
+        if (this.isMarked) s = s + "[";
+        else s = s + " ";
+        if (this.value < 10) s = s + " ";
+        s = s + this.value;
+        if (this.isMarked) s = s + "]";
+        else s = s + " ";
+        return s;
+    }
+}
+
+fun parse(file) {
+    var boardSize = 5;
+    var lineReader = LineReader(FileInputStream(File(file)));
+
+    var numbers = String.split(lineReader.readLine()!?, ",").map(fun (s) = String.toNumber(s)!?);
+
+    var line;
+    var boards = ArrayList();
+    var board;
+    var row = 0;
+    while (line = lineReader.readLine()!?) {
+        if (String.length(line) == 0) {
+            if (board != nil) boards.add(board);
+            board = Board(boardSize);
+            row = 0;
+            continue;
+        }
+        var parts = String.split(line, " ").map(fun (x) = String.toNumber(x)!?);
+        for (var (col, value) in parts.withIndex()) {
+            board.set(row, col, Cell(value));
+        }
+        row++;
+    }
+
+    boards.add(board);
+
+    return Ok(Pair(numbers, boards));
+}
+
+
+fun part1(numbers, boards) {
+    for (var number in numbers) {
+        for (var board in boards) {
+            board.mark(number);
+            if (PRINT) print board;
+            if (board.isWon) return number * board.sum;
+        }
+    }
+}
+
+fun part2(numbers, boards) {
+    var won = ArrayList();
+    for (var number in numbers) {
+        for (var board in boards) {
+            board.mark(number);
+            if (board.isWon) {
+                if (PRINT) print board;
+                if (!won.contains(board)) won.add(board);
+                if (won.length() == boards.length()) {
+                    return won.last().sum * won.last().lastNumber;
+                }
+            }
+        }
+    }
+}
+
+var PRINT = System.arg(0) == "--printboards";
+var (numbers, boards) = parse("examples/aoc-2021/advent-day04.example.txt").orFail();
+print part1(numbers, boards); // expect: 4512
+print part2(numbers, boards); // expect: 1924
+var (numbers, boards) = parse("examples/aoc-2021/advent-day04.txt").orFail();
+print part1(numbers, boards); // expect: 71708
+print part2(numbers, boards); // expect: 34726
