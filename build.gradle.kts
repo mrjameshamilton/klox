@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "2.0.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
     application
     jacoco
@@ -15,16 +15,16 @@ repositories {
 }
 
 dependencies {
-    implementation("com.guardsquare:proguard-core:8.0.5")
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.4")
-    implementation("org.apache.commons:commons-text:1.9")
+    implementation("com.guardsquare:proguard-core:9.1.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
+    implementation("org.apache.commons:commons-text:1.10.0")
     compileOnly("org.jetbrains:annotations:22.0.0")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.10")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.0.3")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.0.3")
-    testImplementation("io.kotest:kotest-property-jvm:5.0.3")
-    testImplementation("io.kotest:kotest-framework-datatest:5.0.3")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.0")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.9.1")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
+    testImplementation("io.kotest:kotest-property-jvm:5.9.1")
+    testImplementation("io.kotest:kotest-framework-datatest:5.9.1")
     testImplementation("io.mockk:mockk:1.12.2")
 }
 
@@ -33,14 +33,12 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
-    kotlinOptions.freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
+    compilerOptions.freeCompilerArgs = listOf("-opt-in=kotlin.RequiresOptIn")
 }
 
 tasks.withType<Test> {
     minHeapSize = "512m"
     maxHeapSize = "2048m"
-    jvmArgs = listOf("-XX:MaxPermSize=512m")
 }
 
 application {
